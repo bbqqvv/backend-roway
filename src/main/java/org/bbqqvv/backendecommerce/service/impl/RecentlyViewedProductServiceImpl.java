@@ -22,17 +22,25 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductService {
 
     private final RecentlyViewedProductRepository repository;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-private final UserRepository userRepository;
-    // Hàm này sử dụng getAuthenticatedUser để lấy thông tin người dùng
+    private final UserRepository userRepository;
+    private final org.springframework.data.redis.core.RedisTemplate<String, String> redisTemplate;
+
+    private static final String REDIS_KEY_PREFIX = "user:recently_viewed:";
+    private static final int MAX_ITEMS = 20;
+
+    // 🟢 Lấy user hiện tại từ SecurityUtils
     private User getAuthenticatedUser() {
         String username = SecurityUtils.getCurrentUserLogin()
                 .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
@@ -41,37 +49,32 @@ private final UserRepository userRepository;
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 
-
-    private static final int MAX_ITEMS = 20;
-
     @Override
     @org.springframework.scheduling.annotation.Async
     @org.springframework.transaction.annotation.Transactional
     public void markProductAsViewed(Long productId) {
-        log.info("Marking product {} as viewed asynchronously", productId);
+        log.info("Marking product {} as viewed with Redis & Async", productId);
         try {
-            // Lấy thông tin người dùng hiện tại
             User currentUser = getAuthenticatedUser();
+            String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
 
-            // Kiểm tra xem sản phẩm có tồn tại không
+            // 1. Ghi vào Redis (ZSET)
+            redisTemplate.opsForZSet().add(redisKey, productId.toString(), System.currentTimeMillis());
+            // Giới hạn 20 phần tử trong Redis
+            redisTemplate.opsForZSet().removeRange(redisKey, 0, -(MAX_ITEMS + 1));
+
+            // 2. Ghi vào DB (để bền vững - Persistent)
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
-            // Kiểm tra xem sản phẩm đã được đánh dấu là đã xem chưa
             RecentlyViewedProduct existing = repository.findTop1ByUserAndProductOrderByUpdatedAtDesc(currentUser, product);
-
             if (existing != null) {
-                // JPA Auditing updates updatedAt. Just saving will trigger it.
-                // We update dummy field or just call save to ensure updatedAt is changed.
                 repository.save(existing);
             } else {
-                // Trước khi thêm mới, kiểm tra số lượng hiện tại
                 long count = repository.countByUser(currentUser);
                 if (count >= MAX_ITEMS) {
-                    // Xóa bản ghi cũ nhất (1 cái) để nhường chỗ
                     repository.deleteOldestByUserId(currentUser.getId(), 1);
                 }
-
                 RecentlyViewedProduct recentlyViewedProduct = RecentlyViewedProduct.builder()
                         .user(currentUser)
                         .product(product)
@@ -85,18 +88,49 @@ private final UserRepository userRepository;
 
     @Override
     public PageResponse<ProductResponse> getRecentlyViewedProducts(Pageable pageable) {
-        // Lấy thông tin người dùng hiện tại
         User currentUser = getAuthenticatedUser();
+        String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
 
-        // Truy vấn danh sách sản phẩm đã xem với phân trang
+        // Thử lấy từ Redis trước (ZREVRANGE)
+        Set<String> productIds = redisTemplate.opsForZSet().reverseRange(redisKey, 
+                (long) pageable.getPageNumber() * pageable.getPageSize(), 
+                (long) (pageable.getPageNumber() + 1) * pageable.getPageSize() - 1);
+
+        if (productIds != null && !productIds.isEmpty()) {
+            log.info("Fetching {} products from Redis for user {}", productIds.size(), currentUser.getId());
+            List<Long> ids = productIds.stream().map(Long::valueOf).collect(Collectors.toList());
+            List<Product> products = productRepository.findAllById(ids);
+            
+            // Sắp xếp lại danh sách sản phẩm theo đúng thứ tự trong Redis (vì findAllById không đảm bảo thứ tự)
+            Map<Long, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, p -> p));
+            List<ProductResponse> sortedResponses = ids.stream()
+                    .filter(productMap::containsKey)
+                    .map(id -> productMapper.toProductResponse(productMap.get(id)))
+                    .collect(Collectors.toList());
+
+            return PageResponse.<ProductResponse>builder()
+                    .items(sortedResponses)
+                    .currentPage(pageable.getPageNumber())
+                    .pageSize(pageable.getPageSize())
+                    .totalElements(redisTemplate.opsForZSet().size(redisKey))
+                    .build();
+        }
+
+        // Nếu Redis trống, lấy từ DB và nạp vào Redis
+        log.info("Redis empty, fetching from DB for user {}", currentUser.getId());
         Page<RecentlyViewedProduct> pageResult = repository.findByUserOrderByUpdatedAtDesc(currentUser, pageable);
+        
+        // Nạp vào Redis nếu là trang đầu tiên
+        if (pageable.getPageNumber() == 0) {
+            pageResult.getContent().forEach(rvp -> 
+                redisTemplate.opsForZSet().add(redisKey, rvp.getProduct().getId().toString(), 
+                    rvp.getUpdatedAt() != null ? rvp.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() : System.currentTimeMillis()));
+        }
 
-        // Chuyển đổi danh sách sản phẩm đã xem sang dạng ProductResponse
         List<ProductResponse> productResponses = pageResult.getContent().stream()
-                .map(recentlyViewedProduct -> productMapper.toProductResponse(recentlyViewedProduct.getProduct()))
+                .map(rvp -> productMapper.toProductResponse(rvp.getProduct()))
                 .collect(Collectors.toList());
 
-        // Xây dựng đối tượng PageResponse
         return PageResponse.<ProductResponse>builder()
                 .items(productResponses)
                 .currentPage(pageResult.getNumber())
@@ -112,13 +146,16 @@ private final UserRepository userRepository;
         if (productIds == null || productIds.isEmpty()) return;
 
         User currentUser = getAuthenticatedUser();
+        String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
+        long now = System.currentTimeMillis();
 
-        // Lấy toàn bộ sản phẩm hợp lệ (đã tồn tại)
         List<Product> products = productRepository.findAllById(productIds);
-
         for (Product product : products) {
+            // Redis Sync
+            redisTemplate.opsForZSet().add(redisKey, product.getId().toString(), now++);
+            
+            // DB Sync
             RecentlyViewedProduct existing = repository.findTop1ByUserAndProductOrderByUpdatedAtDesc(currentUser, product);
-
             if (existing != null) {
                 repository.save(existing);
             } else {
@@ -130,11 +167,11 @@ private final UserRepository userRepository;
             }
         }
         
-        // Sau khi sync, kiểm tra và dọn dẹp nếu vượt quá MAX_ITEMS
+        // Cleanup Redis & DB
+        redisTemplate.opsForZSet().removeRange(redisKey, 0, -(MAX_ITEMS + 1));
         long count = repository.countByUser(currentUser);
         if (count > MAX_ITEMS) {
-            int toDelete = (int) (count - MAX_ITEMS);
-            repository.deleteOldestByUserId(currentUser.getId(), toDelete);
+            repository.deleteOldestByUserId(currentUser.getId(), (int) (count - MAX_ITEMS));
         }
     }
 
