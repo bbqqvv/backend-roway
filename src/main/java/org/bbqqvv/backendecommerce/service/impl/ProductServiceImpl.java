@@ -129,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PageResponse<ProductResponse> searchProductsByName(String name, Pageable pageable) {
-        Page<Product> products = productRepository.findByNameContainingIgnoreCase(name, pageable);
+        Page<Product> products = productRepository.searchByKeyword(name, pageable);
         return toPageResponse(products);
     }
 

@@ -30,7 +30,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<String> findSlugsByPattern(@Param("basePattern") String basePattern);
 
     @EntityGraph(attributePaths = {"category", "mainImage"})
-    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN p.tags t " +
+           "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(p.summary) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(t.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Product> searchByKeyword(@Param("query") String query, Pageable pageable);
     @Query("SELECT COUNT(r) FROM ProductReview r WHERE r.product.id = :productId")
     long countReviewsByProductId(@Param("productId") Long productId);
     @Query("SELECT DISTINCT pv.color FROM ProductVariant pv")
