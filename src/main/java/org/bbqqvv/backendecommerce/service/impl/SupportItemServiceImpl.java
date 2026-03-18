@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +51,7 @@ public class SupportItemServiceImpl implements SupportItemsService {
         log.info("Fetching support item with id: {}", id);
         return supportItemRepository.findById(id)
                 .map(supportItemMapper::toResponse)
-                .orElseThrow(() -> new AppException(ErrorCode.ResourceNotFoundException));
+                .orElseThrow(() -> new AppException(CommonErrorCode.RESOURCE_NOT_FOUND));
     }
 
     @Override
@@ -78,7 +80,7 @@ public class SupportItemServiceImpl implements SupportItemsService {
         log.info("Updating support item with id: {}", id);
 
         SupportItem existing = supportItemRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ResourceNotFoundException));
+                .orElseThrow(() -> new AppException(CommonErrorCode.RESOURCE_NOT_FOUND));
 
         String imageUrl = existing.getImg(); // mặc định giữ nguyên ảnh cũ
         if (request.getImg() != null && !request.getImg().isEmpty()) {
@@ -99,7 +101,8 @@ public class SupportItemServiceImpl implements SupportItemsService {
     public void deleteSupportItem(Long id) {
         log.info("Deleting support item with id: {}", id);
         SupportItem supportItem = supportItemRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ResourceNotFoundException));
+                .orElseThrow(() -> new AppException(CommonErrorCode.RESOURCE_NOT_FOUND));
         supportItemRepository.delete(supportItem);
     }
 }
+

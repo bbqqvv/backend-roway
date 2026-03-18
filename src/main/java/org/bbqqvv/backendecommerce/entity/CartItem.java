@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CartItem {
+public class CartItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,10 +35,7 @@ public class CartItem {
     private BigDecimal subtotal;
     @Column(nullable = false)
     private BigDecimal price;
-    @Column(nullable = false)
-    private int stock;
-    @Column(nullable = false)
-    private Boolean inStock;
+
     public BigDecimal getSubtotal() {
         return price.multiply(BigDecimal.valueOf(quantity));
     }

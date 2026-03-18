@@ -9,7 +9,9 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductReviewImage {
+@ToString
+@EqualsAndHashCode(callSuper = false)
+public class ProductReviewImage extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

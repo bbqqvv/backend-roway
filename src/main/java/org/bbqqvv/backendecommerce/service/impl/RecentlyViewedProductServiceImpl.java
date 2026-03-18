@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import lombok.RequiredArgsConstructor;
 import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
@@ -33,10 +35,10 @@ private final UserRepository userRepository;
     // Hàm này sử dụng getAuthenticatedUser để lấy thông tin người dùng
     private User getAuthenticatedUser() {
         String username = SecurityUtils.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 
 
@@ -50,12 +52,11 @@ private final UserRepository userRepository;
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         // Kiểm tra xem sản phẩm đã được đánh dấu là đã xem chưa
-        RecentlyViewedProduct existingViewedProduct = repository.findTop1ByUserAndProductOrderByViewedAtDesc(currentUser, product);
+        RecentlyViewedProduct existingViewedProduct = repository.findTop1ByUserAndProductOrderByUpdatedAtDesc(currentUser, product);
 
         // Nếu đã có trong danh sách, thì chỉ cập nhật thời gian đã xem
         if (existingViewedProduct != null) {
-            existingViewedProduct.setViewedAt(LocalDateTime.now());
-            repository.save(existingViewedProduct);
+            repository.save(existingViewedProduct); // JPA Auditing updates updatedAt
         } else {
             // Nếu chưa có, thì thêm mới sản phẩm vào bảng recently_viewed_products
             RecentlyViewedProduct recentlyViewedProduct = RecentlyViewedProduct.builder()
@@ -72,7 +73,7 @@ private final UserRepository userRepository;
         User currentUser = getAuthenticatedUser();
 
         // Truy vấn danh sách sản phẩm đã xem với phân trang
-        Page<RecentlyViewedProduct> pageResult = repository.findByUserOrderByViewedAtDesc(currentUser, pageable);
+        Page<RecentlyViewedProduct> pageResult = repository.findByUserOrderByUpdatedAtDesc(currentUser, pageable);
 
         // Chuyển đổi danh sách sản phẩm đã xem sang dạng ProductResponse
         List<ProductResponse> productResponses = pageResult.getContent().stream()
@@ -98,18 +99,16 @@ private final UserRepository userRepository;
         List<Product> products = productRepository.findAllById(productIds);
 
         for (Product product : products) {
-            RecentlyViewedProduct existing = repository.findTop1ByUserAndProductOrderByViewedAtDesc(currentUser, product);
+            RecentlyViewedProduct existing = repository.findTop1ByUserAndProductOrderByUpdatedAtDesc(currentUser, product);
 
             if (existing != null) {
                 // Cập nhật lại thời gian xem nếu đã tồn tại
-                existing.setViewedAt(LocalDateTime.now());
-                repository.save(existing);
+                repository.save(existing); // JPA Auditing updates updatedAt
             } else {
                 // Tạo mới nếu chưa tồn tại
                 RecentlyViewedProduct newViewed = RecentlyViewedProduct.builder()
                         .user(currentUser)
                         .product(product)
-                        .viewedAt(LocalDateTime.now())
                         .build();
                 repository.save(newViewed);
             }
@@ -119,3 +118,4 @@ private final UserRepository userRepository;
 
 
 }
+

@@ -10,7 +10,9 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "discount_products")
-public class DiscountProduct {
+@ToString
+@EqualsAndHashCode(callSuper = false)
+public class DiscountProduct extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,7 +21,6 @@ public class DiscountProduct {
     @JoinColumn(name = "discount_id", nullable = false)
     private Discount discount;
 
-    @Getter
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;

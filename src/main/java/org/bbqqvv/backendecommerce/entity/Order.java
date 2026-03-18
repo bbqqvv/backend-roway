@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -15,7 +14,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
+@ToString(exclude = {"orderItems"})
+@EqualsAndHashCode(callSuper = false, exclude = {"orderItems"})
+public class Order extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -69,20 +70,5 @@ public class Order {
 
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
-
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    public void onPrePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void onPreUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }
+

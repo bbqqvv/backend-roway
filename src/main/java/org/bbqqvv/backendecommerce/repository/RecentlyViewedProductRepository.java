@@ -8,6 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RecentlyViewedProductRepository extends JpaRepository<RecentlyViewedProduct, Long> {
-    RecentlyViewedProduct findTop1ByUserAndProductOrderByViewedAtDesc(User currentUser, Product product);
-    Page<RecentlyViewedProduct> findByUserOrderByViewedAtDesc(User currentUser, Pageable pageable);
+    RecentlyViewedProduct findTop1ByUserAndProductOrderByUpdatedAtDesc(User currentUser, Product product);
+    Page<RecentlyViewedProduct> findByUserOrderByUpdatedAtDesc(User currentUser, Pageable pageable);
 }

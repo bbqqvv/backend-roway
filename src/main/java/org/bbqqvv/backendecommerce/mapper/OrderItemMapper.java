@@ -5,7 +5,7 @@ import org.bbqqvv.backendecommerce.entity.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = ProductMapper.class)
+@Mapper(componentModel = "spring", uses = ProductMapper.class, builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface OrderItemMapper {
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productName", source = "product.name")

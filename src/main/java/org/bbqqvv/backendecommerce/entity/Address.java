@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "addresses")
@@ -12,8 +11,9 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Address {
+@ToString(exclude = {"user"})
+@EqualsAndHashCode(callSuper = false, exclude = {"user"})
+public class Address extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +24,6 @@ public class Address {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Getter
     @Column
     private String recipientName;
 
@@ -55,22 +54,6 @@ public class Address {
     @Column(name = "is_default")
     private boolean defaultAddress;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
     public String getFullAddress() {
         return String.format("%s, %s, %s, %s, %s",
                 addressLine != null ? addressLine : "",
@@ -81,3 +64,4 @@ public class Address {
     }
 
 }
+

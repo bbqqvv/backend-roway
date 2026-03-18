@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -60,7 +62,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private User getAuthenticatedUser() {
         return SecurityUtils.getCurrentUserLogin()
                 .flatMap(userRepository::findByUsername)
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
     }
 
     @Override
@@ -76,7 +78,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 );
 
         if (deliveredOrderItems.isEmpty()) {
-            throw new AppException(ErrorCode.ORDER_NOT_COMPLETED);
+            throw new AppException(CartOrderErrorCode.ORDER_NOT_COMPLETED);
         }
 
         OrderItem orderItem = deliveredOrderItems.get(0);
@@ -86,11 +88,11 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
         if (existingReview != null) {
             if (!existingReview.getUser().getId().equals(user.getId())) {
-                throw new AppException(ErrorCode.FORBIDDEN);
+                throw new AppException(CommonErrorCode.ACCESS_DENIED);
             }
 
             if (existingReview.getCreatedAt().plusDays(30).isBefore(LocalDateTime.now())) {
-                throw new AppException(ErrorCode.REVIEW_EDIT_EXPIRED);
+                throw new AppException(SocialMarketingErrorCode.REVIEW_EDIT_EXPIRED);
             }
 
             existingReview.setRating(reviewRequest.getRating());
@@ -140,7 +142,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     @Override
     public PageResponse<ProductReviewResponse> getReviewsByProduct(Long productId, Pageable pageable) {
         productRepository.findById(productId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
         Page<ProductReview> reviewPage = productReviewRepository.findByProductId(productId, pageable);
         return toPageResponse(reviewPage, productReviewMapper::toResponse);
     }
@@ -157,12 +159,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     public void deleteReview(Long reviewId) {
         User user = getAuthenticatedUser();
         ProductReview review = productReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
+                .orElseThrow(() -> new AppException(SocialMarketingErrorCode.REVIEW_NOT_FOUND));
 
         if (!review.getUser().getId().equals(user.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không thể xóa review của người khác.");
+            throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
 
         productReviewRepository.delete(review);
     }
 }
+

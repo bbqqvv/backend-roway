@@ -3,7 +3,6 @@ package org.bbqqvv.backendecommerce.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -15,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RecentlyViewedProduct {
+public class RecentlyViewedProduct extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,16 +27,5 @@ public class RecentlyViewedProduct {
     @ManyToOne(optional = false)
     @JoinColumn(name = "product_id")
     private Product product;
-
-    private LocalDateTime viewedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.viewedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.viewedAt = LocalDateTime.now();
-    }
 }
+

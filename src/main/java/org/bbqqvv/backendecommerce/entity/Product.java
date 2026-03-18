@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -16,7 +15,9 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product {
+@ToString(exclude = {"favourites", "secondaryImages", "descriptionImages", "variants", "reviews", "tags"})
+@EqualsAndHashCode(callSuper = false, exclude = {"favourites", "secondaryImages", "descriptionImages", "variants", "reviews", "tags"})
+public class Product extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -79,16 +80,5 @@ public class Product {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags;
-    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt = LocalDateTime.now();
-    @PrePersist
-    protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }
+

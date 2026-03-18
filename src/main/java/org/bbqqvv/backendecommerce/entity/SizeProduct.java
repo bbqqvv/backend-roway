@@ -13,7 +13,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SizeProduct {
+@ToString(exclude = {"productVariantSizes"})
+@EqualsAndHashCode(callSuper = false, exclude = {"productVariantSizes"})
+public class SizeProduct extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,7 +32,7 @@ public class SizeProduct {
     @OneToMany(mappedBy = "sizeProduct", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SizeProductVariant> productVariantSizes; // Sử dụng bảng trung gian
     public int getStockQuantity() {
-        return productVariantSizes.stream()
+        return productVariantSizes == null ? 0 : productVariantSizes.stream()
                 .mapToInt(SizeProductVariant::getStock)
                 .sum();
     }

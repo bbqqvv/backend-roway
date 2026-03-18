@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -47,10 +49,10 @@ public class FavouriteServiceImpl implements FavouriteService {
         User user = getAuthenticatedUser();
 
         var product = productRepository.findById(productId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         if (favouriteRepository.existsByProductIdAndUserId(productId, user.getId())) {
-            throw new AppException(ErrorCode.PRODUCT_ALREADY_FAVOURITE);
+            throw new AppException(SocialMarketingErrorCode.FAVOURITE_ALREADY_EXISTS);
         }
 
         Favourite favourite = new Favourite();
@@ -72,7 +74,7 @@ public class FavouriteServiceImpl implements FavouriteService {
         User user = getAuthenticatedUser();
 
         Favourite existingFavourite = favouriteRepository.findById(favouriteId)
-                .orElseThrow(() -> new AppException(ErrorCode.REMOVE_FAVOURITE_NOT_FOUND));
+                .orElseThrow(() -> new AppException(SocialMarketingErrorCode.FAVOURITE_NOT_FOUND));
 
         favouriteRepository.delete(existingFavourite);
 
@@ -106,10 +108,10 @@ public class FavouriteServiceImpl implements FavouriteService {
 
     private User getAuthenticatedUser() {
         String username = SecurityUtils.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 
     /**
@@ -121,3 +123,4 @@ public class FavouriteServiceImpl implements FavouriteService {
                 .anyMatch(size -> size.getStock() > 0) ? "Còn hàng" : "Hết hàng";
     }
 }
+

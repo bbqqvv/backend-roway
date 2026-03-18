@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
 import org.bbqqvv.backendecommerce.dto.request.DiscountPreviewRequest;
@@ -60,7 +62,7 @@ public class DiscountServiceImpl implements DiscountService {
         validateDiscountRequest(request);
 
         if (discountRepository.existsByCode(request.getCode())) {
-            throw new AppException(ErrorCode.DUPLICATE_DISCOUNT_CODE);
+            throw new AppException(SocialMarketingErrorCode.DUPLICATE_DISCOUNT_CODE);
         }
 
         // Dùng Builder để tạo Discount
@@ -75,8 +77,6 @@ public class DiscountServiceImpl implements DiscountService {
                 .expiryDate(request.getExpiryDate())
                 .timesUsed(0)
                 .active(request.isActive())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         List<DiscountProduct> discountProducts = getDiscountProducts(discount, request.getApplicableProducts());
@@ -107,7 +107,7 @@ public class DiscountServiceImpl implements DiscountService {
                 .toList();
 
         if (!missingProductIds.isEmpty()) {
-            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+            throw new AppException(ProductErrorCode.PRODUCT_NOT_FOUND);
         }
 
         return products.stream()
@@ -132,7 +132,7 @@ public class DiscountServiceImpl implements DiscountService {
                 .toList();
 
         if (!missingUserIds.isEmpty()) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
+            throw new AppException(UserErrorCode.USER_NOT_FOUND);
         }
 
         return users.stream()
@@ -150,17 +150,17 @@ public class DiscountServiceImpl implements DiscountService {
         LocalDateTime startDate = request.getStartDate();
         LocalDateTime expiryDate = request.getExpiryDate();
 
-        if (code.isEmpty()) throw new AppException(ErrorCode.INVALID_DISCOUNT_CODE);
-        if (discountAmount.compareTo(BigDecimal.ZERO) <= 0) throw new AppException(ErrorCode.INVALID_DISCOUNT_AMOUNT);
+        if (code.isEmpty()) throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_CODE);
+        if (discountAmount.compareTo(BigDecimal.ZERO) <= 0) throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_AMOUNT);
         if (maxDiscountAmount.compareTo(BigDecimal.ZERO) < 0)
-            throw new AppException(ErrorCode.INVALID_MAX_DISCOUNT_AMOUNT);
+            throw new AppException(SocialMarketingErrorCode.INVALID_MAX_DISCOUNT_AMOUNT);
         if (discountAmount.compareTo(maxDiscountAmount) > 0)
-            throw new AppException(ErrorCode.INVALID_DISCOUNT_AMOUNT_LIMIT);
-        if (request.getDiscountType() == null) throw new AppException(ErrorCode.INVALID_DISCOUNT_TYPE);
-        if (minOrderValue.compareTo(BigDecimal.ZERO) < 0) throw new AppException(ErrorCode.INVALID_MIN_ORDER_VALUE);
-        if (usageLimit < 1) throw new AppException(ErrorCode.INVALID_USAGE_LIMIT);
+            throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_AMOUNT_LIMIT);
+        if (request.getDiscountType() == null) throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_TYPE);
+        if (minOrderValue.compareTo(BigDecimal.ZERO) < 0) throw new AppException(SocialMarketingErrorCode.INVALID_MIN_ORDER_VALUE);
+        if (usageLimit < 1) throw new AppException(SocialMarketingErrorCode.INVALID_USAGE_LIMIT);
         if (startDate == null || expiryDate == null || startDate.isAfter(expiryDate)) {
-            throw new AppException(ErrorCode.INVALID_DISCOUNT_DATES);
+            throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_DATES);
         }
     }
 
@@ -185,7 +185,7 @@ public class DiscountServiceImpl implements DiscountService {
         validateDiscountRequest(request);
 
         if (discount.isExpired()) {
-            throw new AppException(ErrorCode.DISCOUNT_ALREADY_EXPIRED);
+            throw new AppException(SocialMarketingErrorCode.DISCOUNT_ALREADY_EXPIRED);
         }
 
         // Cập nhật thông tin discount
@@ -199,7 +199,6 @@ public class DiscountServiceImpl implements DiscountService {
                 .startDate(request.getStartDate())
                 .expiryDate(request.getExpiryDate())
                 .active(request.isActive())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         discount = discountRepository.save(discount);
@@ -215,7 +214,7 @@ public class DiscountServiceImpl implements DiscountService {
         Discount discount = findDiscountById(id);
 
         if (discount.isActive()) {
-            throw new AppException(ErrorCode.CANNOT_DELETE_ACTIVE_DISCOUNT);
+            throw new AppException(SocialMarketingErrorCode.CANNOT_DELETE_ACTIVE_DISCOUNT);
         }
 
         // ✅ Xóa quan hệ trong bảng trung gian trước khi xóa discount
@@ -254,7 +253,7 @@ public class DiscountServiceImpl implements DiscountService {
         productIdSet.retainAll(existingProductIds); // Chỉ giữ lại các ID tồn tại
 
         if (productIdSet.isEmpty()) {
-            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+            throw new AppException(ProductErrorCode.PRODUCT_NOT_FOUND);
         }
 
         // Xóa sản phẩm khỏi discount
@@ -278,7 +277,7 @@ public class DiscountServiceImpl implements DiscountService {
         userIdSet.retainAll(existingUserIds);
 
         if (userIdSet.isEmpty()) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
+            throw new AppException(UserErrorCode.USER_NOT_FOUND);
         }
 
         // Xóa người dùng khỏi discount
@@ -296,20 +295,20 @@ public class DiscountServiceImpl implements DiscountService {
 
     private User getAuthenticatedUser() {
         String username = SecurityUtils.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 
 
     @Override
     public DiscountPreviewResponse previewDiscount(DiscountPreviewRequest discountPreviewRequest) {
         if (discountPreviewRequest == null || discountPreviewRequest.getDiscountCode() == null) {
-            throw new AppException(ErrorCode.INVALID_REQUEST);
+            throw new AppException(CommonErrorCode.INVALID_REQUEST);
         }
         Discount discount = discountRepository.findByCode(discountPreviewRequest.getDiscountCode())
-                .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(SocialMarketingErrorCode.DISCOUNT_NOT_FOUND));
 
         BigDecimal originalTotalAmount = cartService.getTotalCartAmount(discountPreviewRequest.getCartId());
         if (originalTotalAmount == null) {
@@ -338,11 +337,11 @@ public class DiscountServiceImpl implements DiscountService {
         User currentUser = getAuthenticatedUser();
 
         Discount discount = discountRepository.findByCode(discountCode)
-                .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(SocialMarketingErrorCode.DISCOUNT_NOT_FOUND));
 
         boolean alreadySaved = discountUserRepository.existsByUserIdAndDiscountCode(currentUser.getId(), discountCode);
         if (alreadySaved) {
-            throw new AppException(ErrorCode.DISCOUNT_ALREADY_SAVED);
+            throw new AppException(SocialMarketingErrorCode.DISCOUNT_ALREADY_SAVED);
         }
 
         DiscountUser discountUser = new DiscountUser(discount, currentUser);
@@ -409,7 +408,7 @@ public class DiscountServiceImpl implements DiscountService {
 
     private Discount findDiscountById(Long id) {
         return discountRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(SocialMarketingErrorCode.DISCOUNT_NOT_FOUND));
     }
 
     private void addProductsToDiscount(Discount discount, List<Long> productIds) {
@@ -489,3 +488,5 @@ public class DiscountServiceImpl implements DiscountService {
         discountUserRepository.saveAll(discountUsers);
     }
 }
+
+

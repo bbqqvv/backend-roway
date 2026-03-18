@@ -15,6 +15,12 @@ public interface SizeProductVariantRepository extends JpaRepository<SizeProductV
     @Query("UPDATE SizeProductVariant spv SET spv.stock = spv.stock - :quantity WHERE spv.id = :id")
     void reduceStock(@Param("id") Long id, @Param("quantity") int quantity);
     @Query("SELECT spv FROM SizeProductVariant spv " +
+            "JOIN FETCH spv.productVariant pv " +
+            "JOIN FETCH spv.sizeProduct sp " +
+            "WHERE pv.product.id IN :productIds")
+    java.util.List<SizeProductVariant> findByProductIdIn(@Param("productIds") java.util.Collection<Long> productIds);
+
+    @Query("SELECT spv FROM SizeProductVariant spv " +
             "JOIN spv.productVariant pv " +
             "JOIN spv.sizeProduct sp " +
             "WHERE pv.product.id = :productId AND sp.sizeName = :sizeName")

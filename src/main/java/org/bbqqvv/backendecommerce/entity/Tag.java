@@ -12,7 +12,9 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Tag {
+@ToString(exclude = {"products"})
+@EqualsAndHashCode(callSuper = false, exclude = {"products"})
+public class Tag extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

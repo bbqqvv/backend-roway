@@ -11,7 +11,9 @@ import lombok.*;
 @Entity
 @Table(name = "discount_user", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "discount_id"}) // Đảm bảo mỗi user chỉ có 1 bản ghi với mỗi discount
-})public class DiscountUser {
+})@ToString
+@EqualsAndHashCode(callSuper = false)
+public class DiscountUser extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

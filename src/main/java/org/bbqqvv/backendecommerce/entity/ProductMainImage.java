@@ -3,7 +3,6 @@ package org.bbqqvv.backendecommerce.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product_main_images")  // Đặt tên bảng là product_main_images
@@ -12,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductMainImage {
+public class ProductMainImage extends BaseEntity implements ProductImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Tự động tăng id
@@ -25,12 +24,5 @@ public class ProductMainImage {
 
     @Column(name = "image_url", nullable = false)  // Cột chứa URL của ảnh chính
     private String imageUrl;
-
-    @Column(name = "created_at", updatable = false)  // Thêm thời gian tạo ảnh
-    private LocalDateTime createdAt;
-
-    @PrePersist  // Thêm thời gian khi bản ghi được thêm vào CSDL
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();  // Lưu thời gian tạo ảnh
-    }
 }
+

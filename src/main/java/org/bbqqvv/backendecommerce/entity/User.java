@@ -5,17 +5,19 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+@ToString(exclude = {"addresses", "favourites", "orders", "reviews"})
+@EqualsAndHashCode(callSuper = false, exclude = {"addresses", "favourites", "orders", "reviews"})
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,22 +66,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     private AuthProvider provider;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     public boolean isAdmin() {
-        return authorities.contains(Role.ROLE_ADMIN);
+        return authorities != null && authorities.contains(Role.ROLE_ADMIN);
     }
 }
+

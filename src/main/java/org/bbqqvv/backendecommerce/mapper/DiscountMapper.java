@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface DiscountMapper {
 
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(source = "applicableUsers", target = "applicableUsers", ignore = true) // Chuyển sang service xử lý
     @Mapping(source = "applicableProducts", target = "applicableProducts", ignore = true) // Chuyển sang service xử lý
     Discount toDiscount(DiscountRequest discountRequest);

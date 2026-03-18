@@ -1,5 +1,8 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
+import lombok.extern.slf4j.Slf4j;
 import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.bbqqvv.backendecommerce.dto.request.CartRequest;
 import org.bbqqvv.backendecommerce.dto.response.CartResponse;
@@ -17,6 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
@@ -63,24 +67,24 @@ public class CartServiceImpl implements CartService {
 
         cartRequest.getItems().forEach(itemRequest -> {
             Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                    .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
             validateSizeOption(product, itemRequest.getSizeName());
 
             SizeProduct sizeProduct = sizeProductRepository.findByProductIdAndSizeName(
                             product.getId(), itemRequest.getSizeName())
-                    .orElseThrow(() -> new AppException(ErrorCode.INVALID_PRODUCT_OPTION));
+                    .orElseThrow(() -> new AppException(ProductErrorCode.INVALID_PRODUCT_OPTION));
 
             ProductVariant productVariant = sizeProduct.getProductVariantSizes().stream()
                     .map(SizeProductVariant::getProductVariant)
                     .findFirst()
-                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
+                    .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
             String key = generateKey(itemRequest.getProductId(), itemRequest.getSizeName(), itemRequest.getColor());
             int newTotalQuantity = cartItemMap.getOrDefault(key, new CartItem()).getQuantity() + itemRequest.getQuantity();
 
             if (newTotalQuantity > sizeProduct.getStockQuantity()) {
-                throw new AppException(ErrorCode.OUT_OF_STOCK);
+                throw new AppException(ProductErrorCode.OUT_OF_STOCK);
             }
 
             BigDecimal price = sizeProduct.getPriceAfterDiscount() != null ? sizeProduct.getPriceAfterDiscount() : BigDecimal.ZERO;
@@ -96,8 +100,6 @@ public class CartServiceImpl implements CartService {
                         .color(itemRequest.getColor())
                         .price(price)
                         .subtotal(BigDecimal.ZERO)
-                        .inStock(isInStock)
-                        .stock(sizeProduct.getStockQuantity())
                         .build();
                 cart.getCartItems().add(newCartItem);
                 return newCartItem;
@@ -117,10 +119,10 @@ public class CartServiceImpl implements CartService {
     public CartResponse removeProductFromCart(Long productId, String sizeName, String color) {
         User user = getAuthenticatedUser();
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
 
         CartItem cartItem = cartItemRepository.findByCartIdAndProductIdAndSizeNameAndColor(cart.getId(), productId, sizeName, color)
-                .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_ITEM_NOT_FOUND));
 
         cart.getCartItems().remove(cartItem);
         cartItemRepository.delete(cartItem);
@@ -128,21 +130,12 @@ public class CartServiceImpl implements CartService {
 
         return cartMapper.toCartResponse(cart);
     }
-
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public CartResponse getCartByUserId() {
         User user = getAuthenticatedUser();
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
-
-        cart.getCartItems().forEach(cartItem -> sizeProductRepository.findByProductIdAndSizeName(
-                        cartItem.getProduct().getId(), cartItem.getSizeName())
-                .ifPresent(sizeProduct -> {
-                    cartItem.setStock(sizeProduct.getStockQuantity()); // ✅ Cập nhật stock
-                    cartItem.setInStock(sizeProduct.getStockQuantity() >= cartItem.getQuantity());
-                })
-        );
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
 
         return cartMapper.toCartResponse(cart);
     }
@@ -152,20 +145,20 @@ public class CartServiceImpl implements CartService {
     public CartResponse increaseProductQuantity(CartRequest cartRequest) {
         User user = getAuthenticatedUser();
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
 
         for (var itemRequest : cartRequest.getItems()) {
             CartItem cartItem = cartItemRepository.findByCartIdAndProductIdAndSizeNameAndColor(
                             cart.getId(), itemRequest.getProductId(), itemRequest.getSizeName(), itemRequest.getColor())
-                    .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
+                    .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_ITEM_NOT_FOUND));
 
             SizeProduct sizeProduct = sizeProductRepository.findByProductIdAndSizeName(
                             cartItem.getProduct().getId(), cartItem.getSizeName())
-                    .orElseThrow(() -> new AppException(ErrorCode.INVALID_PRODUCT_OPTION));
+                    .orElseThrow(() -> new AppException(ProductErrorCode.INVALID_PRODUCT_OPTION));
 
             // Kiểm tra tồn kho
             if (cartItem.getQuantity() + 1 > sizeProduct.getStockQuantity()) {
-                throw new AppException(ErrorCode.OUT_OF_STOCK);
+                throw new AppException(ProductErrorCode.OUT_OF_STOCK);
             }
 
             cartItem.setQuantity(cartItem.getQuantity() + 1);
@@ -182,12 +175,12 @@ public class CartServiceImpl implements CartService {
     public CartResponse decreaseProductQuantity(CartRequest cartRequest) {
         User user = getAuthenticatedUser();
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
 
         for (var itemRequest : cartRequest.getItems()) {
             CartItem cartItem = cartItemRepository.findByCartIdAndProductIdAndSizeNameAndColor(
                             cart.getId(), itemRequest.getProductId(), itemRequest.getSizeName(), itemRequest.getColor())
-                    .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
+                    .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_ITEM_NOT_FOUND));
 
             // Nếu số lượng còn 1 thì xóa luôn sản phẩm khỏi giỏ hàng
             if (cartItem.getQuantity() == 1) {
@@ -209,7 +202,7 @@ public class CartServiceImpl implements CartService {
     public void clearCart() {
         User user = getAuthenticatedUser();
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
 
         cartItemRepository.deleteAllByCartId(cart.getId());
         cart.setTotalPrice(BigDecimal.ZERO);
@@ -219,7 +212,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public BigDecimal getTotalCartAmount(Long cartId) {
         Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
 
         return cart.getTotalPrice();
     }
@@ -237,25 +230,26 @@ public class CartServiceImpl implements CartService {
 
     private User getAuthenticatedUser() {
         String username = SecurityUtils.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 
     private void validateSizeOption(Product product, String sizeName) {
         List<String> validSizes = sizeCategoryRepository.findSizeNamesByCategoryId(product.getCategory().getId());
-        System.out.println("📌 Danh sách size hợp lệ: " + validSizes);
-        System.out.println("📌 Kiểm tra size: " + sizeName);
+        log.info("📌 Danh sách size hợp lệ: {}", validSizes);
+        log.info("📌 Kiểm tra size: {}", sizeName);
 
         if (!validSizes.contains(sizeName)) {
-            System.out.println("❌ Size không hợp lệ: " + sizeName);
-            throw new AppException(ErrorCode.INVALID_PRODUCT_OPTION);
+            log.error("❌ Size không hợp lệ: {}", sizeName);
+            throw new AppException(ProductErrorCode.INVALID_PRODUCT_OPTION);
         }
 
-        System.out.println("✅ Size hợp lệ: " + sizeName);
+        log.info("✅ Size hợp lệ: {}", sizeName);
     }
     private String generateKey(Long productId, String sizeName, String color) {
         return productId + "-" + sizeName + "-" + color;
     }
 }
+

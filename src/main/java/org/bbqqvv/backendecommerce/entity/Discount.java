@@ -1,23 +1,26 @@
 package org.bbqqvv.backendecommerce.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "discounts")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@Entity
-@Table(name = "discounts")
-public class Discount {
+@ToString(exclude = {"applicableProducts", "applicableUsers"})
+@EqualsAndHashCode(callSuper = false, exclude = {"applicableProducts", "applicableUsers"})
+public class Discount extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -60,14 +63,6 @@ public class Discount {
     @OneToMany(mappedBy = "discount", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DiscountUser> applicableUsers = new ArrayList<>();
 
-
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
     // 🔹 Kiểm tra xem mã giảm giá có còn hiệu lực không
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiryDate);
@@ -86,3 +81,5 @@ public class Discount {
 
 
 }
+
+

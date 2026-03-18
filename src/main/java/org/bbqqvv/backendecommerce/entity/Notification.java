@@ -1,12 +1,8 @@
 package org.bbqqvv.backendecommerce.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notifications")
@@ -14,7 +10,9 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Notification {
+@ToString(exclude = {"user"})
+@EqualsAndHashCode(callSuper = false, exclude = {"user"})
+public class Notification extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,5 +23,5 @@ public class Notification {
 
     private String message;
     private boolean isRead = false;
-    private LocalDateTime createdAt = LocalDateTime.now();
 }
+

@@ -1,12 +1,8 @@
 package org.bbqqvv.backendecommerce.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 @Entity
 @Table(name = "product_variants")
@@ -14,7 +10,9 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductVariant {
+@ToString(exclude = {"productVariantSizes"})
+@EqualsAndHashCode(callSuper = false, exclude = {"productVariantSizes"})
+public class ProductVariant extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,19 +30,5 @@ public class ProductVariant {
 
     @Column(nullable = false)
     private String color;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }
+

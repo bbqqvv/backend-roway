@@ -20,6 +20,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
@@ -34,30 +35,34 @@ public class SecurityConfig {
 
     // Các URL không yêu cầu xác thực
     private static final String[] WHITE_LIST_URL = {
-            "/**",
             "/api/auth/**",
             "/api/categories/**",
-            "/api/products-review/**",
             "/api/products/**",
-            "/api/cart/**",
-            "/api/orders/**",
-            "/api/search-history/**",
-            "api/addresses/**",
-            "api/favourites/**",
+            "/api/products-review/**",
             "/api/filter/**",
 
-            // ⚠️ Các URL Swagger cần được permitAll
+            // Swagger URLs
+            "/swagger-ui.html",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/v2/api-docs/**",
+            "/api-docs/**",
             "/swagger-resources/**",
             "/configuration/**",
             "/webjars/**"
     };
-    private static final String[] SECURED_URL_PATTERNS = {
-            "/api/**",
+
+    private static final String[] ADMIN_URL_PATTERNS = {
             "/admin/**",
-            "/user/**"
+            "/api/admin/**"
+    };
+
+    private static final String[] USER_URL_PATTERNS = {
+            "/api/cart/**",
+            "/api/orders/**",
+            "/api/search-history/**",
+            "/api/addresses/**",
+            "/api/favourites/**"
     };
 
     // Cấu hình SecurityFilterChain
@@ -67,8 +72,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Cấu hình CORS
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF cho API REST
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(WHITE_LIST_URL).permitAll() // ✅ Các API trong danh sách này không cần xác thực
-                        .requestMatchers(SECURED_URL_PATTERNS).authenticated() // Các phương thức POST, PUT, DELETE yêu cầu xác thực
+                        .requestMatchers(WHITE_LIST_URL).permitAll() 
+                        .requestMatchers(ADMIN_URL_PATTERNS).hasRole("ADMIN")
+                        .requestMatchers(USER_URL_PATTERNS).hasAnyRole("USER", "ADMIN")
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenUtil, customUserDetailsService),
                         UsernamePasswordAuthenticationFilter.class); // Thêm filter JWT vào chuỗi bảo mật

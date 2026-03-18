@@ -12,7 +12,9 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SupportItem implements Serializable {
+@ToString
+@EqualsAndHashCode(callSuper = false)
+public class SupportItem extends BaseEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Tự động tăng ID

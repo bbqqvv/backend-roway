@@ -3,7 +3,6 @@ package org.bbqqvv.backendecommerce.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,9 +13,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"product", "user"})
-@EqualsAndHashCode(exclude = {"product", "user"})
-public class ProductReview {
+@ToString(exclude = {"product", "user", "orderItem", "images"})
+@EqualsAndHashCode(callSuper = false, exclude = {"product", "user", "orderItem", "images"})
+public class ProductReview extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,12 +41,5 @@ public class ProductReview {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }
+

@@ -26,4 +26,7 @@ public class ApiResponse<T> {
 
     @Schema(description = "Response data")
     T data;
+
+    @Schema(description = "Error details (e.g., validation errors)")
+    Object details;
 }

@@ -13,7 +13,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Cart {
+@ToString(exclude = "cartItems")
+@EqualsAndHashCode(callSuper = false, exclude = "cartItems")
+public class Cart extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -2,10 +2,7 @@ package org.bbqqvv.backendecommerce.entity;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "size_category")
@@ -13,7 +10,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SizeCategory {
+@ToString(exclude = {"category"})
+@EqualsAndHashCode(callSuper = false, exclude = {"category"})
+public class SizeCategory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

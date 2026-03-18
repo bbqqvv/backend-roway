@@ -10,7 +10,9 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SizeProductVariant {
+@ToString
+@EqualsAndHashCode(callSuper = false)
+public class SizeProductVariant extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +44,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse createCategory(CategoryRequest categoryRequest) {
         try {
             if (categoryRepository.existsCategoriesByName(categoryRequest.getName())) {
-                throw new AppException(ErrorCode.USER_EXISTED);
+                throw new AppException(UserErrorCode.USER_EXISTED);
             }
 
             String imageUrl = handleImageUpload(categoryRequest.getImage());
@@ -59,7 +61,7 @@ public class CategoryServiceImpl implements CategoryService {
             return categoryMapper.categoryToCategoryResponse(savedCategory);
         } catch (IOException e) {
             log.error("Lỗi khi tải ảnh", e);
-            throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            throw new AppException(InfrastructureAddressErrorCode.IMAGE_UPLOAD_FAILED);
         }
     }
 
@@ -67,7 +69,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse updateCategory(Long id, CategoryRequest categoryRequest) {
         try {
             Category category = categoryRepository.findById(id)
-                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+                    .orElseThrow(() -> new AppException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
             String imageUrl = handleImageUpload(categoryRequest.getImage());
 
@@ -84,7 +86,7 @@ public class CategoryServiceImpl implements CategoryService {
             return categoryMapper.categoryToCategoryResponse(updatedCategory);
         } catch (IOException e) {
             log.error("Lỗi khi tải ảnh", e);
-            throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            throw new AppException(InfrastructureAddressErrorCode.IMAGE_UPLOAD_FAILED);
         }
     }
 
@@ -92,7 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse getCategoryById(Long id) {
         return categoryRepository.findById(id)
                 .map(categoryMapper::categoryToCategoryResponse)
-                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.CATEGORY_NOT_FOUND));
     }
 
     @Override
@@ -105,7 +107,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public boolean deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.CATEGORY_NOT_FOUND));
         categoryRepository.delete(category);
         return true;
     }
@@ -124,3 +126,4 @@ public class CategoryServiceImpl implements CategoryService {
         return null;
     }
 }
+

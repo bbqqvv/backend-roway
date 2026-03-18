@@ -2,7 +2,6 @@ package org.bbqqvv.backendecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -10,7 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @Entity@Table(name = "product_secondary_images")
-public class ProductSecondaryImage extends ProductImage {
+public class ProductSecondaryImage extends BaseEntity implements ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -23,15 +22,9 @@ public class ProductSecondaryImage extends ProductImage {
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist  // Thêm thời gian khi bản ghi được thêm
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
     public ProductSecondaryImage(String imageUrl, Product product) {
         this.imageUrl = imageUrl;
         this.product = product;
     }
 }
+

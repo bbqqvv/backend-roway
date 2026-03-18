@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +85,7 @@ public class AddressServiceImpl implements AddressService {
         Address address = findAddressByIdAndUser(addressId);
 
         if (address.isDefaultAddress()) {
-            throw new AppException(ErrorCode.ADDRESS_DEFAULT_CANNOT_DELETE);
+            throw new AppException(InfrastructureAddressErrorCode.ADDRESS_DEFAULT_CANNOT_DELETE);
         }
 
         addressRepository.delete(address);
@@ -102,13 +104,13 @@ public class AddressServiceImpl implements AddressService {
     private User getAuthenticatedUser() {
         return SecurityUtils.getCurrentUserLogin()
                 .flatMap(userRepository::findByUsername)
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
     }
 
     private Address findAddressByIdAndUser(Long addressId) {
         User user = getAuthenticatedUser();
         return addressRepository.findByIdAndUserId(addressId, user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+                .orElseThrow(() -> new AppException(InfrastructureAddressErrorCode.ADDRESS_NOT_FOUND));
     }
 
     private void setDefaultAddressForUser(User user, Long newDefaultAddressId) {
@@ -119,3 +121,4 @@ public class AddressServiceImpl implements AddressService {
         addressRepository.saveAll(userAddresses);
     }
 }
+

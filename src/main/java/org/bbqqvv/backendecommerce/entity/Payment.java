@@ -1,9 +1,10 @@
 package org.bbqqvv.backendecommerce.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,7 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "payments")
-public class Payment {
+@ToString(exclude = {"order"})
+@EqualsAndHashCode(callSuper = false, exclude = {"order"})
+public class Payment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,9 +41,6 @@ public class Payment {
 
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
-
-    @PrePersist
-    public void onPrePersist() {
-        this.paymentDate = LocalDateTime.now();
-    }
 }
+
+

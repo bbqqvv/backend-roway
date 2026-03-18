@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -52,9 +54,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductResponse createProduct(ProductRequest productRequest) {
         if (productRepository.existsByProductCode(productRequest.getProductCode())) {
-            throw new AppException(ErrorCode.DUPLICATE_PRODUCT_CODE);
+            throw new AppException(ProductErrorCode.DUPLICATE_PRODUCT_CODE);
         }
 
         Category category = getCategoryById(productRequest.getCategoryId());
@@ -69,7 +72,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getProductById(Long id) {
         return productRepository.findById(id)
                 .map(this::toFullProductResponse)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
     @Override
@@ -81,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public PageResponse<ProductResponse> findProductByCategorySlug(String slug, Pageable pageable) {
         Category category = categoryRepository.findBySlug(slug);
-        if (category == null) throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
+        if (category == null) throw new AppException(ProductErrorCode.CATEGORY_NOT_FOUND);
         Page<Product> productPage = productRepository.findProductByCategory(category, pageable);
         return toPageResponse(productPage);
     }
@@ -90,7 +93,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getProductBySlug(String slug) {
         return productRepository.findBySlug(slug)
                 .map(this::toFullProductResponse)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
     @Override
@@ -98,7 +101,7 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(value = "products", key = "#id")
     public ProductResponse updateProduct(Long id, ProductRequest productRequest) {
         Product existingProduct = productRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         Category category = getCategoryById(productRequest.getCategoryId());
         Product product = createOrUpdateProductEntity(productRequest, category);
@@ -117,7 +120,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public boolean deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
-            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+            throw new AppException(ProductErrorCode.PRODUCT_NOT_FOUND);
         }
         productRepository.deleteById(id);
         return true;
@@ -126,17 +129,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public PageResponse<ProductResponse> searchProductsByName(String name, Pageable pageable) {
         Page<Product> products = productRepository.findByNameContainingIgnoreCase(name, pageable);
-        List<ProductResponse> responses = products.getContent().stream()
-                .map(this::toFullProductResponse)
-                .collect(Collectors.toList());
-
-        return PageResponse.<ProductResponse>builder()
-                .currentPage(products.getNumber())
-                .totalPages(products.getTotalPages())
-                .pageSize(products.getSize())
-                .totalElements(products.getTotalElements())
-                .items(responses)
-                .build();
+        return toPageResponse(products);
     }
 
     @Override
@@ -147,7 +140,7 @@ public class ProductServiceImpl implements ProductService {
 
     private Category getCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.CATEGORY_NOT_FOUND));
     }
 
     private Product createOrUpdateProductEntity(ProductRequest req, Category category) {
@@ -226,16 +219,23 @@ public class ProductServiceImpl implements ProductService {
                             .map(url -> ProductDescriptionImage.builder().imageUrl(url).product(product).build())
                             .collect(Collectors.toList())));
         } catch (Exception e) {
-            throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            throw new AppException(InfrastructureAddressErrorCode.IMAGE_UPLOAD_FAILED);
         }
     }
 
     private String generateUniqueSlug(String name) {
         String base = SlugUtils.toSlug(name);
-        String slug = base;
+        List<String> existingSlugs = productRepository.findSlugsByPattern(base + "%");
+        
+        if (!existingSlugs.contains(base)) {
+            return base;
+        }
+
         int count = 1;
-        while (productRepository.existsBySlug(slug)) {
-            slug = base + "-" + count++;
+        String slug = base + "-" + count;
+        while (existingSlugs.contains(slug)) {
+            count++;
+            slug = base + "-" + count;
         }
         return slug;
     }
@@ -249,8 +249,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private PageResponse<ProductResponse> toPageResponse(Page<Product> page) {
+        List<Long> productIds = page.getContent().stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, Integer> reviewCounts = productRepository.countReviewsByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        obj -> (Long) obj[0],
+                        obj -> ((Long) obj[1]).intValue()
+                ));
+
         List<ProductResponse> items = page.getContent().stream()
-                .map(this::toFullProductResponse)
+                .map(product -> {
+                    ProductResponse res = productMapper.toProductResponse(product);
+                    res.setReviewCount(reviewCounts.getOrDefault(product.getId(), 0));
+                    return res;
+                })
                 .collect(Collectors.toList());
 
         return PageResponse.<ProductResponse>builder()
@@ -269,3 +283,4 @@ public class ProductServiceImpl implements ProductService {
         return res;
     }
 }
+

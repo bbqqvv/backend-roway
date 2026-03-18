@@ -1,5 +1,8 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
+import org.bbqqvv.backendecommerce.exception.codes.*;
+
+import lombok.extern.slf4j.Slf4j;
 import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
 import org.bbqqvv.backendecommerce.dto.request.OrderItemRequest;
@@ -28,6 +31,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -59,10 +63,10 @@ public class OrderServiceImpl implements OrderService {
 
     private User getAuthenticatedUser() {
         String username = SecurityUtils.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 
     @Override
@@ -72,21 +76,33 @@ public class OrderServiceImpl implements OrderService {
         Address address = findAddressById(orderRequest.getAddressId());
 
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
         if (cart.getCartItems().isEmpty()) {
-            throw new AppException(ErrorCode.EMPTY_CART);
+            throw new AppException(CartOrderErrorCode.EMPTY_CART);
         }
 
-        // Tính toán giá trị đơn hàng
-        Map<Long, Product> productMap = cart.getCartItems().stream()
-                .map(CartItem::getProduct)
+        // Pre-fetch all needed variants to avoid N+1 queries
+        List<Long> productIds = cart.getCartItems().stream()
+                .map(item -> item.getProduct().getId())
                 .distinct()
-                .collect(Collectors.toMap(Product::getId, product -> product));
+                .collect(Collectors.toList());
+        
+        List<SizeProductVariant> allVariants = sizeProductVariantRepository.findByProductIdIn(productIds);
+        Map<String, SizeProductVariant> variantMap = allVariants.stream()
+                .collect(Collectors.toMap(
+                    v -> v.getProductVariant().getProduct().getId() + ":" + v.getProductVariant().getColor() + ":" + v.getSizeProduct().getSizeName(),
+                    v -> v,
+                    (v1, v2) -> v1 // Handle duplicates if any
+                ));
 
+        // Tính toán giá trị đơn hàng
         BigDecimal orderTotal = cart.getCartItems().stream()
                 .map(cartItem -> {
-                    Product product = productMap.get(cartItem.getProduct().getId());
-                    SizeProductVariant sizeProductVariant = findSizeProduct(product, cartItem.getSizeName());
+                    String key = cartItem.getProduct().getId() + ":" + cartItem.getColor() + ":" + cartItem.getSizeName();
+                    SizeProductVariant sizeProductVariant = variantMap.get(key);
+                    if (sizeProductVariant == null) {
+                        throw new AppException(ProductErrorCode.SIZE_NOT_FOUND);
+                    }
                     return sizeProductVariant.getSizeProduct().getPriceAfterDiscount()
                             .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
                 })
@@ -105,30 +121,28 @@ public class OrderServiceImpl implements OrderService {
         // Tạo và lưu orderItems
         List<OrderItem> orderItems = cart.getCartItems().stream()
                 .map(cartItem -> {
-                    Product product = findProductById(cartItem.getProduct().getId());
-                    SizeProductVariant sizeProductVariant = findSizeProduct(product, cartItem.getSizeName());
-
+                    String key = cartItem.getProduct().getId() + ":" + cartItem.getColor() + ":" + cartItem.getSizeName();
+                    SizeProductVariant sizeProductVariant = variantMap.get(key);
+                    
                     OrderItemRequest itemRequest = new OrderItemRequest();
                     itemRequest.setQuantity(cartItem.getQuantity());
                     itemRequest.setColor(cartItem.getColor());
 
-                    return buildOrderItem(savedOrder, product, sizeProductVariant, itemRequest);
+                    return buildOrderItem(savedOrder, sizeProductVariant.getProductVariant().getProduct(), sizeProductVariant, itemRequest);
                 }).collect(Collectors.toList());
+        
         orderItemRepository.saveAll(orderItems);
         savedOrder.setOrderItems(orderItems);
         cartRepository.deleteByUserId(user.getId());
-        // Gửi email
-        try {
-            emailService.sendOrderConfirmationEmail(savedOrder, user.getEmail());
-        } catch (Exception e) {
-            System.err.println("Failed to send confirmation email: " + e.getMessage());
-        }
+        // Gửi email bất đồng bộ
+        emailService.sendOrderConfirmationEmail(savedOrder, user.getEmail());
+        
         return orderMapper.toOrderResponse(savedOrder);
     }
 
     private Discount applyDiscount(String discountCode, BigDecimal totalAmount) {
         if (discountCode == null || discountCode.isBlank()) {
-            System.out.println("Không có mã giảm giá");
+            log.info("Không có mã giảm giá");
             return null;
         }
 
@@ -136,17 +150,17 @@ public class OrderServiceImpl implements OrderService {
         Discount discount = discountRepository.findByCode(discountCode).orElse(null);
 
         if (discount == null || !discount.isActive()) {
-            System.out.println("Mã giảm giá không hợp lệ hoặc chưa được kích hoạt: " + discountCode);
+            log.warn("Mã giảm giá không hợp lệ hoặc chưa được kích hoạt: {}", discountCode);
             return null;
         }
 
         // Kiểm tra điều kiện áp dụng mã giảm giá
         if (totalAmount.compareTo(discount.getMinOrderValue()) < 0) {
-            System.out.println("Tổng giá trị đơn hàng (" + totalAmount + ") không đủ để áp dụng mã giảm giá " + discountCode);
+            log.warn("Tổng giá trị đơn hàng ({}) không đủ để áp dụng mã giảm giá {}", totalAmount, discountCode);
             return null;
         }
 
-        System.out.println("Áp dụng mã giảm giá: " + discountCode + ", Giá trị giảm: " + discount.getDiscountAmount());
+        log.info("Áp dụng mã giảm giá: {}, Giá trị giảm: {}", discountCode, discount.getDiscountAmount());
         return discount;
     }
 
@@ -186,8 +200,6 @@ public class OrderServiceImpl implements OrderService {
                 .phoneNumber(address.getPhoneNumber())
                 .fullAddress(address.getFullAddress())
                 .status(OrderStatus.PENDING)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .expectedDeliveryDate(LocalDate.now().plusDays(EXPECTED_DELIVERY_DAYS))
                 .paymentMethod(orderRequest.getPaymentMethod())
                 .shippingFee(shippingFee)
@@ -204,7 +216,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private String generateOrderCode() {
-        return "ORD-" + System.currentTimeMillis();
+        return "ORD-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
     private OrderItem buildOrderItem(Order order, Product product, SizeProductVariant sizeProductVariant, OrderItemRequest itemRequest) {
@@ -215,6 +227,7 @@ public class OrderServiceImpl implements OrderService {
         return OrderItem.builder()
                 .order(order)
                 .product(product)
+                .productVariant(sizeProductVariant.getProductVariant())
                 .sizeName(sizeProduct.getSizeName())
                 .quantity(itemRequest.getQuantity())
                 .price(sizeProduct.getPriceAfterDiscount()) // Sử dụng giá sau giảm
@@ -224,30 +237,30 @@ public class OrderServiceImpl implements OrderService {
     }
     private void validateStock(SizeProduct sizeProduct, int quantity) {
         if (sizeProduct.getStockQuantity() < quantity) {
-            throw new AppException(ErrorCode.OUT_OF_STOCK);
+            throw new AppException(ProductErrorCode.OUT_OF_STOCK);
         }
     }
 
     private Address findAddressById(Long addressId) {
         return addressRepository.findById(addressId)
-                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND)); // ✅ Ném lỗi nếu không tìm thấy
+                .orElseThrow(() -> new AppException(InfrastructureAddressErrorCode.ADDRESS_NOT_FOUND)); // ✅ Ném lỗi nếu không tìm thấy
     }
 
     private Product findProductById(Long productId) {
         return productRepository.findById(productId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
     private SizeProductVariant findSizeProduct(Product product, String sizeName) {
-        System.out.println("Finding SizeProductVariant for product: " + product.getId() + " with size: " + sizeName);
+        log.info("Finding SizeProductVariant for product: {} with size: {}", product.getId(), sizeName);
 
         return sizeProductVariantRepository.findByProductIdAndSizeName(product.getId(), sizeName)
-                .orElseThrow(() -> new AppException(ErrorCode.SIZE_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ProductErrorCode.SIZE_NOT_FOUND));
     }
 
     private Order findOrderById(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.ORDER_NOT_FOUND));
     }
 
     @Override
@@ -258,7 +271,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Chỉ cho phép admin hoặc chủ sở hữu đơn hàng truy cập
         if (!user.getId().equals(order.getUser().getId()) && !user.isAdmin()) {
-            throw new AppException(ErrorCode.ACCESS_DENIED);
+            throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
 
         return orderMapper.toOrderResponse(order);
@@ -274,7 +287,7 @@ public class OrderServiceImpl implements OrderService {
     }
     private Order findOrderByCode(String orderCode) {
         return orderRepository.findByOrderCode(orderCode)
-                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.ORDER_NOT_FOUND));
     }
 
     @Override
@@ -303,7 +316,6 @@ public class OrderServiceImpl implements OrderService {
 
     private void updateOrderDetails(Order order, OrderRequest orderRequest) {
         order.setPaymentMethod(orderRequest.getPaymentMethod());
-        order.setUpdatedAt(LocalDateTime.now());
 
         orderRepository.save(order);
     }
@@ -317,10 +329,9 @@ public class OrderServiceImpl implements OrderService {
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
             order.setStatus(newStatus);
         } catch (IllegalArgumentException e) {
-            throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
+            throw new AppException(CartOrderErrorCode.INVALID_ORDER_STATUS);
         }
 
-        order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
 
         return orderMapper.toOrderResponse(order);
@@ -332,10 +343,10 @@ public class OrderServiceImpl implements OrderService {
         Order order = findOrderById(orderId);
         User user = getAuthenticatedUser();
         if (!user.getId().equals(order.getUser().getId()) && !user.isAdmin()) {
-            throw new AppException(ErrorCode.ACCESS_DENIED);
+            throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
         if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELED) {
-            throw new AppException(ErrorCode.CANNOT_CANCEL_ORDER);
+            throw new AppException(CartOrderErrorCode.CANNOT_CANCEL_ORDER);
         }
 
 
@@ -350,14 +361,13 @@ public class OrderServiceImpl implements OrderService {
 
 
         order.setStatus(OrderStatus.CANCELED);
-        order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
     }
 
 
     private void updateStock(SizeProductVariant sizeProductVariant, int quantity) {
         if (sizeProductVariant.getStock() < quantity) {
-            throw new AppException(ErrorCode.OUT_OF_STOCK);
+            throw new AppException(ProductErrorCode.OUT_OF_STOCK);
         }
         sizeProductVariant.setStock(sizeProductVariant.getStock() - quantity);
         sizeProductVariantRepository.save(sizeProductVariant);
@@ -371,3 +381,4 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.delete(order);
     }
 }
+
