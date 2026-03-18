@@ -15,9 +15,9 @@ spring:
       max-request-size: 10MB
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/roway_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -29,10 +29,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   mail:
-    host: ${MAIL_HOST}
+    host: ${MAIL_HOST:smtp.gmail.com}
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:your_email@example.com}
+    password: ${MAIL_PASSWORD:your_password}
     properties:
       mail:
         smtp:
@@ -54,8 +54,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID:google_id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:google_secret}
             scope:
               - email
               - profile
@@ -81,17 +81,17 @@ springdoc:
 application:
   security:
     jwt:
-      secret-key: ${JWT_SECRET_KEY}
+      secret-key: ${JWT_SECRET_KEY:dGhpcy1pcy1hLTMyLWJ5dGUtc2VjcmV0LWtleS0xMjM=}
       expiration: 86400000 # 1 day in milliseconds
   cloudinary:
-    cloud-name: ${CLOUDINARY_CLOUD_NAME}
-    api-key: ${CLOUDINARY_API_KEY}
-    api-secret: ${CLOUDINARY_API_SECRET}
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:name}
+    api-key: ${CLOUDINARY_API_KEY:key}
+    api-secret: ${CLOUDINARY_API_SECRET:secret}
 
 payment:
   vnPay:
     url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-    tmnCode: ${VNPAY_TMN_CODE}
-    secretKey: ${VNPAY_SECRET_KEY}
+    tmnCode: ${VNPAY_TMN_CODE:tmn_code}
+    secretKey: ${VNPAY_SECRET_KEY:secret_key}
     version: 2.1.0
     returnUrl: http://localhost:8080/api/v1/payment/vn-pay-callback
