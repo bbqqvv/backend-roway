@@ -8,6 +8,9 @@ import lombok.*;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
 @Entity
 @Table(name = "products")
 @Getter
@@ -17,6 +20,8 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString(exclude = {"favourites", "secondaryImages", "descriptionImages", "variants", "reviews", "tags"})
 @EqualsAndHashCode(callSuper = false, exclude = {"favourites", "secondaryImages", "descriptionImages", "variants", "reviews", "tags"})
+@SQLDelete(sql = "UPDATE products SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 public class Product extends BaseEntity {
 
     @Id

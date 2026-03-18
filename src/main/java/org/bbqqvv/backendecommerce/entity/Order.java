@@ -2,9 +2,12 @@ package org.bbqqvv.backendecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -14,6 +17,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLDelete(sql = "UPDATE orders SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 @ToString(exclude = {"orderItems"})
 @EqualsAndHashCode(callSuper = false, exclude = {"orderItems"})
 public class Order extends BaseEntity {
