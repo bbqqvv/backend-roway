@@ -128,15 +128,13 @@ public class OAuth2Service implements UserDetailsService {
         // Kiểm tra user trong DB hoặc tạo mới
         User user = userRepository.findByEmail(email).orElse(null);
 
-        if (user == null) {
-            log.info("Creating new user from {} login: {}", provider, email);
             user = User.builder()
                     .email(email)
                     .username(email) // Dùng email làm username để tránh trùng lặp
                     .name(name)
                     .provider(provider)
                     .providerId(providerId)
-                    .avatarUrl(avatarUrl)
+                    .avatar(avatarUrl)
                     .authorities(Set.of(Role.ROLE_USER)) // Mặc định role USER
                     .build();
             userRepository.save(user);
@@ -152,8 +150,8 @@ public class OAuth2Service implements UserDetailsService {
                 user.setProvider(provider);
                 updated = true;
             }
-            if (avatarUrl != null && (user.getAvatarUrl() == null || !avatarUrl.equals(user.getAvatarUrl()))) {
-                user.setAvatarUrl(avatarUrl);
+            if (avatarUrl != null && (user.getAvatar() == null || !avatarUrl.equals(user.getAvatar()))) {
+                user.setAvatar(avatarUrl);
                 updated = true;
             }
             if (updated) {
