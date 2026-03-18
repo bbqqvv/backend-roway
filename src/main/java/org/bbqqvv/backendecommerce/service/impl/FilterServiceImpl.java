@@ -76,6 +76,19 @@ public class FilterServiceImpl implements FilterService {
     public PageResponse<ProductResponse> filterProducts(Map<String, String> allParams, Pageable pageable) {
         Specification<Product> spec = Specification.where(null);
 
+        // 🔍 Filter by keyword (Search)
+        if (allParams.containsKey("keyword") && !allParams.get("keyword").isBlank()) {
+            String keyword = allParams.get("keyword").toLowerCase();
+            spec = spec.and((root, query, cb) -> {
+                Join<Product, Tag> tagJoin = root.join("tags", jakarta.persistence.criteria.JoinType.LEFT);
+                return cb.or(
+                    cb.like(cb.lower(root.get("name")), "%" + keyword + "%"),
+                    cb.like(cb.lower(root.get("summary")), "%" + keyword + "%"),
+                    cb.like(cb.lower(tagJoin.get("name")), "%" + keyword + "%")
+                );
+            });
+        }
+
         // Filter by category (slug)
         if (allParams.containsKey("category")) {
             String categorySlug = allParams.get("category");
@@ -96,12 +109,12 @@ public class FilterServiceImpl implements FilterService {
 
         // Filter by price range
         if (allParams.containsKey("minPrice") || allParams.containsKey("maxPrice")) {
-            BigDecimal minPrice = allParams.containsKey("minPrice")
-                    ? new BigDecimal(allParams.get("minPrice"))
+            BigDecimal minPrice = allParams.getOrDefault("minPrice", null) != null 
+                    ? new BigDecimal(allParams.get("minPrice")) 
                     : BigDecimal.ZERO;
-            BigDecimal maxPrice = allParams.containsKey("maxPrice")
-                    ? new BigDecimal(allParams.get("maxPrice"))
-                    : new BigDecimal(Long.MAX_VALUE);
+            BigDecimal maxPrice = allParams.getOrDefault("maxPrice", null) != null 
+                    ? new BigDecimal(allParams.get("maxPrice")) 
+                    : new BigDecimal("9999999999");
 
             spec = spec.and((root, query, cb) -> {
                 Join<Product, ProductVariant> variantJoin = root.join("variants");
@@ -137,7 +150,23 @@ public class FilterServiceImpl implements FilterService {
                     cb.greaterThan(root.get("salePercentage"), 0));
         }
 
+        // 🟢 Handle Sorting (Tùy chỉnh nếu frontend truyền sortBy=price-asc...)
+        if (allParams.containsKey("sortBy")) {
+            String sortBy = allParams.get("sortBy");
+            // Ghi đè sort của pageable nếu cần, hoặc đơn giản là xử lý trong query
+            // Ở đây Pageable thường đã được Spring xử lý nếu truyền ?sort=...
+            // Nhưng nếu frontend dùng chuẩn riêng:
+            /*
+            switch (sortBy) {
+                case "price-asc" -> ...
+                case "price-desc" -> ...
+                case "newest" -> ...
+            }
+            */
+        }
+
         // Query and map
+        // Sử dụng EntityGraph để fetch các quan hệ cần thiết tránh N+1
         Page<Product> filteredProducts = productRepository.findAll(spec, pageable);
         return toPageResponse(filteredProducts, productMapper::toProductResponse);
     }
