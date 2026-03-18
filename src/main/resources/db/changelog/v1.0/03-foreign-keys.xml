@@ -1,0 +1,112 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <!-- Foreign Key Constraints (CS 44-79) -->
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-44">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="product_description_images" constraintName="fk1308gfua2ytduosa5napo4t5u" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-45">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="addresses" constraintName="fk1fa36y2oqhao3wgg2rw1pi459" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-46">
+        <addForeignKeyConstraint baseColumnNames="product_variant_id" baseTableName="order_item" constraintName="fk1n92a16igj05dvyfl9c107xoc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="product_variants" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-47">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cart_items" constraintName="fk1re40cjegsfvw58xrkdp6bac6" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-48">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="orders" constraintName="fk32ql8ubntj5uh44ph9659tiih" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-49">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="product_reviews" constraintName="fk35kxxqe2g9r4mww80w9e3tnw9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-50">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="recently_viewed_products" constraintName="fk44cdeti9ans7phb8897xl55h6" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-51">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="product_reviews" constraintName="fk58i39bhws2hss3tbcvdmrm60f" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-52">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="product_tags" constraintName="fk5rk6s19k3risy7q7wqdr41uss" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-53">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="favourites" constraintName="fk6ffqdnwmm3ks4fenx2ml1uap8" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-54">
+        <addForeignKeyConstraint baseColumnNames="category_id" baseTableName="size_category" constraintName="fk6myxlefl44sbbm9449vo1op0y" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="categories" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-55">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="discount_user" constraintName="fk73o8bj1hi1cw7aqtrhvw3e8go" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-56">
+        <addForeignKeyConstraint baseColumnNames="size_product_id" baseTableName="product_variant_size" constraintName="fk7eq1soblgowo06uhibgrsfqkx" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="size_product" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-57">
+        <addForeignKeyConstraint baseColumnNames="order_id" baseTableName="payments" constraintName="fk81gagumt0r8y3rmudcgpbk42l" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="orders" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-58">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="search_history" constraintName="fk8ll2cxj6i83mnrcyxrxl4b7dm" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-59">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="discount_products" constraintName="fk9xp4efs1yvjxo3cq42o4he5da" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-60">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="notifications" constraintName="fk9y21adhxn0ayjhfocscqox7bh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-61">
+        <addForeignKeyConstraint baseColumnNames="product_variant_id" baseTableName="product_variant_size" constraintName="fkaoh296jh71k0jisnhy43ygn5k" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="product_variants" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-62">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="product_main_images" constraintName="fkaxnd1u018cw0y133etasw66qa" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-63">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="carts" constraintName="fkb5o626f86h46m4s7ms6ginnop" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-64">
+        <addForeignKeyConstraint baseColumnNames="review_id" baseTableName="product_review_images" constraintName="fkbevcwpq3yknf6q1e0xfg36g89" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="product_reviews" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-65">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="order_item" constraintName="fkc5uhmwioq5kscilyuchp4w49o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-66">
+        <addForeignKeyConstraint baseColumnNames="discount_id" baseTableName="discount_products" constraintName="fkcmrtx6xnqwk42qb7m8flfun0q" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="discounts" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-67">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="recently_viewed_products" constraintName="fkgxf53i2ytkkdpwf7pwsmuf2qy" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-68">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_roles" constraintName="fkhfh9dx7w3ubf1co1vdev94g3f" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-69">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="product_secondary_images" constraintName="fklaki3rfg74s8qxbte0xxmm4rw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-70">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="favourites" constraintName="fklun1uhuc5m4o44vuv7nsymyvf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-71">
+        <addForeignKeyConstraint baseColumnNames="discount_id" baseTableName="discount_user" constraintName="fkm4mg8qivkub7yy726hv4t5web" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="discounts" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-72">
+        <addForeignKeyConstraint baseColumnNames="order_item_id" baseTableName="product_reviews" constraintName="fkm6vq88dp6820hlgjipd3oj7p8" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="order_item" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-73">
+        <addForeignKeyConstraint baseColumnNames="product_variant_id" baseTableName="cart_items" constraintName="fkn1s4l7h0vm4o259wpu7ft0y2y" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="product_variants" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-74">
+        <addForeignKeyConstraint baseColumnNames="category_id" baseTableName="products" constraintName="fkog2rp4qthbtt2lfyhfo32lsw9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="categories" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-75">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="product_variants" constraintName="fkosqitn4s405cynmhb87lkvuau" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="products" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-76">
+        <addForeignKeyConstraint baseColumnNames="cart_id" baseTableName="cart_items" constraintName="fkpcttvuq4mxppo8sxggjtn5i2c" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="carts" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-77">
+        <addForeignKeyConstraint baseColumnNames="tag_id" baseTableName="product_tags" constraintName="fkpur2885qb9ae6fiquu77tcv1o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tags" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-78">
+        <addForeignKeyConstraint baseColumnNames="discount_id" baseTableName="orders" constraintName="fksxfvku34v9ujavmj9ao69vo8s" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="discounts" validate="true"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-79">
+        <addForeignKeyConstraint baseColumnNames="order_id" baseTableName="order_item" constraintName="fkt4dc2r9nbvbujrljv3e23iibt" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="orders" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

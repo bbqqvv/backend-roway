@@ -58,7 +58,7 @@ public class AuthController {
     }
 
 
-    // 🔹 Đăng nhập bằng Google OAuth2 (Frontend sẽ redirect đến URL này)
+    // 🔹 Đăng nhập bằng Google OAuth2
     @PostMapping("/oauth2/google")
     @Operation(summary = "Đăng nhập Google", description = "Xác thực và đăng nhập bằng Google ID Token.")
     public ResponseEntity<?> googleLogin(@RequestBody @Valid OAuth2LoginRequest request) {
@@ -67,6 +67,18 @@ public class AuthController {
             return ResponseEntity.ok(new JwtResponse(jwtToken));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Google login failed: " + e.getMessage());
+        }
+    }
+
+    // 🔹 Đăng nhập bằng Facebook OAuth2
+    @PostMapping("/oauth2/facebook")
+    @Operation(summary = "Đăng nhập Facebook", description = "Xác thực và đăng nhập bằng Facebook Access Token.")
+    public ResponseEntity<?> facebookLogin(@RequestBody @Valid OAuth2LoginRequest request) {
+        try {
+            String jwtToken = oAuth2Service.loginWithFacebook(request.getToken());
+            return ResponseEntity.ok(new JwtResponse(jwtToken));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Facebook login failed: " + e.getMessage());
         }
     }
 

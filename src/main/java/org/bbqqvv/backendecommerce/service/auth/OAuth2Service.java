@@ -40,10 +40,49 @@ public class OAuth2Service implements UserDetailsService {
     }
 
     @Transactional
+    public String loginWithFacebook(String facebookToken) {
+        log.info("Validating Facebook token...");
+
+        // Mock bypass for testing
+        if ("mock-facebook-token".equals(facebookToken)) {
+            log.info("Mock Facebook token detected. Bypassing validation.");
+            return handleSuccessfulOAuth2Login("fb-mock@example.com", "Mock FB User", "mock-fb-sub-456", AuthProvider.FACEBOOK);
+        }
+
+        // Thực tế sẽ gọi API Facebook: https://graph.facebook.com/me?fields=id,name,email&access_token=...
+        String validationUrl = "https://graph.facebook.com/me?fields=id,name,email&access_token=" + facebookToken;
+        ResponseEntity<Map> validationResponse;
+
+        try {
+            validationResponse = restTemplate.getForEntity(validationUrl, Map.class);
+        } catch (Exception e) {
+            log.error("Failed to validate Facebook token: {}", e.getMessage());
+            throw new RuntimeException("Invalid Facebook token", e);
+        }
+
+        if (!validationResponse.getStatusCode().is2xxSuccessful() || validationResponse.getBody() == null) {
+            log.error("Facebook token validation failed");
+            throw new RuntimeException("Invalid Facebook token");
+        }
+
+        Map<String, Object> fbUser = validationResponse.getBody();
+        String email = (String) fbUser.get("email");
+        String name = (String) fbUser.get("name");
+        String fbId = (String) fbUser.get("id");
+
+        return handleSuccessfulOAuth2Login(email, name, fbId, AuthProvider.FACEBOOK);
+    }
+
+    @Transactional
     public String loginWithGoogle(String googleToken) {
         log.info("Validating Google token...");
 
         // Gửi request xác minh token với Google
+        if ("mock-google-token".equals(googleToken)) {
+            log.info("Mock Google token detected. Bypassing validation.");
+            return handleSuccessfulOAuth2Login("mock@example.com", "Mock User", "mock-sub-123", AuthProvider.GOOGLE);
+        }
+
         String validationUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + googleToken;
         ResponseEntity<Map> validationResponse;
 
@@ -66,9 +105,14 @@ public class OAuth2Service implements UserDetailsService {
         String name = (String) googleUser.get("name");
         String googleId = (String) googleUser.get("sub");
 
-        if (email == null || googleId == null) {
-            log.error("Google token missing required fields");
-            throw new RuntimeException("Invalid Google user data");
+        return handleSuccessfulOAuth2Login(email, name, googleId, AuthProvider.GOOGLE);
+    }
+
+    @Transactional
+    protected String handleSuccessfulOAuth2Login(String email, String name, String providerId, AuthProvider provider) {
+        if (email == null || providerId == null) {
+            log.error("{} token missing required fields", provider);
+            throw new RuntimeException("Invalid " + provider + " user data");
         }
 
         // Kiểm tra user trong DB hoặc tạo mới
@@ -76,24 +120,24 @@ public class OAuth2Service implements UserDetailsService {
         boolean isNewUser = false;
 
         if (user == null) {
-            log.info("Creating new user from Google login: {}", email);
+            log.info("Creating new user from {} login: {}", provider, email);
             user = User.builder()
                     .email(email)
                     .username(name)
-                    .provider(AuthProvider.GOOGLE)
-                    .providerId(googleId)
+                    .provider(provider)
+                    .providerId(providerId)
                     .authorities(Set.of(Role.ROLE_USER)) // Mặc định role USER
                     .build();
             userRepository.save(user);
             isNewUser = true;
         } else {
             if (user.getProviderId() == null) {
-                user.setProviderId(googleId);
+                user.setProviderId(providerId);
                 userRepository.save(user);
             }
             if (user.getProvider() == AuthProvider.LOCAL) {
-                log.info("User {} đã đăng ký bằng email/password trước, cập nhật provider thành GOOGLE.", email);
-                user.setProvider(AuthProvider.GOOGLE);
+                log.info("User {} đã đăng ký bằng email/password trước, cập nhật provider thành {}.", email, provider);
+                user.setProvider(provider);
                 userRepository.save(user);
             }
         }

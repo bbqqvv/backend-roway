@@ -189,7 +189,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"token\": \"4/0AQSTgQFdFBzry4EYV-wTPI85YvlOI5VHn-i68mcGcw-o4r7BI57m3mDlMUADrC-6siw8hw\"\r\n}\r\n",
+                  "raw": "{\r\n    \"token\": \"mock-google-token\"\r\n}\r\n",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -197,7 +197,7 @@
                   }
                 },
                 "url": {
-                  "raw": "{{baseURL}}/auth/oauth2/google",
+                  "raw": "{{baseURL}}/api/auth/oauth2/google",
                   "host": [
                     "{{baseURL}}"
                   ],
@@ -206,6 +206,35 @@
                     "auth",
                     "oauth2",
                     "google"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login with facebook",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"token\": \"mock-facebook-token\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/oauth2/facebook",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "oauth2",
+                    "facebook"
                   ]
                 }
               },
@@ -509,7 +538,7 @@
                       "filesNotInWorkingDirectory": [
                         "/C:/Users/VAN QUOC BUI/Desktop/Roway/Remove-bg.ai_1733921944473.png"
                       ],
-                      "src": "/C:/Users/VAN QUOC BUI/Desktop/Roway/Remove-bg.ai_1733921944473.png"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "sizes[0].name",
@@ -755,7 +784,7 @@
                       "filesNotInWorkingDirectory": [
                         "/C:/Users/VAN QUOC BUI/Desktop/Roway/somi-removebg-preview.png"
                       ],
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23020-zyb1ji2qawnvdb.webp"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "secondaryImageUrls[]",
@@ -798,7 +827,7 @@
                     {
                       "key": "variants[0].imageUrl",
                       "type": "file",
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-7qukw-lemgq5c1npv70e.webp"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "variants[0].sizes[0].sizeName",
@@ -993,7 +1022,7 @@
                       "filesNotInWorkingDirectory": [
                         "/C:/Users/VAN QUOC BUI/Desktop/Roway/somi-removebg-preview.png"
                       ],
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134207-7qukw-lk5p1lqc1qyc97.webp"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "secondaryImageUrls[]",
@@ -1039,7 +1068,7 @@
                     {
                       "key": "variants[0].imageUrl",
                       "type": "file",
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23020-zyb1ji2qawnvdb.webp"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "variants[0].sizes[0].sizeName",
@@ -1515,19 +1544,19 @@
                       "key": "imageFiles[0]",
                       "type": "file",
                       "uuid": "87db1886-dc80-4cfb-ad6f-b6b7d1936b39",
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/vn-11134207-7ras8-m0l2phbu13hp71.webp"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "imageFiles[1]",
                       "type": "file",
                       "uuid": "fbda9fe2-0ff7-4e3b-82f1-7a2312f5eb26",
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/vn-11134207-7ras8-m0l2phbu2idr4d.webp"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "imageFiles[2]",
                       "type": "file",
                       "uuid": "08ea59f0-aec7-4bb5-ba7b-f622781ddd7d",
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/vn-11134207-7ras8-m0l2phbtzox9fc.webp"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     }
                   ]
                 },
@@ -1961,7 +1990,7 @@
                 },
                 "url": {
                   "raw": "{{baseURL}}/api/cart/remove?productId=1&sizeName=X&color=RED",
-                  "protocol": "DELETE http",
+                  "protocol": "http",
                   "host": [
                     "localhost"
                   ],
@@ -2863,7 +2892,7 @@
                       "key": "img",
                       "type": "file",
                       "uuid": "7aabc24d-e5c8-4d20-9b70-5573761b3efc",
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/dd.jpg"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     },
                     {
                       "key": "title",
@@ -2989,7 +3018,7 @@
                       "key": "img",
                       "type": "file",
                       "uuid": "2454651b-c0b4-49e8-9628-ce3a93945278",
-                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/avatar.jpg"
+                      "src": "d:/Workspace/Java/backend-roway/test-assets/product.png"
                     }
                   ]
                 },

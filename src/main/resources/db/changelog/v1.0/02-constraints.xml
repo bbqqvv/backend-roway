@@ -1,0 +1,46 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <!-- Unique Constraints (CS 14-27) -->
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-14">
+        <addUniqueConstraint columnNames="code" constraintName="ukbc29q3wh0lqhy0k84bx3afk08" tableName="discounts"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-15">
+        <addUniqueConstraint columnNames="order_code" constraintName="ukdhk2umg8ijjkg4njg6891trit" tableName="orders"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-16">
+        <addUniqueConstraint columnNames="product_code" constraintName="uk922x4t23nx64422orei4meb2y" tableName="products"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-17">
+        <addUniqueConstraint columnNames="name" constraintName="uko61fmio5yukmmiqgnxf8pnavn" tableName="products"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-18">
+        <addUniqueConstraint columnNames="slug" constraintName="ukostq1ec3toafnjok09y9l7dox" tableName="products"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-19">
+        <addUniqueConstraint columnNames="email" constraintName="uk6dotkott2kjsp8vw4d0m25fb7" tableName="users"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-20">
+        <addUniqueConstraint columnNames="username" constraintName="ukr43af9ap4edm43mmtq01oddj6" tableName="users"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-21">
+        <addUniqueConstraint columnNames="size_name" constraintName="uk52tomhcov1nx4q0s43v8rw7v3" tableName="size_product"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-22">
+        <addUniqueConstraint columnNames="user_id" constraintName="uk64t7ox312pqal3p7fg9o503c2" tableName="carts"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-23">
+        <addUniqueConstraint columnNames="product_id" constraintName="uk6jl9smcu1o0uciyu6ir6dkv8a" tableName="product_main_images"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-24">
+        <addUniqueConstraint columnNames="user_id, discount_id" constraintName="ukd5gutaqwifluhidm28m6lewdq" tableName="discount_user"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-25">
+        <addUniqueConstraint columnNames="user_id, product_id" constraintName="ukms0eua8a3hrfno15t2crwe1et" tableName="recently_viewed_products"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-26">
+        <addUniqueConstraint columnNames="slug" constraintName="ukoul14ho7bctbefv8jywp5v3i2" tableName="categories"/>
+    </changeSet>
+    <changeSet author="VAN QUOC BUI (generated)" id="1773855498367-27">
+        <addUniqueConstraint columnNames="name" constraintName="ukt48xdq560gs3gap9g7jg36kgc" tableName="tags"/>
+    </changeSet>
+</databaseChangeLog>
