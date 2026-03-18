@@ -42,28 +42,44 @@ private final UserRepository userRepository;
     }
 
 
+    private static final int MAX_ITEMS = 20;
+
     @Override
+    @org.springframework.scheduling.annotation.Async
+    @org.springframework.transaction.annotation.Transactional
     public void markProductAsViewed(Long productId) {
-        // Lấy thông tin người dùng hiện tại
-        User currentUser = getAuthenticatedUser();
+        log.info("Marking product {} as viewed asynchronously", productId);
+        try {
+            // Lấy thông tin người dùng hiện tại
+            User currentUser = getAuthenticatedUser();
 
-        // Kiểm tra xem sản phẩm có tồn tại không
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+            // Kiểm tra xem sản phẩm có tồn tại không
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // Kiểm tra xem sản phẩm đã được đánh dấu là đã xem chưa
-        RecentlyViewedProduct existingViewedProduct = repository.findTop1ByUserAndProductOrderByUpdatedAtDesc(currentUser, product);
+            // Kiểm tra xem sản phẩm đã được đánh dấu là đã xem chưa
+            RecentlyViewedProduct existing = repository.findTop1ByUserAndProductOrderByUpdatedAtDesc(currentUser, product);
 
-        // Nếu đã có trong danh sách, thì chỉ cập nhật thời gian đã xem
-        if (existingViewedProduct != null) {
-            repository.save(existingViewedProduct); // JPA Auditing updates updatedAt
-        } else {
-            // Nếu chưa có, thì thêm mới sản phẩm vào bảng recently_viewed_products
-            RecentlyViewedProduct recentlyViewedProduct = RecentlyViewedProduct.builder()
-                    .user(currentUser)
-                    .product(product)
-                    .build();
-            repository.save(recentlyViewedProduct);
+            if (existing != null) {
+                // JPA Auditing updates updatedAt. Just saving will trigger it.
+                // We update dummy field or just call save to ensure updatedAt is changed.
+                repository.save(existing);
+            } else {
+                // Trước khi thêm mới, kiểm tra số lượng hiện tại
+                long count = repository.countByUser(currentUser);
+                if (count >= MAX_ITEMS) {
+                    // Xóa bản ghi cũ nhất (1 cái) để nhường chỗ
+                    repository.deleteOldestByUserId(currentUser.getId(), 1);
+                }
+
+                RecentlyViewedProduct recentlyViewedProduct = RecentlyViewedProduct.builder()
+                        .user(currentUser)
+                        .product(product)
+                        .build();
+                repository.save(recentlyViewedProduct);
+            }
+        } catch (Exception e) {
+            log.error("Failed to mark product {} as viewed: {}", productId, e.getMessage());
         }
     }
 
@@ -89,7 +105,9 @@ private final UserRepository userRepository;
                 .totalElements(pageResult.getTotalElements())
                 .build();
     }
+
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void syncViewedProducts(List<Long> productIds) {
         if (productIds == null || productIds.isEmpty()) return;
 
@@ -102,16 +120,21 @@ private final UserRepository userRepository;
             RecentlyViewedProduct existing = repository.findTop1ByUserAndProductOrderByUpdatedAtDesc(currentUser, product);
 
             if (existing != null) {
-                // Cập nhật lại thời gian xem nếu đã tồn tại
-                repository.save(existing); // JPA Auditing updates updatedAt
+                repository.save(existing);
             } else {
-                // Tạo mới nếu chưa tồn tại
                 RecentlyViewedProduct newViewed = RecentlyViewedProduct.builder()
                         .user(currentUser)
                         .product(product)
                         .build();
                 repository.save(newViewed);
             }
+        }
+        
+        // Sau khi sync, kiểm tra và dọn dẹp nếu vượt quá MAX_ITEMS
+        long count = repository.countByUser(currentUser);
+        if (count > MAX_ITEMS) {
+            int toDelete = (int) (count - MAX_ITEMS);
+            repository.deleteOldestByUserId(currentUser.getId(), toDelete);
         }
     }
 
