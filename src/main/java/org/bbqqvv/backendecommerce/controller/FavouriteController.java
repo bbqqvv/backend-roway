@@ -12,7 +12,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/favourites")
+@RequestMapping("/api/v1/favourites")
 @RequiredArgsConstructor
 public class FavouriteController {
     private final FavouriteService favouriteService;

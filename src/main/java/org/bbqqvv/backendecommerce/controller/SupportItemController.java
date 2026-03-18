@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/support")
+@RequestMapping("/api/v1/support-items")
 @RequiredArgsConstructor
 public class SupportItemController {
 

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/v1/filter")
 @RequiredArgsConstructor
 public class FilterController {
     private final FilterService filterService;

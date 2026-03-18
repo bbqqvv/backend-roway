@@ -10,7 +10,7 @@ import org.bbqqvv.backendecommerce.service.CartService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/cart")
+@RequestMapping("/api/v1/cart")
 @RequiredArgsConstructor
 @Tag(name = "Cart Management", description = "Quản lý giỏ hàng")
 public class CartController {

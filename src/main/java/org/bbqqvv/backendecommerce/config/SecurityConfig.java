@@ -35,11 +35,12 @@ public class SecurityConfig {
 
     // Các URL không yêu cầu xác thực
     private static final String[] WHITE_LIST_URL = {
-            "/api/auth/**",
-            "/api/categories/**",
-            "/api/products/**",
-            "/api/products-review/**",
-            "/api/filter/**",
+            "/api/v1/auth/**",
+            "/api/v1/categories/**",
+            "/api/v1/products/**",
+            "/api/v1/reviews/**",
+            "/api/v1/filter/**",
+            "/api/v1/blogs/**",
 
             // Swagger URLs
             "/swagger-ui.html",
@@ -54,15 +55,15 @@ public class SecurityConfig {
 
     private static final String[] ADMIN_URL_PATTERNS = {
             "/admin/**",
-            "/api/admin/**"
+            "/api/v1/admin/**"
     };
 
     private static final String[] USER_URL_PATTERNS = {
-            "/api/cart/**",
-            "/api/orders/**",
-            "/api/search-history/**",
-            "/api/addresses/**",
-            "/api/favourites/**"
+            "/api/v1/cart/**",
+            "/api/v1/orders/**",
+            "/api/v1/search/history/**",
+            "/api/v1/addresses/**",
+            "/api/v1/favourites/**"
     };
 
     // Cấu hình SecurityFilterChain

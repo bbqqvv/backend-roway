@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/search-history")
+@RequestMapping("/api/v1/search/history")
 @RequiredArgsConstructor
 public class SearchHistoryController {
 
