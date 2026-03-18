@@ -45,6 +45,9 @@ public class User extends BaseEntity {
     @Column(name = "bio", length = 500)
     private String bio;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses;

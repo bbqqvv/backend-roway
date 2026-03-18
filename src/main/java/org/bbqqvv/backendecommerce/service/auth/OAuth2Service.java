@@ -46,11 +46,11 @@ public class OAuth2Service implements UserDetailsService {
         // Mock bypass for testing
         if ("mock-facebook-token".equals(facebookToken)) {
             log.info("Mock Facebook token detected. Bypassing validation.");
-            return handleSuccessfulOAuth2Login("fb-mock@example.com", "Mock FB User", "mock-fb-sub-456", AuthProvider.FACEBOOK);
+            return handleSuccessfulOAuth2Login("fb-mock@example.com", "Mock FB User", "mock-fb-sub-456", AuthProvider.FACEBOOK, null);
         }
 
-        // Thực tế sẽ gọi API Facebook: https://graph.facebook.com/me?fields=id,name,email&access_token=...
-        String validationUrl = "https://graph.facebook.com/me?fields=id,name,email&access_token=" + facebookToken;
+        // Thực tế sẽ gọi API Facebook: https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=...
+        String validationUrl = "https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=" + facebookToken;
         ResponseEntity<Map> validationResponse;
 
         try {
@@ -69,8 +69,17 @@ public class OAuth2Service implements UserDetailsService {
         String email = (String) fbUser.get("email");
         String name = (String) fbUser.get("name");
         String fbId = (String) fbUser.get("id");
+        
+        String avatarUrl = null;
+        if (fbUser.containsKey("picture")) {
+            Map<String, Object> picture = (Map<String, Object>) fbUser.get("picture");
+            if (picture.containsKey("data")) {
+                Map<String, Object> data = (Map<String, Object>) picture.get("data");
+                avatarUrl = (String) data.get("url");
+            }
+        }
 
-        return handleSuccessfulOAuth2Login(email, name, fbId, AuthProvider.FACEBOOK);
+        return handleSuccessfulOAuth2Login(email, name, fbId, AuthProvider.FACEBOOK, avatarUrl);
     }
 
     @Transactional
@@ -80,7 +89,7 @@ public class OAuth2Service implements UserDetailsService {
         // Gửi request xác minh token với Google
         if ("mock-google-token".equals(googleToken)) {
             log.info("Mock Google token detected. Bypassing validation.");
-            return handleSuccessfulOAuth2Login("mock@example.com", "Mock User", "mock-sub-123", AuthProvider.GOOGLE);
+            return handleSuccessfulOAuth2Login("mock@example.com", "Mock User", "mock-sub-123", AuthProvider.GOOGLE, null);
         }
 
         String validationUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + googleToken;
@@ -104,12 +113,13 @@ public class OAuth2Service implements UserDetailsService {
         String email = (String) googleUser.get("email");
         String name = (String) googleUser.get("name");
         String googleId = (String) googleUser.get("sub");
+        String avatarUrl = (String) googleUser.get("picture");
 
-        return handleSuccessfulOAuth2Login(email, name, googleId, AuthProvider.GOOGLE);
+        return handleSuccessfulOAuth2Login(email, name, googleId, AuthProvider.GOOGLE, avatarUrl);
     }
 
     @Transactional
-    protected String handleSuccessfulOAuth2Login(String email, String name, String providerId, AuthProvider provider) {
+    protected String handleSuccessfulOAuth2Login(String email, String name, String providerId, AuthProvider provider, String avatarUrl) {
         if (email == null || providerId == null) {
             log.error("{} token missing required fields", provider);
             throw new RuntimeException("Invalid " + provider + " user data");
@@ -117,27 +127,36 @@ public class OAuth2Service implements UserDetailsService {
 
         // Kiểm tra user trong DB hoặc tạo mới
         User user = userRepository.findByEmail(email).orElse(null);
-        boolean isNewUser = false;
 
         if (user == null) {
             log.info("Creating new user from {} login: {}", provider, email);
             user = User.builder()
                     .email(email)
-                    .username(name)
+                    .username(email) // Dùng email làm username để tránh trùng lặp
+                    .name(name)
                     .provider(provider)
                     .providerId(providerId)
+                    .avatarUrl(avatarUrl)
                     .authorities(Set.of(Role.ROLE_USER)) // Mặc định role USER
                     .build();
             userRepository.save(user);
-            isNewUser = true;
         } else {
+            // Cập nhật thông tin nếu có thay đổi
+            boolean updated = false;
             if (user.getProviderId() == null) {
                 user.setProviderId(providerId);
-                userRepository.save(user);
+                updated = true;
             }
-            if (user.getProvider() == AuthProvider.LOCAL) {
+            if (user.getProvider() == AuthProvider.LOCAL || user.getProvider() == null) {
                 log.info("User {} đã đăng ký bằng email/password trước, cập nhật provider thành {}.", email, provider);
                 user.setProvider(provider);
+                updated = true;
+            }
+            if (avatarUrl != null && (user.getAvatarUrl() == null || !avatarUrl.equals(user.getAvatarUrl()))) {
+                user.setAvatarUrl(avatarUrl);
+                updated = true;
+            }
+            if (updated) {
                 userRepository.save(user);
             }
         }
