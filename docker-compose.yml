@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: roway-postgres
     environment:
       POSTGRES_DB: roway_db
@@ -15,7 +15,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     container_name: roway-redis
     ports:
       - "6379:6379"
@@ -24,3 +24,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  app:
+    build: .
+    container_name: roway-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/roway_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      # Add other environment variables as needed, or use a .env file
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api-docs || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

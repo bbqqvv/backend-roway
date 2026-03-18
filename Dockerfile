@@ -1,13 +1,22 @@
-# Sử dụng JRE để chạy app (Nhẹ hơn JDK)
-FROM eclipse-temurin:17-jre-alpine
-RUN apk upgrade --no-cache
+# --- Build Stage ---
+FROM maven:3.9-eclipse-temurin-17-alpine AS build
 WORKDIR /app
+# Copy pom.xml first to cache dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+# Copy source and build JAR
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copy file jar đã được build từ CI/CD runner vào image
-# Việc này giúp giảm thời gian build Docker image đáng kể
-COPY target/*.jar app.jar
+# --- Run Stage ---
+FROM eclipse-temurin:17-jre-alpine
+RUN apk upgrade --no-cache && \
+    apk add --no-cache curl
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 
-# Mở port app
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:8080/api-docs || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
