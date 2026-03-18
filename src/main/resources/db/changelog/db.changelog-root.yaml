@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/v1.0/02-constraints.xml
   - include:
       file: db/changelog/v1.0/03-foreign-keys.xml
+  - include:
+      file: db/changelog/v1.1/01-blog.xml

@@ -1,0 +1,89 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    
+    <changeSet author="VAN QUOC BUI (generated)" id="v1.1-1">
+        <createTable tableName="blog_categories">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_blog_categories"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated_at" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column defaultValueBoolean="false" name="deleted" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="VAN QUOC BUI (generated)" id="v1.1-2">
+        <createTable tableName="blog_posts">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_blog_posts"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="summary" type="TEXT"/>
+            <column name="content" type="TEXT"/>
+            <column name="author" type="VARCHAR(255)"/>
+            <column name="date" type="VARCHAR(255)"/>
+            <column name="image_url" type="VARCHAR(255)"/>
+            <column name="reading_time" type="VARCHAR(50)"/>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated_at" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column defaultValueBoolean="false" name="deleted" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="VAN QUOC BUI (generated)" id="v1.1-3">
+        <createTable tableName="blog_post_tags">
+            <column name="post_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="VAN QUOC BUI (generated)" id="v1.1-4">
+        <createTable tableName="blog_post_gallery">
+            <column name="post_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="VAN QUOC BUI (generated)" id="v1.1-5">
+        <createTable tableName="blog_post_related_products">
+            <column name="post_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="VAN QUOC BUI (generated)" id="v1.1-6">
+        <addForeignKeyConstraint baseColumnNames="category_id" baseTableName="blog_posts" constraintName="fk_blog_post_category" referencedColumnNames="id" referencedTableName="blog_categories"/>
+        <addForeignKeyConstraint baseColumnNames="post_id" baseTableName="blog_post_tags" constraintName="fk_blog_post_tags_post" referencedColumnNames="id" referencedTableName="blog_posts"/>
+        <addForeignKeyConstraint baseColumnNames="post_id" baseTableName="blog_post_gallery" constraintName="fk_blog_post_gallery_post" referencedColumnNames="id" referencedTableName="blog_posts"/>
+        <addForeignKeyConstraint baseColumnNames="post_id" baseTableName="blog_post_related_products" constraintName="fk_blog_post_related_products_post" referencedColumnNames="id" referencedTableName="blog_posts"/>
+        <!-- Optional: Link to real products table -->
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="blog_post_related_products" constraintName="fk_blog_post_related_products_prod" referencedColumnNames="id" referencedTableName="products"/>
+    </changeSet>
+
+</databaseChangeLog>
