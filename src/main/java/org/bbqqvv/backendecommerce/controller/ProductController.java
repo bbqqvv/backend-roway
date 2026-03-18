@@ -1,6 +1,8 @@
 package org.bbqqvv.backendecommerce.controller;
 
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bbqqvv.backendecommerce.dto.ApiResponse;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
@@ -18,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
+@Tag(name = "Product Management", description = "Quản lý sản phẩm và lượt xem")
 public class ProductController {
 
     private final ProductService productService;
@@ -37,6 +40,7 @@ public class ProductController {
 
     // Lấy danh sách tất cả sản phẩm với phân trang
     @GetMapping
+    @Operation(summary = "Lấy danh sách sản phẩm", description = "Lấy toàn bộ danh sách sản phẩm có hỗ trợ phân trang (mặc định 10 sản phẩm/trang).")
     public ApiResponse<PageResponse<ProductResponse>> getAllProducts(@PageableDefault(page = 0, size = 10) Pageable pageable) {
         PageResponse<ProductResponse> productPage = productService.getAllProducts(pageable);
         return ApiResponse.<PageResponse<ProductResponse>>builder()

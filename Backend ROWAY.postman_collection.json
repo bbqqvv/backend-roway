@@ -1,0 +1,3095 @@
+{
+  "info": {
+    "_postman_id": "5b9dd688-fd57-4fb3-8858-f81aed7f3be3",
+    "name": "Backend ROWAY",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "34319573",
+    "_collection_link": "https://go.postman.co/collection/34319573-5b9dd688-fd57-4fb3-8858-f81aed7f3be3?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Project Management",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Register User",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"vanbui262004\",\r\n  \"password\": \"Vanbui262004@\",\r\n  \"email\": \"vanbq.22itb@vku.udn.vn\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/register",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login User",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.variables.set(\"id\", 1);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"username\": \"vanbui262004\",\r\n  \"password\": \"Vanbui262004@\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/login",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ],
+                  "query": [
+                    {
+                      "key": "",
+                      "value": null,
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "ForgotPassword",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": " {\r\n     \"email\" : \"vanbq.22itb@vku.udn.vn\"\r\n }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/forgot-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "forgot-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Verify OTP",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"email\": \"vanbq.22itb@vku.udn.vn\",\r\n  \"otp\": \"169615\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/verify-otp",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "verify-otp"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"email\": \"vanbq.22itb@vku.udn.vn\",\r\n  \"newPassword\": \"Vanbui262004@\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/reset-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "reset-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login with google",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"token\": \"4/0AQSTgQFdFBzry4EYV-wTPI85YvlOI5VHn-i68mcGcw-o4r7BI57m3mDlMUADrC-6siw8hw\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/auth/oauth2/google",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "oauth2",
+                    "google"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "User",
+          "item": [
+            {
+              "name": "Get all user",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/users",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "User change password",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"oldPassword\": \"Vanbui262004@\",\r\n  \"newPassword\": \"123\",\r\n  \"confirmPassword\" :\"123\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/users/change-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "change-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete User",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/users/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update user by Id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/users/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get user by Id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{baseURL}}/api/users/me",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/users/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create new user",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/users",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get current user",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/users/me",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update info current user",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Bùi Quốc Văn\",\r\n  \"bio\": \"Đam mê lập trình & công nghệ, luôn tìm kiếm những thử thách mới. 🚀\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/users/me/update-info",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me",
+                    "update-info"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Category",
+          "item": [
+            {
+              "name": "Post Category",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Áo Polo",
+                      "type": "text"
+                    },
+                    {
+                      "key": "slug",
+                      "value": "ao-polo",
+                      "type": "text"
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "fileNotInWorkingDirectoryWarning": "This file isn't in your working directory. Teammates you share this request with won't be able to use this file. To make collaboration easier you can setup your working directory in Settings.",
+                      "filesNotInWorkingDirectory": [
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/Remove-bg.ai_1733921944473.png"
+                      ],
+                      "src": "/C:/Users/VAN QUOC BUI/Desktop/Roway/Remove-bg.ai_1733921944473.png"
+                    },
+                    {
+                      "key": "sizes[0].name",
+                      "value": "X",
+                      "type": "text"
+                    },
+                    {
+                      "key": "sizes[1].name",
+                      "value": "XL",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/categories",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "categories"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get all category",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/categories",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "categories"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Category Where Id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/categories/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "categories",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category Where Id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/categories/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "categories",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Category Where Id",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/categories/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "categories",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Product",
+          "item": [
+            {
+              "name": "Post Product",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var template = `\r",
+                      "<style type=\"text/css\">\r",
+                      "    .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}\r",
+                      "    .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}\r",
+                      "    .tftable tr {background-color:#ffffff;}\r",
+                      "    .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}\r",
+                      "    .tftable tr:hover {background-color:#e0ffff;}\r",
+                      "</style>\r",
+                      "\r",
+                      "<table class=\"tftable\" border=\"1\">\r",
+                      "    <tr>\r",
+                      "        <th>ID</th>\r",
+                      "        <th>Name</th>\r",
+                      "        <th>Slug</th>\r",
+                      "        <th>Short Description</th>\r",
+                      "        <th>Description</th>\r",
+                      "        <th>Product Code</th>\r",
+                      "        <th>Featured</th>\r",
+                      "        <th>Sale</th>\r",
+                      "        <th>Active</th>\r",
+                      "        <th>Sale Percentage</th>\r",
+                      "        <th>Category ID</th>\r",
+                      "        <th>Main Image URL</th>\r",
+                      "        <th>Secondary Image URLs</th>\r",
+                      "        <th>Description Image URLs</th>\r",
+                      "        <th>Variants</th>\r",
+                      "        <th>Created At</th>\r",
+                      "        <th>Updated At</th>\r",
+                      "    </tr>\r",
+                      "    <tr>\r",
+                      "        <td>{{response.data.id}}</td>\r",
+                      "        <td>{{response.data.name}}</td>\r",
+                      "        <td>{{response.data.slug}}</td>\r",
+                      "        <td>{{response.data.shortDescription}}</td>\r",
+                      "        <td>{{response.data.description}}</td>\r",
+                      "        <td>{{response.data.productCode}}</td>\r",
+                      "        <td>{{response.data.featured}}</td>\r",
+                      "        <td>{{response.data.sale}}</td>\r",
+                      "        <td>{{response.data.active}}</td>\r",
+                      "        <td>{{response.data.salePercentage}}</td>\r",
+                      "        <td>{{response.data.categoryId}}</td>\r",
+                      "        <td>{{response.data.mainImageUrl}}</td>\r",
+                      "        <td>{{response.data.secondaryImageUrls}}</td>\r",
+                      "        <td>{{response.data.descriptionImageUrls}}</td>\r",
+                      "        <td>{{response.data.variants}}</td>\r",
+                      "        <td>{{response.data.createdAt}}</td>\r",
+                      "        <td>{{response.data.updatedAt}}</td>\r",
+                      "    </tr>\r",
+                      "</table>\r",
+                      "`;\r",
+                      "\r",
+                      "function constructVisualizerPayload() {\r",
+                      "    return {response: pm.response.json()}\r",
+                      "}\r",
+                      "\r",
+                      "pm.visualizer.set(template, constructVisualizerPayload());"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Áo Sơ Mi Mùa Xuân",
+                      "type": "text"
+                    },
+                    {
+                      "key": "shortDescription",
+                      "value": "Một sản phẩm đẹp đến từ thương hiệu Roway",
+                      "type": "text"
+                    },
+                    {
+                      "key": "description",
+                      "value": "Một sản phẩm đẹp đến từ thương hiệu Roway",
+                      "type": "text"
+                    },
+                    {
+                      "key": "productCode",
+                      "value": "RW1X",
+                      "type": "text"
+                    },
+                    {
+                      "key": "featured",
+                      "value": "True",
+                      "type": "text"
+                    },
+                    {
+                      "key": "sale",
+                      "value": "False",
+                      "type": "text"
+                    },
+                    {
+                      "key": "active",
+                      "value": "true",
+                      "type": "text"
+                    },
+                    {
+                      "key": "categoryId",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "mainImageUrl",
+                      "type": "file",
+                      "fileNotInWorkingDirectoryWarning": "This file isn't in your working directory. Teammates you share this request with won't be able to use this file. To make collaboration easier you can setup your working directory in Settings.",
+                      "filesNotInWorkingDirectory": [
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/somi-removebg-preview.png"
+                      ],
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23020-zyb1ji2qawnvdb.webp"
+                    },
+                    {
+                      "key": "secondaryImageUrls[]",
+                      "type": "file",
+                      "fileNotInWorkingDirectoryWarning": "This file isn't in your working directory. Teammates you share this request with won't be able to use this file. To make collaboration easier you can setup your working directory in Settings.",
+                      "filesNotInWorkingDirectory": [
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/somi-removebg-preview.png",
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/Remove-bg.ai_1733921944473.png",
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/rm.png"
+                      ],
+                      "src": [
+                        "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23020-jexyji2qawnvfa.webp",
+                        "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134207-7qukw-lk5p1lqc35isc6.webp"
+                      ]
+                    },
+                    {
+                      "key": "descriptionImageUrls[]",
+                      "type": "file",
+                      "fileNotInWorkingDirectoryWarning": "This file isn't in your working directory. Teammates you share this request with won't be able to use this file. To make collaboration easier you can setup your working directory in Settings.",
+                      "filesNotInWorkingDirectory": [
+                        "/C:/Users/VAN QUOC BUI/Desktop/202249441_334664518279156_3973230263339603586_n.jpg"
+                      ],
+                      "value": null
+                    },
+                    {
+                      "key": "variants[0].color",
+                      "value": "RED",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].price",
+                      "value": "300000",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].stock",
+                      "value": "100",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].imageUrl",
+                      "type": "file",
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-7qukw-lemgq5c1npv70e.webp"
+                    },
+                    {
+                      "key": "variants[0].sizes[0].sizeName",
+                      "value": "X",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[1].sizeName",
+                      "value": "Y",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[2].sizeName",
+                      "value": "Z",
+                      "type": "text"
+                    },
+                    {
+                      "key": "salePercentage",
+                      "value": "20",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[0].quantity",
+                      "value": "12",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[1].quantity",
+                      "value": "5",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[2].quantity",
+                      "value": "10",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[0].price",
+                      "value": "100500",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[1].price",
+                      "value": "100500",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[2].price",
+                      "value": "100500",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update product by id",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var template = `\r",
+                      "<style type=\"text/css\">\r",
+                      "    .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}\r",
+                      "    .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}\r",
+                      "    .tftable tr {background-color:#ffffff;}\r",
+                      "    .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}\r",
+                      "    .tftable tr:hover {background-color:#e0ffff;}\r",
+                      "</style>\r",
+                      "\r",
+                      "<table class=\"tftable\" border=\"1\">\r",
+                      "    <tr>\r",
+                      "        <th>ID</th>\r",
+                      "        <th>Name</th>\r",
+                      "        <th>Slug</th>\r",
+                      "        <th>Short Description</th>\r",
+                      "        <th>Description</th>\r",
+                      "        <th>Product Code</th>\r",
+                      "        <th>Featured</th>\r",
+                      "        <th>Sale</th>\r",
+                      "        <th>Active</th>\r",
+                      "        <th>Sale Percentage</th>\r",
+                      "        <th>Category ID</th>\r",
+                      "        <th>Main Image URL</th>\r",
+                      "        <th>Secondary Image URLs</th>\r",
+                      "        <th>Description Image URLs</th>\r",
+                      "        <th>Variants</th>\r",
+                      "        <th>Created At</th>\r",
+                      "        <th>Updated At</th>\r",
+                      "    </tr>\r",
+                      "    <tr>\r",
+                      "        <td>{{response.data.id}}</td>\r",
+                      "        <td>{{response.data.name}}</td>\r",
+                      "        <td>{{response.data.slug}}</td>\r",
+                      "        <td>{{response.data.shortDescription}}</td>\r",
+                      "        <td>{{response.data.description}}</td>\r",
+                      "        <td>{{response.data.productCode}}</td>\r",
+                      "        <td>{{response.data.featured}}</td>\r",
+                      "        <td>{{response.data.sale}}</td>\r",
+                      "        <td>{{response.data.active}}</td>\r",
+                      "        <td>{{response.data.salePercentage}}</td>\r",
+                      "        <td>{{response.data.categoryId}}</td>\r",
+                      "        <td>{{response.data.mainImageUrl}}</td>\r",
+                      "        <td>{{response.data.secondaryImageUrls}}</td>\r",
+                      "        <td>{{response.data.descriptionImageUrls}}</td>\r",
+                      "        <td>{{response.data.variants}}</td>\r",
+                      "        <td>{{response.data.createdAt}}</td>\r",
+                      "        <td>{{response.data.updatedAt}}</td>\r",
+                      "    </tr>\r",
+                      "</table>\r",
+                      "`;\r",
+                      "\r",
+                      "function constructVisualizerPayload() {\r",
+                      "    return {response: pm.response.json()}\r",
+                      "}\r",
+                      "\r",
+                      "pm.visualizer.set(template, constructVisualizerPayload());"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Áo Sơ Mi Mùa Xuân",
+                      "type": "text"
+                    },
+                    {
+                      "key": "shortDescription",
+                      "value": "Một sản phẩm đẹp đến từ thương hiệu Roway",
+                      "type": "text"
+                    },
+                    {
+                      "key": "description",
+                      "value": "Một sản phẩm đẹp đến từ thương hiệu Roway",
+                      "type": "text"
+                    },
+                    {
+                      "key": "productCode",
+                      "value": "RW1X",
+                      "type": "text"
+                    },
+                    {
+                      "key": "featured",
+                      "value": "True",
+                      "type": "text"
+                    },
+                    {
+                      "key": "sale",
+                      "value": "False",
+                      "type": "text"
+                    },
+                    {
+                      "key": "active",
+                      "value": "true",
+                      "type": "text"
+                    },
+                    {
+                      "key": "categoryId",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "mainImageUrl",
+                      "type": "file",
+                      "fileNotInWorkingDirectoryWarning": "This file isn't in your working directory. Teammates you share this request with won't be able to use this file. To make collaboration easier you can setup your working directory in Settings.",
+                      "filesNotInWorkingDirectory": [
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/somi-removebg-preview.png"
+                      ],
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134207-7qukw-lk5p1lqc1qyc97.webp"
+                    },
+                    {
+                      "key": "secondaryImageUrls[]",
+                      "type": "file",
+                      "fileNotInWorkingDirectoryWarning": "This file isn't in your working directory. Teammates you share this request with won't be able to use this file. To make collaboration easier you can setup your working directory in Settings.",
+                      "filesNotInWorkingDirectory": [
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/somi-removebg-preview.png",
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/Remove-bg.ai_1733921944473.png",
+                        "/C:/Users/VAN QUOC BUI/Desktop/Roway/rm.png"
+                      ],
+                      "src": [
+                        "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23020-zyb1ji2qawnvdb.webp",
+                        "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23030-hsjg0xf1qwov6d.webp",
+                        "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23030-xobs8pf1qwov17.webp",
+                        "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134207-7qukw-lk5p1lqc1qyc97.webp",
+                        "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134207-7qukw-lk5p1lqc35isc6.webp"
+                      ]
+                    },
+                    {
+                      "key": "descriptionImageUrls[]",
+                      "type": "file",
+                      "fileNotInWorkingDirectoryWarning": "This file isn't in your working directory. Teammates you share this request with won't be able to use this file. To make collaboration easier you can setup your working directory in Settings.",
+                      "filesNotInWorkingDirectory": [
+                        "/C:/Users/VAN QUOC BUI/Desktop/202249441_334664518279156_3973230263339603586_n.jpg"
+                      ],
+                      "value": null
+                    },
+                    {
+                      "key": "variants[0].color",
+                      "value": "RED",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].price",
+                      "value": "300000",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].stock",
+                      "value": "100",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].imageUrl",
+                      "type": "file",
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/Áo  polo/Áo Polo nam ROWAY cotton thoáng mát, thấm hút, không nhăn form regular, polo trắng cổ đen/vn-11134201-23020-zyb1ji2qawnvdb.webp"
+                    },
+                    {
+                      "key": "variants[0].sizes[0].sizeName",
+                      "value": "X",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[1].sizeName",
+                      "value": "Y",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[2].sizeName",
+                      "value": "Z",
+                      "type": "text"
+                    },
+                    {
+                      "key": "salePercentage",
+                      "value": "20",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[0].quantity",
+                      "value": "12",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[1].quantity",
+                      "value": "5",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[2].quantity",
+                      "value": "10",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[0].price",
+                      "value": "100500",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[1].price",
+                      "value": "100500",
+                      "type": "text"
+                    },
+                    {
+                      "key": "variants[0].sizes[2].price",
+                      "value": "100500",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Product",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product by Category Id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/find-by-category/{slug}",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "find-by-category",
+                    "{slug}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By Product Id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product by Slug",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "",
+                    "type": "text",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/slug/ao-so-mi-mua-xuan",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "slug",
+                    "ao-so-mi-mua-xuan"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By Category",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/find-by-category-slug/ao-polo",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "find-by-category-slug",
+                    "ao-polo"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search name product",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/search?name=Ao&page=0&size=5",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Ao"
+                    },
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "size",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get viewed",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products/recently-viewed",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "recently-viewed"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get products featured",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/featured",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "featured"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search  Product by name",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/search?name=Áo Sơ Mi Mùa Xuân&page=0&size=5",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Áo Sơ Mi Mùa Xuân"
+                    },
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "size",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Mark product",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"productId\":1\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products/1/mark",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "1",
+                    "mark"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get recently viewed",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"productId\":1\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products/recently-viewed",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "recently-viewed"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Sync viewed",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\r\n    1\r\n]"
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products/viewed-sync",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "viewed-sync"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "ProductReview",
+          "item": [
+            {
+              "name": "Create Review",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "productId",
+                      "value": "1",
+                      "type": "text",
+                      "uuid": "32ee05b0-9f0c-4614-91bc-57bcc4150b56"
+                    },
+                    {
+                      "key": "rating",
+                      "value": "5",
+                      "type": "text",
+                      "uuid": "7aab558c-abcf-4b86-8983-4dc57bb96d2a"
+                    },
+                    {
+                      "key": "reviewText",
+                      "value": "Quá đẹp",
+                      "type": "text",
+                      "uuid": "695c3d71-a138-4c84-9613-cd44c48d4ae1"
+                    },
+                    {
+                      "key": "imageFiles[0]",
+                      "type": "file",
+                      "uuid": "87db1886-dc80-4cfb-ad6f-b6b7d1936b39",
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/vn-11134207-7ras8-m0l2phbu13hp71.webp"
+                    },
+                    {
+                      "key": "imageFiles[1]",
+                      "type": "file",
+                      "uuid": "fbda9fe2-0ff7-4e3b-82f1-7a2312f5eb26",
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/vn-11134207-7ras8-m0l2phbu2idr4d.webp"
+                    },
+                    {
+                      "key": "imageFiles[2]",
+                      "type": "file",
+                      "uuid": "08ea59f0-aec7-4bb5-ba7b-f622781ddd7d",
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/ImagesRowway/vn-11134207-7ras8-m0l2phbtzox9fc.webp"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products-review/add-or-update",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products-review",
+                    "add-or-update"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get list review",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products-review/product/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products-review",
+                    "product",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get list review current user",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products-review/user",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products-review",
+                    "user"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete review",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"productId\":1\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/products-review/remove/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products-review",
+                    "remove",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Order",
+          "item": [
+            {
+              "name": "Create Order",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"addressId\": 1,\r\n  \"discountCode\": \"DISCOUNT10\",\r\n  \"paymentMethod\": \"COD\",\r\n  \"orderItems\": [\r\n    {\r\n      \"productId\": 101,\r\n      \"quantity\": 2,\r\n      \"price\": 150000,\r\n      \"color\": \"Red\",\r\n      \"sizeName\": \"L\"\r\n    },\r\n    {\r\n      \"productId\": 102,\r\n      \"quantity\": 1,\r\n      \"price\": 250000,\r\n      \"color\": \"Black\",\r\n      \"sizeName\": \"M\"\r\n    }\r\n  ],\r\n  \"totalAmount\": 550000\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/orders",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get order by Order Code",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/ORD-1744047375496",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "ORD-1744047375496"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get list order by user",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/me",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get all order by current user",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/me",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update order",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update order status",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/1/status?status=CONFIRMED",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "1",
+                    "status"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "CONFIRMED",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel order by id",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete order by id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/1/delete",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "1",
+                    "delete"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Check status",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/orders/check-delivery/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "check-delivery",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Cart",
+          "item": [
+            {
+              "name": "Add to Cart",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": 1,\r\n      \"quantity\": 1,\r\n      \"sizeName\": \"X\",\r\n      \"color\": \"RED\"\r\n    }\r\n  ]\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/cart/add-or-update",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cart",
+                    "add-or-update"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get all Cart",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseURL}}/api/cart",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cart"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/cart/remove?productId=1&sizeName=X&color=RED",
+                  "protocol": "DELETE http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "cart",
+                    "remove"
+                  ],
+                  "query": [
+                    {
+                      "key": "productId",
+                      "value": "1"
+                    },
+                    {
+                      "key": "sizeName",
+                      "value": "X"
+                    },
+                    {
+                      "key": "color",
+                      "value": "RED"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Clear All  Cart",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/cart/clear",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cart",
+                    "clear"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Increase Quanlity",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/cart/increase",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cart",
+                    "increase"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Decrease Quanlity",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": 1,\r\n      \"sizeName\": \"X\",\r\n      \"color\": \"RED\"\r\n    }\r\n  ]\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/cart/decrease",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "cart",
+                    "decrease"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Address",
+          "item": [
+            {
+              "name": "Post Address",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"country\": \"Vietnam\",\r\n  \"province\": \"Hà Nội\",\r\n  \"district\": \"Cầu Giấy\",\r\n  \"commune\": \"Dịch Vọng\",\r\n  \"email\": \"vanbui0966467356@gmail.com\",\r\n  \"addressLine\": \"Số 1, Đường ABC\",\r\n  \"note\": \"LoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLoremLorem\",\r\n  \"phoneNumber\": \"0987654321\",\r\n  \"isDefault\": true\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/addresses",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "addresses"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Address Where Id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/addresses/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "addresses",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Address Form Id",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseURL}}/api/addresses/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "addresses",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Address Current User",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/addresses/me",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "addresses",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Address From Id User",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"country\": \"Vietnam\",\r\n  \"province\": \"Hồ Chí Minh\",\r\n  \"district\": \"Quận 1\",\r\n  \"commune\": \"Bến Nghé\",\r\n  \"addressLine\": \"Số 99, Đường XYZ\",\r\n  \"phoneNumber\": \"0123456789\",\r\n  \"isDefault\": false\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/addresses/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "addresses",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Default",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/addresses/2/set-default",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "addresses",
+                    "2",
+                    "set-default"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Favourites",
+          "item": [
+            {
+              "name": "Add Favourite",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"productId\": 1\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/favourites",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "favourites"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Favourite By UserId and ProductId",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/favourites/2",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "favourites",
+                    "2"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Favourite currentUser",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/favourites",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "favourites"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Discount",
+          "item": [
+            {
+              "name": "Create New Discount",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"code\": \"SUMMER2025\",\r\n  \"discountAmount\": 50.0,\r\n  \"maxDiscountAmount\": 150000,\r\n  \"discountType\": \"PERCENTAGE\",\r\n  \"minOrderValue\": 100000,\r\n  \"usageLimit\": 100,\r\n  \"startDate\": \"2025-03-10T00:00:00\",\r\n  \"expiryDate\": \"2025-12-31T23:59:59\",\r\n  \"active\": true,\r\n  \"applicableProducts\": [],\r\n  \"applicableUsers\": []\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Detail Discount Code",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get List Discount Code",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Discount Code",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"code\": \"SUMMER2024\",\r\n  \"discountAmount\": 25,\r\n  \"isPercentage\": true,\r\n  \"expiryDate\": \"2026-12-31T23:59:59\",\r\n  \"isActive\": false\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/2",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "2"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Discount Code",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Clear all Discount for User and Product",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/2/clear",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "2",
+                    "clear"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove list product form discount",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/1/remove-products",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "1",
+                    "remove-products"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove list user from discount",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[1, 2, 3]\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/1/remove-users",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "1",
+                    "remove-users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Preview Discount",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n\"cartId\": 1,\r\n\"discountCode\":\"SUMMER2025\"\r\n\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/preview-discount",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "preview-discount"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get voucher of current user",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/me",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Save discount",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/discounts/save?discountCode=SUMMER2025",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "discounts",
+                    "save"
+                  ],
+                  "query": [
+                    {
+                      "key": "discountCode",
+                      "value": "SUMMER2025"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Search History",
+          "item": [
+            {
+              "name": "Save search",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"searchQuery\": \"Áo thun\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/search-history",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "search-history"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get search history",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/search-history",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "search-history"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Suggestions Search",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/search-history/suggestions?query=Z",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "search-history",
+                    "suggestions"
+                  ],
+                  "query": [
+                    {
+                      "key": "query",
+                      "value": "Z"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Support",
+          "item": [
+            {
+              "name": "Create Info",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "img",
+                      "type": "file",
+                      "uuid": "7aabc24d-e5c8-4d20-9b70-5573761b3efc",
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/dd.jpg"
+                    },
+                    {
+                      "key": "title",
+                      "value": "Hỗ trợ khách hàng",
+                      "type": "text",
+                      "uuid": "2896e67a-1aa2-4bab-832d-1614e9eb6773"
+                    },
+                    {
+                      "key": "hours",
+                      "value": "08:00 - 18:00",
+                      "type": "text",
+                      "uuid": "9f016335-7dee-44c9-8dd5-2f5821de27df"
+                    },
+                    {
+                      "key": "contact",
+                      "value": "0123456789",
+                      "type": "text",
+                      "uuid": "35527275-2a5a-45d1-be5d-709dece57f69"
+                    },
+                    {
+                      "key": "link",
+                      "value": "https://zalo.me/0123456789",
+                      "type": "text",
+                      "uuid": "c1d7fba6-898b-4953-be98-53500d956c5c"
+                    },
+                    {
+                      "key": "bgColor",
+                      "value": "#ffcc00",
+                      "type": "text",
+                      "uuid": "cb1b170e-a1ca-4bde-8768-7f08ada91ca8"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/support",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "support"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get all Info",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/support",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "support"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get support by id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/support/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "support",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update support by id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "title",
+                      "value": "Updated Title",
+                      "type": "text",
+                      "uuid": "7f189fd1-fdc8-4945-bd72-650c40432268"
+                    },
+                    {
+                      "key": "hours",
+                      "value": "10 AM - 6 PM",
+                      "type": "text",
+                      "uuid": "286c1412-7367-4e8d-9aba-6c4e0bd5f3fc"
+                    },
+                    {
+                      "key": "contact",
+                      "value": "0987654321",
+                      "type": "text",
+                      "uuid": "42c51167-fb69-4c46-9867-99b0c981aee2"
+                    },
+                    {
+                      "key": "link",
+                      "value": "https://updated.com",
+                      "type": "text",
+                      "uuid": "200e1c69-8e70-4a6e-ab6a-8aec5a83bfe7"
+                    },
+                    {
+                      "key": "bgColor",
+                      "value": "#000000",
+                      "type": "text",
+                      "uuid": "eecfa711-8559-4c95-847a-e69450eb2163"
+                    },
+                    {
+                      "key": "img",
+                      "type": "file",
+                      "uuid": "2454651b-c0b4-49e8-9628-ce3a93945278",
+                      "src": "/C:/Users/vanbu/OneDrive/Máy tính/avatar.jpg"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/support/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "support",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "New Request",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/support/1",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "support",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Filter",
+          "item": [
+            {
+              "name": "Filter",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/products/filter?sizes=Z",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "filter"
+                  ],
+                  "query": [
+                    {
+                      "key": "sizes",
+                      "value": "Z"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseURL}}/api/filter/options",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "filter",
+                    "options"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "baseURL",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}

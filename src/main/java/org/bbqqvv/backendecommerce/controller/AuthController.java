@@ -3,6 +3,8 @@ package org.bbqqvv.backendecommerce.controller;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.bbqqvv.backendecommerce.dto.ApiResponse;
 import org.bbqqvv.backendecommerce.dto.request.*;
 import org.bbqqvv.backendecommerce.dto.response.*;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Tag(name = "Authentication", description = "Đăng ký, Đăng nhập và Quên mật khẩu")
 public class AuthController {
 
     AuthenticationService authenticationService;
@@ -30,6 +33,7 @@ public class AuthController {
 
     // Đăng ký người dùng
     @PostMapping("/register")
+    @Operation(summary = "Đăng ký tài khoản", description = "Tạo tài khoản người dùng mới với các thông tin cơ bản.")
     public ResponseEntity<UserResponse> register(@RequestBody @Valid UserCreationRequest creationRequest) {
         UserResponse userResponse = authenticationService.register(creationRequest);
         return userResponse != null
@@ -40,6 +44,7 @@ public class AuthController {
 
     // Đăng nhập người dùng
     @PostMapping("/login")
+    @Operation(summary = "Đăng nhập truyền thống", description = "Xác thực người dùng bằng username và password, trả về JWT token.")
     public ResponseEntity<?> login(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
         try {
             String token = authenticationService.login(authenticationRequest);
@@ -55,6 +60,7 @@ public class AuthController {
 
     // 🔹 Đăng nhập bằng Google OAuth2 (Frontend sẽ redirect đến URL này)
     @PostMapping("/oauth2/google")
+    @Operation(summary = "Đăng nhập Google", description = "Xác thực và đăng nhập bằng Google ID Token.")
     public ResponseEntity<?> googleLogin(@RequestBody @Valid OAuth2LoginRequest request) {
         try {
             String jwtToken = oAuth2Service.loginWithGoogle(request.getToken());
@@ -68,6 +74,7 @@ public class AuthController {
      * Gửi OTP để đặt lại mật khẩu
      */
     @PostMapping("/forgot-password")
+    @Operation(summary = "Quên mật khẩu", description = "Gửi mã OTP đến email của người dùng để thực hiện khôi phục mật khẩu.")
     public ApiResponse<OtpResponse> forgotPassword(@RequestBody @Valid OtpRequest request) {
         String message = otpService.sendOtp(request.getEmail());
         return ApiResponse.<OtpResponse>builder()
@@ -81,6 +88,7 @@ public class AuthController {
      * Xác thực OTP
      */
     @PostMapping("/verify-otp")
+    @Operation(summary = "Xác thực OTP", description = "Kiểm tra mã OTP người dùng gửi lên có khớp với mã hệ thống đã gửi qua email không.")
     public ApiResponse<OtpVerificationResponse> verifyOtp(@RequestBody @Valid OtpVerificationRequest request) {
         String result = otpService.verifyOtp(request.getEmail(), request.getOtp());
         boolean success = result.equals("OTP verified successfully!");
@@ -96,6 +104,7 @@ public class AuthController {
      * Đặt lại mật khẩu sau khi xác thực OTP thành công
      */
     @PostMapping("/reset-password")
+    @Operation(summary = "Đặt lại mật khẩu", description = "Cập nhật mật khẩu mới sau khi đã xác thực OTP thành công.")
     public ApiResponse<ResetPasswordResponse> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         String result = otpService.resetPassword(request.getEmail(), request.getNewPassword());
         boolean success = result.equals("Password reset successful!");

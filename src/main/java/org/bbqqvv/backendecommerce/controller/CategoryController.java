@@ -1,5 +1,6 @@
 package org.bbqqvv.backendecommerce.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.bbqqvv.backendecommerce.dto.ApiResponse;
 import org.bbqqvv.backendecommerce.dto.request.CategoryRequest;
 import org.bbqqvv.backendecommerce.dto.response.CategoryResponse;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
+@Tag(name = "Category Management", description = "Quản lý danh mục sản phẩm")
 public class CategoryController {
 
     private final CategoryService categoryService;
