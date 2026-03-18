@@ -41,12 +41,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(UserErrorCode.USER_EXISTED);
         }
+        
         // Map RegisterUserRequest -> User entity
         User user = userMapper.toUser(request);
+        
+        // Encode password before saving
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         // Lưu vào DB
         User savedUser = userRepository.save(user);
@@ -75,6 +80,7 @@ public class UserServiceImpl implements UserService {
         return toPageResponse(userPage, userMapper::toUserResponse);
     }
     @Override
+    @Transactional
     public UserResponse updateUser(Long id, UserCreationRequest request) {
         // Kiểm tra người dùng có tồn tại không
         User user = userRepository.findById(id).orElseThrow(() ->
@@ -83,7 +89,9 @@ public class UserServiceImpl implements UserService {
 
         // Cập nhật thông tin từ DTO
         user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
         user.setEmail(request.getEmail());
 
         // Lưu lại
@@ -97,6 +105,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional
     public void deleteUser(Long id) {
         // Kiểm tra người dùng có tồn tại không trước khi xóa
         User user = userRepository.findById(id).orElseThrow(() ->
@@ -114,6 +123,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserUpdateResponse updateUserInfo(UserUpdateRequest request) {
         String username = SecurityUtils.getCurrentUserLogin()
                 .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));

@@ -41,6 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryResponse createCategory(CategoryRequest categoryRequest) {
         try {
             if (categoryRepository.existsCategoriesByName(categoryRequest.getName())) {
@@ -66,6 +67,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryResponse updateCategory(Long id, CategoryRequest categoryRequest) {
         try {
             Category category = categoryRepository.findById(id)
@@ -105,6 +107,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public boolean deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ProductErrorCode.CATEGORY_NOT_FOUND));

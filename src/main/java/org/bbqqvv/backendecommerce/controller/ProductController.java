@@ -1,5 +1,6 @@
 package org.bbqqvv.backendecommerce.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.bbqqvv.backendecommerce.dto.ApiResponse;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
@@ -25,7 +26,7 @@ public class ProductController {
     // Tạo mới một sản phẩm
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<ProductResponse> createProduct(@ModelAttribute ProductRequest productRequest) {
+    public ApiResponse<ProductResponse> createProduct(@ModelAttribute @Valid ProductRequest productRequest) {
         ProductResponse product = productService.createProduct(productRequest);
         return ApiResponse.<ProductResponse>builder()
                 .success(true)
@@ -96,7 +97,7 @@ public class ProductController {
     // Cập nhật thông tin sản phẩm
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<ProductResponse> updateProduct(@PathVariable Long id, @ModelAttribute ProductRequest productRequest) {
+    public ApiResponse<ProductResponse> updateProduct(@PathVariable Long id, @ModelAttribute @Valid ProductRequest productRequest) {
         ProductResponse updatedProduct = productService.updateProduct(id, productRequest);
         return ApiResponse.<ProductResponse>builder()
                 .success(true)

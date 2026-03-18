@@ -118,6 +118,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public boolean deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
             throw new AppException(ProductErrorCode.PRODUCT_NOT_FOUND);

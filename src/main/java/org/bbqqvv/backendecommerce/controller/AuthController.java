@@ -30,7 +30,7 @@ public class AuthController {
 
     // Đăng ký người dùng
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody UserCreationRequest creationRequest) {
+    public ResponseEntity<UserResponse> register(@RequestBody @Valid UserCreationRequest creationRequest) {
         UserResponse userResponse = authenticationService.register(creationRequest);
         return userResponse != null
                 ? ResponseEntity.status(HttpStatus.CREATED).body(userResponse)
@@ -40,7 +40,7 @@ public class AuthController {
 
     // Đăng nhập người dùng
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthenticationRequest authenticationRequest) {
+    public ResponseEntity<?> login(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
         try {
             String token = authenticationService.login(authenticationRequest);
             return ResponseEntity.ok(new JwtResponse(token)); // Trả về JWT token
