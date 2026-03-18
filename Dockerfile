@@ -1,5 +1,6 @@
 # Sử dụng JRE để chạy app (Nhẹ hơn JDK)
 FROM eclipse-temurin:17-jre-alpine
+RUN apk upgrade --no-cache
 WORKDIR /app
 
 # Copy file jar đã được build từ CI/CD runner vào image

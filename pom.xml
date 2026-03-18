@@ -22,6 +22,7 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <jjwt.version>0.12.6</jjwt.version>
         <spring-framework.version>6.2.11</spring-framework.version>
+        <jackson-bom.version>2.18.6</jackson-bom.version>
     </properties>
 
     <dependencies>
