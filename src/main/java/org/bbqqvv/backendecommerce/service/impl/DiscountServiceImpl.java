@@ -39,14 +39,14 @@ public class DiscountServiceImpl implements DiscountService {
     private final UserRepository userRepository;
     private final DiscountProductRepository discountProductRepository;
     private final DiscountUserRepository discountUserRepository;
-    private final CartService cartService;
+    private final CartRepository cartRepository;
 
     public DiscountServiceImpl(DiscountRepository discountRepository,
                                DiscountMapper discountMapper, DiscountPreviewMapper discountPreviewMapper,
                                ProductRepository productRepository,
                                UserRepository userRepository,
                                DiscountProductRepository discountProductRepository,
-                               DiscountUserRepository discountUserRepository, CartService cartService) {
+                               DiscountUserRepository discountUserRepository, CartRepository cartRepository) {
         this.discountRepository = discountRepository;
         this.discountMapper = discountMapper;
         this.discountPreviewMapper = discountPreviewMapper;
@@ -54,7 +54,7 @@ public class DiscountServiceImpl implements DiscountService {
         this.userRepository = userRepository;
         this.discountProductRepository = discountProductRepository;
         this.discountUserRepository = discountUserRepository;
-        this.cartService = cartService;
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -310,15 +310,25 @@ public class DiscountServiceImpl implements DiscountService {
         Discount discount = discountRepository.findByCode(discountPreviewRequest.getDiscountCode())
                 .orElseThrow(() -> new AppException(SocialMarketingErrorCode.DISCOUNT_NOT_FOUND));
 
-        BigDecimal originalTotalAmount = cartService.getTotalCartAmount();
-        if (originalTotalAmount == null) {
-            originalTotalAmount = BigDecimal.ZERO;
+        User currentUser = getAuthenticatedUser();
+        Cart cart = cartRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
+
+        BigDecimal originalTotalAmount = cart.getTotalPrice();
+        if (originalTotalAmount == null) originalTotalAmount = BigDecimal.ZERO;
+
+        boolean valid = validateDiscount(discount, originalTotalAmount, currentUser);
+
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        if (valid) {
+            // Chuẩn bị dữ liệu cho hàm tính toán chung
+            List<Long> productIds = cart.getCartItems().stream().map(item -> item.getProduct().getId()).toList();
+            List<BigDecimal> subtotals = cart.getCartItems().stream().map(CartItem::getSubtotal).toList();
+            
+            discountAmount = calculateDiscountAmount(discount, productIds, subtotals, originalTotalAmount);
         }
 
-        boolean valid = validateDiscount(discount, originalTotalAmount);
-
-        BigDecimal discountAmount = valid ? calculateDiscountAmount(discount, originalTotalAmount) : BigDecimal.ZERO;
-        BigDecimal finalAmount = originalTotalAmount.subtract(discountAmount);
+        BigDecimal finalAmount = originalTotalAmount.subtract(discountAmount).max(BigDecimal.ZERO);
 
         return DiscountPreviewResponse.builder()
                 .discountCode(discount.getCode())
@@ -329,6 +339,73 @@ public class DiscountServiceImpl implements DiscountService {
                 .valid(valid)
                 .message(valid ? "Discount applied successfully" : "Discount not applicable")
                 .build();
+    }
+
+    @Override
+    public Discount getDiscountByCode(String code) {
+        return discountRepository.findByCode(code).orElse(null);
+    }
+
+    @Override
+    public BigDecimal calculateDiscountAmount(Discount discount, List<Long> productIds, List<BigDecimal> subtotals, BigDecimal totalAmount) {
+        BigDecimal applicableTotal = BigDecimal.ZERO;
+        
+        boolean hasSpecificProducts = discount.getApplicableProducts() != null && !discount.getApplicableProducts().isEmpty();
+        
+        for (int i = 0; i < productIds.size(); i++) {
+            Long pid = productIds.get(i);
+            BigDecimal subtotal = subtotals.get(i);
+            
+            // Nếu mã có list sản phẩm -> chỉ cộng tiền các sp đó
+            // Nếu mã KHÔNG có list sản phẩm -> cộng tất cả
+            if (!hasSpecificProducts || discount.getApplicableProducts().stream().anyMatch(dp -> dp.getProduct().getId().equals(pid))) {
+                applicableTotal = applicableTotal.add(subtotal);
+            }
+        }
+
+        if (applicableTotal.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+
+        BigDecimal amount;
+        if (discount.getDiscountType() == DiscountType.PERCENTAGE) {
+            amount = applicableTotal.multiply(discount.getDiscountAmount()).divide(BigDecimal.valueOf(100));
+            if (discount.getMaxDiscountAmount() != null) {
+                amount = amount.min(discount.getMaxDiscountAmount());
+            }
+        } else {
+            amount = discount.getDiscountAmount();
+        }
+
+        return amount.min(totalAmount);
+    }
+
+
+    private boolean validateDiscount(Discount discount, BigDecimal originalTotalAmount, User user) {
+        if (discount.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return false;
+        }
+
+        if (originalTotalAmount.compareTo(discount.getMinOrderValue()) < 0) {
+            return false;
+        }
+
+        if (!discount.isApplicableForUser(user)) {
+            return false;
+        }
+
+        return discount.isActive() && !discount.isUsageLimitReached();
+    }
+
+    private BigDecimal calculateAmount(Discount discount, BigDecimal applicableAmount, BigDecimal orderTotal) {
+        BigDecimal amount;
+        if (discount.getDiscountType() == DiscountType.PERCENTAGE) {
+            amount = applicableAmount.multiply(discount.getDiscountAmount()).divide(BigDecimal.valueOf(100));
+            if (discount.getMaxDiscountAmount() != null) {
+                amount = amount.min(discount.getMaxDiscountAmount());
+            }
+        } else {
+            amount = discount.getDiscountAmount();
+        }
+        return amount.min(orderTotal);
     }
 
 
@@ -349,61 +426,6 @@ public class DiscountServiceImpl implements DiscountService {
 
         discount.setTimesUsed(discount.getTimesUsed() + 1);
         discountRepository.save(discount);
-    }
-
-
-    private BigDecimal calculateDiscountAmount(Discount discount, BigDecimal originalTotalAmount) {
-        if (discount == null || originalTotalAmount == null || originalTotalAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            return BigDecimal.ZERO;
-        }
-
-        if (originalTotalAmount.compareTo(discount.getMinOrderValue()) < 0) {
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal discountAmount;
-
-        if (discount.getDiscountType() == DiscountType.PERCENTAGE) {
-            discountAmount = originalTotalAmount
-                    .multiply(discount.getDiscountAmount().divide(BigDecimal.valueOf(100))); // Chia 100 để tính %
-
-            if (discount.getMaxDiscountAmount() != null) {
-                discountAmount = discountAmount.min(discount.getMaxDiscountAmount());
-            }
-        }
-        else {
-            discountAmount = discount.getDiscountAmount();
-        }
-
-        return discountAmount.min(originalTotalAmount);
-    }
-
-    private boolean validateDiscount(Discount discount, BigDecimal originalTotalAmount) {
-        if (discount.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return false;
-        }
-
-        if (originalTotalAmount.compareTo(discount.getMinOrderValue()) < 0) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private BigDecimal applyDiscount(Discount discount, BigDecimal originalTotalAmount) {
-        BigDecimal discountAmount;
-
-        if (discount.getDiscountType() == DiscountType.PERCENTAGE) {
-            discountAmount = originalTotalAmount.multiply(discount.getDiscountAmount().divide(BigDecimal.valueOf(100)));
-        } else {
-            discountAmount = discount.getDiscountAmount();
-        }
-
-        if (discount.getMaxDiscountAmount() != null) {
-            discountAmount = discountAmount.min(discount.getMaxDiscountAmount());
-        }
-
-        return originalTotalAmount.subtract(discountAmount);
     }
 
     private Discount findDiscountById(Long id) {

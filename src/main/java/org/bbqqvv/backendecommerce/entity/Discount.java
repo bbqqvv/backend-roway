@@ -74,12 +74,25 @@ public class Discount extends BaseEntity {
     }
 
     // 🔹 Kiểm tra xem mã giảm giá có thể áp dụng cho người dùng không
+    // Nếu danh sách trống -> Mã công khai (Global)
     public boolean isApplicableForUser(User user) {
-        return applicableUsers == null || applicableUsers.stream()
+        if (applicableUsers == null || applicableUsers.isEmpty()) {
+            return true;
+        }
+        if (user == null) return false;
+        return applicableUsers.stream()
                 .anyMatch(discountUser -> discountUser.getUser().getId().equals(user.getId()));
     }
 
-
+    // 🔹 Kiểm tra xem mã giảm giá có áp dụng cho sản phẩm này không
+    // Nếu danh sách trống -> Áp dụng cho mọi sản phẩm
+    public boolean isApplicableForProduct(Product product) {
+        if (applicableProducts == null || applicableProducts.isEmpty()) {
+            return true;
+        }
+        return applicableProducts.stream()
+                .anyMatch(dp -> dp.getProduct().getId().equals(product.getId()));
+    }
 }
 
 

@@ -7,7 +7,8 @@ import org.bbqqvv.backendecommerce.dto.request.DiscountRequest;
 import org.bbqqvv.backendecommerce.dto.response.DiscountPreviewResponse;
 import org.bbqqvv.backendecommerce.dto.response.DiscountResponse;
 import org.springframework.data.domain.Pageable;
-
+import org.bbqqvv.backendecommerce.entity.Discount;
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface DiscountService {
@@ -26,4 +27,7 @@ public interface DiscountService {
 
     DiscountPreviewResponse previewDiscount(DiscountPreviewRequest discountPreviewRequest);
     void saveDiscount(@Valid String discountCode);
+
+    Discount getDiscountByCode(String code);
+    BigDecimal calculateDiscountAmount(Discount discount, List<Long> productIds, List<BigDecimal> subtotals, BigDecimal totalAmount);
 }

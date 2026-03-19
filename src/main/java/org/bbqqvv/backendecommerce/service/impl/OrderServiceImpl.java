@@ -14,6 +14,7 @@ import org.bbqqvv.backendecommerce.exception.ErrorCode;
 import org.bbqqvv.backendecommerce.mapper.OrderMapper;
 import org.bbqqvv.backendecommerce.repository.*;
 import org.bbqqvv.backendecommerce.service.OrderService;
+import org.bbqqvv.backendecommerce.service.DiscountService;
 import org.bbqqvv.backendecommerce.service.email.EmailService;
 import org.bbqqvv.backendecommerce.service.payment.PaymentService;
 import org.bbqqvv.backendecommerce.util.PagingUtil;
@@ -41,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final AddressRepository addressRepository;
     private final SizeProductVariantRepository sizeProductVariantRepository;
+    private final DiscountService discountService;
     private final DiscountRepository discountRepository;
     private final OrderMapper orderMapper;
     private final EmailService emailService;
@@ -52,7 +54,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                             UserRepository userRepository, ProductRepository productRepository, CartRepository cartRepository,
                             AddressRepository addressRepository, SizeProductVariantRepository sizeProductVariantRepository,
-                            DiscountRepository discountRepository, OrderMapper orderMapper, EmailService emailService, 
+                            DiscountService discountService, DiscountRepository discountRepository, OrderMapper orderMapper, EmailService emailService, 
                             PaymentService paymentService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
@@ -61,6 +63,7 @@ public class OrderServiceImpl implements OrderService {
         this.cartRepository = cartRepository;
         this.addressRepository = addressRepository;
         this.sizeProductVariantRepository = sizeProductVariantRepository;
+        this.discountService = discountService;
         this.discountRepository = discountRepository;
         this.orderMapper = orderMapper;
         this.emailService = emailService;
@@ -114,12 +117,16 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Discount discount = applyDiscount(orderRequest.getDiscountCode(), orderTotal, user);
-        BigDecimal discountAmount = (discount != null) ? calculateDiscountAmount(discount, orderTotal) : BigDecimal.ZERO;
+        Discount discount = findAndValidateDiscount(orderRequest.getDiscountCode(), orderTotal, user);
         
+        BigDecimal discountAmount = BigDecimal.ZERO;
         if (discount != null) {
+            List<Long> itemProductIds = cart.getCartItems().stream().map(item -> item.getProduct().getId()).toList();
+            List<BigDecimal> subtotals = cart.getCartItems().stream().map(CartItem::getSubtotal).toList();
+            
+            discountAmount = discountService.calculateDiscountAmount(discount, itemProductIds, subtotals, orderTotal);
+            
             discount.setTimesUsed(discount.getTimesUsed() + 1);
-            discountRepository.save(discount);
         }
 
         BigDecimal totalAfterDiscount = orderTotal.subtract(discountAmount).max(BigDecimal.ZERO);
@@ -158,14 +165,14 @@ public class OrderServiceImpl implements OrderService {
         return response;
     }
 
-    private Discount applyDiscount(String discountCode, BigDecimal totalAmount, User user) {
+    private Discount findAndValidateDiscount(String discountCode, BigDecimal totalAmount, User user) {
         if (discountCode == null || discountCode.isBlank()) {
             log.info("Không có mã giảm giá");
             return null;
         }
 
         // Lấy discount từ DB
-        Discount discount = discountRepository.findByCode(discountCode).orElse(null);
+        Discount discount = discountService.getDiscountByCode(discountCode); // Cần thêm method này vào service
 
         if (discount == null || !discount.isActive()) {
             log.warn("Mã giảm giá không hợp lệ hoặc chưa được kích hoạt: {}", discountCode);
@@ -198,16 +205,6 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Áp dụng mã giảm giá: {}, Giá trị giảm: {}", discountCode, discount.getDiscountAmount());
         return discount;
-    }
-
-
-    private BigDecimal calculateDiscountAmount(Discount discount, BigDecimal orderTotal) {
-        if (discount.getDiscountType() == DiscountType.PERCENTAGE) {
-            return orderTotal.multiply(discount.getDiscountAmount()).divide(BigDecimal.valueOf(100));
-        } else if (discount.getDiscountType() == DiscountType.FIXED) {
-            return discount.getDiscountAmount();
-        }
-        return BigDecimal.ZERO; // Nếu loại giảm giá không hợp lệ
     }
 
 
