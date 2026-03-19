@@ -1,4 +1,4 @@
-name: Java CI/CD with API Testing
+name: Java CI/CD Enterprise Pipeline
 
 on:
   push:
@@ -7,18 +7,23 @@ on:
     branches: [ "main", "master", "develop" ]
 
 env:
-  # Universal defaults for services (overridden by secrets where sensitive)
+  # Các biến môi trường dùng chung cho toàn bộ Pipeline
   DB_URL: jdbc:postgresql://localhost:5432/roway_db
-  DB_USERNAME: ${{ secrets.DB_USERNAME || 'postgres' }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD || 'password' }}
+  DB_USERNAME: postgres
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   REDIS_HOST: localhost
   REDIS_PORT: 6379
-  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY || 'dGhpcy1pcy1hLTMyLWJ5dGUtc2VjcmV0LWtleS0xMjM=' }}
-  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME || 'test@example.com' }}
-  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD || 'test' }}
-  CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME || 'test' }}
-  CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY || 'test' }}
-  CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET || 'test' }}
+  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+  MAIL_HOST: ${{ secrets.MAIL_HOST }}
+  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+  CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+  CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+  CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+  VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
+  VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
+  VNPAY_RETURN_URL: ${{ secrets.VNPAY_RETURN_URL }}
+  VNPAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 
 jobs:
   build:
@@ -27,22 +32,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
-      - name: Cache Maven Repository
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+      - name: Make mvnw executable
+        run: chmod +x mvnw
 
-      - name: Build with Maven
+      - name: Build with Maven (Skip Tests for Packaging)
         run: ./mvnw clean package -DskipTests
 
       - name: Upload JAR Artifact
@@ -52,8 +52,8 @@ jobs:
           path: target/*.jar
           retention-days: 1
 
-  api-test:
-    name: Global API Testing
+  unit-test:
+    name: Core Unit Testing
     needs: build
     runs-on: ubuntu-latest
     services:
@@ -62,7 +62,7 @@ jobs:
         env:
           POSTGRES_DB: roway_db
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ports: [5432:5432]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
@@ -73,60 +73,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Download JAR Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-jar
-          path: target/
-
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
+          cache: maven
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Newman & htmlextra
-        run: npm install -g newman newman-reporter-htmlextra
-
-      - name: Create Test Assets
-        run: |
-          mkdir -p test-assets
-          echo "fake image" > test-assets/product.png
-
-      - name: Start Spring Boot Application
-        run: |
-          JAR_FILE=$(ls target/*.jar)
-          nohup java -jar $JAR_FILE > app.log 2>&1 &
-          echo "Waiting for service to be healthy..."
-          timeout 120s bash -c 'until curl -s localhost:8080/api-docs > /dev/null; do sleep 5; echo "..."; done' || (cat app.log && exit 1)
-
-      - name: Run Newman Tests
-        run: |
-          newman run "Backend ROWAY.postman_collection.json" \
-            --env-var "baseURL=http://localhost:8080" \
-            --reporters cli,htmlextra,junit \
-            --reporter-htmlextra-export report.html \
-            --reporter-junit-export report.xml
-
-      - name: Upload Test Reports & Logs
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: api-test-results
-          path: |
-            report.html
-            report.xml
-            app.log
+      - name: Run 8 Enterprise Unit Tests
+        run: ./mvnw test
 
   docker:
-    name: Containerize
-    needs: api-test
+    name: Containerize & DockerHub
+    needs: unit-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -140,21 +99,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Image
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
         run: |
-          IMAGE_NAME=roway-backend
+          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/roway-backend
           COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
           docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$COMMIT_SHA .
-
-      # Note: Login and Push steps are commented out.
-      # Requires DOCKER_USERNAME and DOCKER_PASSWORD secrets.
-      # - name: Login to DockerHub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
-      # - name: Push to DockerHub
-      #   run: |
-      #     IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/roway-backend
-      #     docker tag roway-backend:latest $IMAGE_NAME:latest
-      #     docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:$COMMIT_SHA
