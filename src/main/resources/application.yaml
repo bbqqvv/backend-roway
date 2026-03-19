@@ -98,4 +98,4 @@ payment:
     tmnCode: ${VNPAY_TMN_CODE:tmn_code}
     secretKey: ${VNPAY_SECRET_KEY:secret_key}
     version: 2.1.0
-    returnUrl: http://localhost:8080/api/v1/payment/vn-pay-callback
+    returnUrl: ${VNPAY_RETURN_URL:http://localhost:8080/api/v1/payment/vn-pay-callback}

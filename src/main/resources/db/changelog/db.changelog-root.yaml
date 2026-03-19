@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/v1.1/02-user-avatar.xml
   - include:
       file: db/changelog/v1.1/03-user-fields.xml
+  - include:
+      file: db/changelog/v1.1/04-version-column.xml

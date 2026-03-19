@@ -25,34 +25,39 @@ import static org.bbqqvv.backendecommerce.util.PagingUtil.toPageResponse;
 public class FilterServiceImpl implements FilterService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final OrderRepository orderRepository;
+    private final org.springframework.data.redis.core.RedisTemplate<String, String> redisTemplate;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final ProductMapper productMapper;
+
+    private static final String FILTER_CACHE_KEY = "catalog:filter:options";
 
     public FilterServiceImpl(ProductRepository productRepository,
                              CategoryRepository categoryRepository,
-                             OrderRepository orderRepository,
+                             org.springframework.data.redis.core.RedisTemplate<String, String> redisTemplate,
+                             com.fasterxml.jackson.databind.ObjectMapper objectMapper,
                              ProductMapper productMapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
-        this.orderRepository = orderRepository;
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
         this.productMapper = productMapper;
     }
 
     @Override
+    @lombok.SneakyThrows
     public Map<String, Object> getFilterOptions() {
-        // 1. Colors
+        // 1. Thử lấy từ Redis
+        String cachedJson = redisTemplate.opsForValue().get(FILTER_CACHE_KEY);
+        if (cachedJson != null && !cachedJson.isBlank()) {
+            return objectMapper.readValue(cachedJson, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+        }
+
+        // 2. Nếu không có ở Redis, Query từ DB
         List<String> colors = productRepository.findDistinctColors();
-
-        // 2. Sizes
         List<String> sizes = productRepository.findDistinctSizes();
-
-        // 3. Tags
         List<String> tags = productRepository.findDistinctTags();
-
-        // 4. Min & Max Price
         BigDecimal minPrice = productRepository.findMinPrice();
         BigDecimal maxPrice = productRepository.findMaxPrice();
-            // 5. Categories → trả về DTO CategoryResponse
         List<CategoryResponseForFilter> categories = categoryRepository.findAll()
                 .stream()
                 .map(c -> CategoryResponseForFilter.builder()
@@ -62,7 +67,7 @@ public class FilterServiceImpl implements FilterService {
                         .build())
                 .toList();
 
-        return Map.of(
+        Map<String, Object> filterOptions = Map.of(
                 "colors", colors,
                 "sizes", sizes,
                 "tags", tags,
@@ -70,6 +75,13 @@ public class FilterServiceImpl implements FilterService {
                 "maxPrice", maxPrice,
                 "categories", categories
         );
+
+        // 3. Lưu vào Redis với TTL 30 phút
+        redisTemplate.opsForValue().set(FILTER_CACHE_KEY, 
+                objectMapper.writeValueAsString(filterOptions), 
+                java.time.Duration.ofMinutes(30));
+
+        return filterOptions;
     }
 
     @Override

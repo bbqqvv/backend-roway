@@ -19,8 +19,9 @@ services:
     container_name: roway-redis
     ports:
       - "6379:6379"
+    command: ["redis-server", "--requirepass", "password"]
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a password ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,12 +36,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file: .env
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/roway_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - REDIS_PASSWORD=password
       # Add other environment variables as needed, or use a .env file
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api-docs || exit 1"]

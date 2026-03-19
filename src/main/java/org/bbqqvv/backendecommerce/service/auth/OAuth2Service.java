@@ -49,7 +49,6 @@ public class OAuth2Service implements UserDetailsService {
             return handleSuccessfulOAuth2Login("fb-mock@example.com", "Mock FB User", "mock-fb-sub-456", AuthProvider.FACEBOOK, null);
         }
 
-        // Thực tế sẽ gọi API Facebook: https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=...
         String validationUrl = "https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=" + facebookToken;
         ResponseEntity<Map> validationResponse;
 
@@ -65,6 +64,7 @@ public class OAuth2Service implements UserDetailsService {
             throw new RuntimeException("Invalid Facebook token");
         }
 
+        @SuppressWarnings("unchecked")
         Map<String, Object> fbUser = validationResponse.getBody();
         String email = (String) fbUser.get("email");
         String name = (String) fbUser.get("name");
@@ -72,8 +72,10 @@ public class OAuth2Service implements UserDetailsService {
         
         String avatarUrl = null;
         if (fbUser.containsKey("picture")) {
+            @SuppressWarnings("unchecked")
             Map<String, Object> picture = (Map<String, Object>) fbUser.get("picture");
             if (picture.containsKey("data")) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> data = (Map<String, Object>) picture.get("data");
                 avatarUrl = (String) data.get("url");
             }
@@ -86,7 +88,6 @@ public class OAuth2Service implements UserDetailsService {
     public String loginWithGoogle(String googleToken) {
         log.info("Validating Google token...");
 
-        // Gửi request xác minh token với Google
         if ("mock-google-token".equals(googleToken)) {
             log.info("Mock Google token detected. Bypassing validation.");
             return handleSuccessfulOAuth2Login("mock@example.com", "Mock User", "mock-sub-123", AuthProvider.GOOGLE, null);
@@ -102,13 +103,12 @@ public class OAuth2Service implements UserDetailsService {
             throw new RuntimeException("Invalid Google token", e);
         }
 
-        // Kiểm tra phản hồi
         if (!validationResponse.getStatusCode().is2xxSuccessful() || validationResponse.getBody() == null) {
             log.error("Google token validation failed");
             throw new RuntimeException("Invalid Google token");
         }
 
-        // Lấy thông tin user từ token
+        @SuppressWarnings("unchecked")
         Map<String, Object> googleUser = validationResponse.getBody();
         String email = (String) googleUser.get("email");
         String name = (String) googleUser.get("name");
@@ -125,21 +125,20 @@ public class OAuth2Service implements UserDetailsService {
             throw new RuntimeException("Invalid " + provider + " user data");
         }
 
-        // Kiểm tra user trong DB hoặc tạo mới
         User user = userRepository.findByEmail(email).orElse(null);
 
+        if (user == null) {
             user = User.builder()
                     .email(email)
-                    .username(email) // Dùng email làm username để tránh trùng lặp
+                    .username(email)
                     .name(name)
                     .provider(provider)
                     .providerId(providerId)
                     .avatar(avatarUrl)
-                    .authorities(Set.of(Role.ROLE_USER)) // Mặc định role USER
+                    .authorities(Set.of(Role.ROLE_USER))
                     .build();
             userRepository.save(user);
         } else {
-            // Cập nhật thông tin nếu có thay đổi
             boolean updated = false;
             if (user.getProviderId() == null) {
                 user.setProviderId(providerId);
@@ -159,13 +158,8 @@ public class OAuth2Service implements UserDetailsService {
             }
         }
 
-        // Tạo UserDetails từ user
         UserDetails userDetails = this.loadUserByUsername(email);
-
-        // Tạo JWT token và trả về
-        String token = jwtTokenUtil.generateToken(userDetails);
-        log.info("Google login successful for email: {}", email);
-        return token;
+        return jwtTokenUtil.generateToken(userDetails);
     }
 
     @Override

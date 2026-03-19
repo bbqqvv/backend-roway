@@ -9,6 +9,7 @@ import lombok.*;
 @Table(name = "addresses")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"user"})

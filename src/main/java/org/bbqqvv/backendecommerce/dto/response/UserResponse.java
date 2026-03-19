@@ -2,18 +2,6 @@ package org.bbqqvv.backendecommerce.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDateTime;
-import java.util.Set;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-package org.bbqqvv.backendecommerce.dto.response;
-
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -30,10 +18,8 @@ public class UserResponse {
     String avatar;
     String phoneNumber;
     String bio;
-    RoleResponse authorities; // Single RoleResponse
+    RoleResponse authorities;
 
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-    public UserResponse(String authorities) {
-    }
 }

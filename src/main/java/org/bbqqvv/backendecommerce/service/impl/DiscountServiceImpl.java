@@ -310,7 +310,7 @@ public class DiscountServiceImpl implements DiscountService {
         Discount discount = discountRepository.findByCode(discountPreviewRequest.getDiscountCode())
                 .orElseThrow(() -> new AppException(SocialMarketingErrorCode.DISCOUNT_NOT_FOUND));
 
-        BigDecimal originalTotalAmount = cartService.getTotalCartAmount(discountPreviewRequest.getCartId());
+        BigDecimal originalTotalAmount = cartService.getTotalCartAmount();
         if (originalTotalAmount == null) {
             originalTotalAmount = BigDecimal.ZERO;
         }

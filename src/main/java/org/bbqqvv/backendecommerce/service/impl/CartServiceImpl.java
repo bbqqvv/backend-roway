@@ -210,8 +210,9 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public BigDecimal getTotalCartAmount(Long cartId) {
-        Cart cart = cartRepository.findById(cartId)
+    public BigDecimal getTotalCartAmount() {
+        User user = getAuthenticatedUser();
+        Cart cart = cartRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
 
         return cart.getTotalPrice();

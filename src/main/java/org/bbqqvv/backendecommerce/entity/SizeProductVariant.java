@@ -27,4 +27,7 @@ public class SizeProductVariant extends BaseEntity {
 
     @Column(nullable = false)
     private int stock;
+
+    @Version
+    private Long version;
 }

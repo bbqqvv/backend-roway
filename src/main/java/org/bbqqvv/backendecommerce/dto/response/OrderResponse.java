@@ -15,21 +15,22 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderResponse {
-    private Long id;
-    private Long userId;
-    private String name;
-    private String address;
-    private String phoneNumber;
-    private String notes;
-    private String orderCode;
-    private String status;
-    private PaymentMethod paymentMethod;
-    private BigDecimal shippingFee;
-    private String discountCode;
-    private BigDecimal discountAmount;
-    private LocalDate expectedDeliveryDate;
-    private List<OrderItemResponse> orderItems;
-    private BigDecimal totalAmount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    Long id;
+    Long userId;
+    String name;
+    String address;
+    String phoneNumber;
+    String notes;
+    String orderCode;
+    String status;
+    PaymentMethod paymentMethod;
+    BigDecimal shippingFee;
+    String discountCode;
+    BigDecimal discountAmount;
+    LocalDate expectedDeliveryDate;
+    List<OrderItemResponse> orderItems;
+    BigDecimal totalAmount;
+    String paymentUrl;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

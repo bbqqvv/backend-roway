@@ -10,10 +10,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Set;
 
+import lombok.*;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ProductRequest {
     @NotBlank(message = "Product name is required")
     @Size(max = 100, message = "Product name must be less than 100 characters")

@@ -8,6 +8,7 @@ import java.util.List;
 @Table(name = "product_variants")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"productVariantSizes"})

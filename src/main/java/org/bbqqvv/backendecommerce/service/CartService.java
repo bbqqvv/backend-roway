@@ -36,5 +36,5 @@ public interface CartService {
      */
     void clearCart();
 
-    BigDecimal getTotalCartAmount(Long cartId);
+    BigDecimal getTotalCartAmount();
 }

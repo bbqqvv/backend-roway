@@ -15,6 +15,7 @@ import org.bbqqvv.backendecommerce.mapper.OrderMapper;
 import org.bbqqvv.backendecommerce.repository.*;
 import org.bbqqvv.backendecommerce.service.OrderService;
 import org.bbqqvv.backendecommerce.service.email.EmailService;
+import org.bbqqvv.backendecommerce.service.payment.PaymentService;
 import org.bbqqvv.backendecommerce.util.PagingUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,13 +43,17 @@ public class OrderServiceImpl implements OrderService {
     private final SizeProductVariantRepository sizeProductVariantRepository;
     private final DiscountRepository discountRepository;
     private final OrderMapper orderMapper;
+    private final EmailService emailService;
+    private final PaymentService paymentService;
+
     private static final BigDecimal FREE_SHIPPING_THRESHOLD = BigDecimal.valueOf(499000);
     private static final int EXPECTED_DELIVERY_DAYS = 5;
-    private final EmailService emailService;
+
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                             UserRepository userRepository, ProductRepository productRepository, CartRepository cartRepository,
                             AddressRepository addressRepository, SizeProductVariantRepository sizeProductVariantRepository,
-                            DiscountRepository discountRepository, OrderMapper orderMapper, EmailService emailService) {
+                            DiscountRepository discountRepository, OrderMapper orderMapper, EmailService emailService, 
+                            PaymentService paymentService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
@@ -59,6 +64,7 @@ public class OrderServiceImpl implements OrderService {
         this.discountRepository = discountRepository;
         this.orderMapper = orderMapper;
         this.emailService = emailService;
+        this.paymentService = paymentService;
     }
 
     private User getAuthenticatedUser() {
@@ -108,8 +114,14 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Discount discount = applyDiscount(orderRequest.getDiscountCode(), orderTotal);
+        Discount discount = applyDiscount(orderRequest.getDiscountCode(), orderTotal, user);
         BigDecimal discountAmount = (discount != null) ? calculateDiscountAmount(discount, orderTotal) : BigDecimal.ZERO;
+        
+        if (discount != null) {
+            discount.setTimesUsed(discount.getTimesUsed() + 1);
+            discountRepository.save(discount);
+        }
+
         BigDecimal totalAfterDiscount = orderTotal.subtract(discountAmount).max(BigDecimal.ZERO);
         BigDecimal shippingFee = calculateShippingFee(address, totalAfterDiscount);
         BigDecimal finalTotalAmount = totalAfterDiscount.add(shippingFee);
@@ -134,13 +146,19 @@ public class OrderServiceImpl implements OrderService {
         orderItemRepository.saveAll(orderItems);
         savedOrder.setOrderItems(orderItems);
         cartRepository.deleteByUserId(user.getId());
+
+        // 💳 Tạo Link thanh toán (Ví dụ: VNPay) nếu cần
+        String paymentUrl = paymentService.createPaymentUrl(savedOrder);
+        
         // Gửi email bất đồng bộ
         emailService.sendOrderConfirmationEmail(savedOrder, user.getEmail());
         
-        return orderMapper.toOrderResponse(savedOrder);
+        OrderResponse response = orderMapper.toOrderResponse(savedOrder);
+        response.setPaymentUrl(paymentUrl);
+        return response;
     }
 
-    private Discount applyDiscount(String discountCode, BigDecimal totalAmount) {
+    private Discount applyDiscount(String discountCode, BigDecimal totalAmount, User user) {
         if (discountCode == null || discountCode.isBlank()) {
             log.info("Không có mã giảm giá");
             return null;
@@ -154,7 +172,25 @@ public class OrderServiceImpl implements OrderService {
             return null;
         }
 
-        // Kiểm tra điều kiện áp dụng mã giảm giá
+        // 🛡️ Security Check: Hết hạn
+        if (discount.isExpired()) {
+            log.warn("Mã giảm giá đã hết hạn: {}", discountCode);
+            return null;
+        }
+
+        // 🛡️ Security Check: Hết lượt sử dụng
+        if (discount.isUsageLimitReached()) {
+            log.warn("Mã giảm giá đã đạt giới hạn sử dụng: {}", discountCode);
+            return null;
+        }
+
+        // 🛡️ Security Check: Không dành cho User này (Nếu có giới hạn User)
+        if (!discount.isApplicableForUser(user)) {
+            log.warn("User {} không thuộc danh sách được áp dụng mã {}", user.getUsername(), discountCode);
+            return null;
+        }
+
+        // Kiểm tra điều kiện áp dụng mã giảm giá (Giá trị tối thiểu)
         if (totalAmount.compareTo(discount.getMinOrderValue()) < 0) {
             log.warn("Tổng giá trị đơn hàng ({}) không đủ để áp dụng mã giảm giá {}", totalAmount, discountCode);
             return null;
@@ -310,6 +346,13 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse updateOrder(Long orderId, OrderRequest orderRequest) {
         Order order = findOrderById(orderId);
+        User user = getAuthenticatedUser();
+
+        // 🛡️ Security Check: Chỉ chủ nhân hoặc Admin mới được sửa
+        if (!user.getId().equals(order.getUser().getId()) && !user.isAdmin()) {
+            throw new AppException(CommonErrorCode.ACCESS_DENIED);
+        }
+
         updateOrderDetails(order, orderRequest);
         return orderMapper.toOrderResponse(order);
     }
@@ -359,6 +402,14 @@ public class OrderServiceImpl implements OrderService {
         });
         sizeProductVariantRepository.saveAll(updatedVariants);
 
+
+        // 🔄 Hoàn lại mã giảm giá nếu có
+        if (order.getDiscount() != null) {
+            Discount discount = order.getDiscount();
+            discount.setTimesUsed(Math.max(0, discount.getTimesUsed() - 1));
+            discountRepository.save(discount);
+            log.info("Refunded coupon {} for canceled order {}", discount.getCode(), order.getOrderCode());
+        }
 
         order.setStatus(OrderStatus.CANCELED);
         orderRepository.save(order);

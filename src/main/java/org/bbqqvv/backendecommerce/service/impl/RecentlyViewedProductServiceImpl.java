@@ -40,24 +40,26 @@ public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductSe
     private static final String REDIS_KEY_PREFIX = "user:recently_viewed:";
     private static final int MAX_ITEMS = 20;
 
-    // 🟢 Lấy user hiện tại từ SecurityUtils
+    // 🟢 Lấy user hiện tại (trả về null nếu khách chưa đăng nhập)
     private User getAuthenticatedUser() {
-        String username = SecurityUtils.getCurrentUserLogin()
-                .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+        return SecurityUtils.getCurrentUserLogin()
+                .flatMap(userRepository::findByUsername)
+                .orElse(null);
     }
 
     @Override
     @org.springframework.scheduling.annotation.Async
     @org.springframework.transaction.annotation.Transactional
     public void markProductAsViewed(Long productId) {
-        log.info("Marking product {} as viewed with Redis & Async", productId);
-        try {
-            User currentUser = getAuthenticatedUser();
-            String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) {
+            log.debug("Guest user viewed product {}. Not saving to backend.", productId);
+            return;
+        }
 
+        log.info("Marking product {} as viewed with Redis & Async for user {}", productId, currentUser.getId());
+        try {
+            String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
             // 1. Ghi vào Redis (ZSET)
             redisTemplate.opsForZSet().add(redisKey, productId.toString(), System.currentTimeMillis());
             // Giới hạn 20 phần tử trong Redis
@@ -82,13 +84,23 @@ public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductSe
                 repository.save(recentlyViewedProduct);
             }
         } catch (Exception e) {
-            log.error("Failed to mark product {} as viewed: {}", productId, e.getMessage());
+            log.error("Failed to mark product {} for user {}: {}", productId, currentUser.getId(), e.getMessage());
         }
     }
 
     @Override
     public PageResponse<ProductResponse> getRecentlyViewedProducts(Pageable pageable) {
         User currentUser = getAuthenticatedUser();
+        // Nếu là khách, không có dữ liệu trên Backend để trả về
+        if (currentUser == null) {
+            return PageResponse.<ProductResponse>builder()
+                    .items(List.of())
+                    .currentPage(pageable.getPageNumber())
+                    .pageSize(pageable.getPageSize())
+                    .totalElements(0)
+                    .build();
+        }
+
         String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
 
         // Thử lấy từ Redis trước (ZREVRANGE)
@@ -146,10 +158,16 @@ public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductSe
         if (productIds == null || productIds.isEmpty()) return;
 
         User currentUser = getAuthenticatedUser();
+        if (currentUser == null) {
+            log.warn("Attempted to sync viewed products without authentication.");
+            return;
+        }
+
         String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
         long now = System.currentTimeMillis();
 
         List<Product> products = productRepository.findAllById(productIds);
+        log.info("Syncing {} viewed products for user {}", products.size(), currentUser.getId());
         for (Product product : products) {
             // Redis Sync
             redisTemplate.opsForZSet().add(redisKey, product.getId().toString(), now++);

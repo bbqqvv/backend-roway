@@ -1,4 +1,5 @@
 package org.bbqqvv.backendecommerce.dto.response;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
@@ -9,13 +10,12 @@ import java.math.BigDecimal;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderItemResponse {
-    private Long productId;
-    private String productName;
-    private String mainImageUrl;
-    private String color;
-    private String sizeName;
-    private Integer quantity;
-    private BigDecimal price;
-    private BigDecimal subtotal;
-
+    Long productId;
+    String productName;
+    String mainImageUrl;
+    String color;
+    String sizeName;
+    Integer quantity;
+    BigDecimal price;
+    BigDecimal subtotal;
 }

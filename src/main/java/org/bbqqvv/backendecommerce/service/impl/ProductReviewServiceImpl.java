@@ -161,7 +161,9 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         ProductReview review = productReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new AppException(SocialMarketingErrorCode.REVIEW_NOT_FOUND));
 
-        if (!review.getUser().getId().equals(user.getId())) {
+        // 🛡️ Security Check: Chỉ chủ nhân hoặc ADMIN mới được xóa
+        if (!review.getUser().getId().equals(user.getId()) && !user.isAdmin()) {
+            log.warn("User {} tried to delete review {} without permission", user.getUsername(), reviewId);
             throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
 

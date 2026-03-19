@@ -34,52 +34,50 @@ public class AuthController {
     // Đăng ký người dùng
     @PostMapping("/register")
     @Operation(summary = "Đăng ký tài khoản", description = "Tạo tài khoản người dùng mới với các thông tin cơ bản.")
-    public ResponseEntity<UserResponse> register(@RequestBody @Valid UserCreationRequest creationRequest) {
+    public ApiResponse<UserResponse> register(@RequestBody @Valid UserCreationRequest creationRequest) {
         UserResponse userResponse = authenticationService.register(creationRequest);
-        return userResponse != null
-                ? ResponseEntity.status(HttpStatus.CREATED).body(userResponse)
-                : ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new UserResponse("Registration failed"));
+        return ApiResponse.<UserResponse>builder()
+                .success(true)
+                .message("User registered successfully")
+                .data(userResponse)
+                .build();
     }
 
     // Đăng nhập người dùng
     @PostMapping("/login")
     @Operation(summary = "Đăng nhập truyền thống", description = "Xác thực người dùng bằng username và password, trả về JWT token.")
-    public ResponseEntity<?> login(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
-        try {
-            String token = authenticationService.login(authenticationRequest);
-            return ResponseEntity.ok(new JwtResponse(token)); // Trả về JWT token
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Login failed: " + e.getMessage());
-        }
+    public ApiResponse<JwtResponse> login(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
+        String token = authenticationService.login(authenticationRequest);
+        return ApiResponse.<JwtResponse>builder()
+                .success(true)
+                .message("Login successful")
+                .data(new JwtResponse(token))
+                .build();
     }
 
 
     // 🔹 Đăng nhập bằng Google OAuth2
     @PostMapping("/oauth2/google")
     @Operation(summary = "Đăng nhập Google", description = "Xác thực và đăng nhập bằng Google ID Token.")
-    public ResponseEntity<?> googleLogin(@RequestBody @Valid OAuth2LoginRequest request) {
-        try {
-            String jwtToken = oAuth2Service.loginWithGoogle(request.getToken());
-            return ResponseEntity.ok(new JwtResponse(jwtToken));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Google login failed: " + e.getMessage());
-        }
+    public ApiResponse<JwtResponse> googleLogin(@RequestBody @Valid OAuth2LoginRequest request) {
+        String jwtToken = oAuth2Service.loginWithGoogle(request.getToken());
+        return ApiResponse.<JwtResponse>builder()
+                .success(true)
+                .message("Google login successful")
+                .data(new JwtResponse(jwtToken))
+                .build();
     }
 
     // 🔹 Đăng nhập bằng Facebook OAuth2
     @PostMapping("/oauth2/facebook")
     @Operation(summary = "Đăng nhập Facebook", description = "Xác thực và đăng nhập bằng Facebook Access Token.")
-    public ResponseEntity<?> facebookLogin(@RequestBody @Valid OAuth2LoginRequest request) {
-        try {
-            String jwtToken = oAuth2Service.loginWithFacebook(request.getToken());
-            return ResponseEntity.ok(new JwtResponse(jwtToken));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Facebook login failed: " + e.getMessage());
-        }
+    public ApiResponse<JwtResponse> facebookLogin(@RequestBody @Valid OAuth2LoginRequest request) {
+        String jwtToken = oAuth2Service.loginWithFacebook(request.getToken());
+        return ApiResponse.<JwtResponse>builder()
+                .success(true)
+                .message("Facebook login successful")
+                .data(new JwtResponse(jwtToken))
+                .build();
     }
 
     /**

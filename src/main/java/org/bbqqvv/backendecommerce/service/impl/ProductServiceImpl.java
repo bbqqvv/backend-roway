@@ -134,7 +134,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(value = "featured_products", key = "'all'")
     public PageResponse<ProductResponse> getFeaturedProducts(Pageable pageable) {
+        log.info("Fetching featured products from DB (Cache Miss)");
         Page<Product> featured = productRepository.findByFeaturedTrue(pageable);
         return toPageResponse(featured);
     }

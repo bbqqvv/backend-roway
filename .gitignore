@@ -33,5 +33,10 @@ build/
 .vscode/
 .env
 *.log
+app_log.txt
+results_full.txt
 missing_packages.txt
-run_final*.log
+.gemini/
+.DS_Store
+.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar

@@ -15,13 +15,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/addresses")
 @RequiredArgsConstructor
-@Tag(name = "Address", description = "Address API for managing user addresses")
+@Tag(name = "Address Management", description = "Quản lý địa chỉ nhận hàng của người dùng.")
 public class AddressController {
 
     private final AddressService addressService;
 
     @PostMapping
-    @Operation(summary = "Create new address")
+    @Operation(summary = "Thêm địa chỉ mới", description = "Thêm một địa chỉ nhận hàng mới vào danh mục của người dùng hiện tại.")
     public ApiResponse<AddressResponse> createAddress(@RequestBody @Valid AddressRequest request) {
         return ApiResponse.<AddressResponse>builder()
                 .success(true)
@@ -30,7 +30,7 @@ public class AddressController {
     }
 
     @GetMapping("/me")
-    @Operation(summary = "Get current user's addresses")
+    @Operation(summary = "Lấy danh sách địa chỉ của tôi", description = "Trả về toàn bộ danh sách các địa chỉ nhận hàng mà người dùng hiện tại đã lưu.")
     public ApiResponse<List<AddressResponse>> getMyAddresses() {
         return ApiResponse.<List<AddressResponse>>builder()
                 .success(true)
@@ -39,7 +39,7 @@ public class AddressController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get address by ID")
+    @Operation(summary = "Lấy chi tiết địa chỉ theo ID", description = "Xem thông tin chi tiết của một địa chỉ cụ thể thông qua mã ID.")
     public ApiResponse<AddressResponse> getAddress(@PathVariable Long id) {
         return ApiResponse.<AddressResponse>builder()
                 .success(true)
@@ -48,7 +48,7 @@ public class AddressController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update address by ID")
+    @Operation(summary = "Cập nhật địa chỉ", description = "Sửa đổi thông tin của một địa chỉ nhận hàng đã tồn tại.")
     public ApiResponse<AddressResponse> updateAddress(@PathVariable Long id, @RequestBody @Valid AddressRequest request) {
         return ApiResponse.<AddressResponse>builder()
                 .success(true)
@@ -57,7 +57,7 @@ public class AddressController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete address by ID")
+    @Operation(summary = "Xóa địa chỉ", description = "Xóa hoàn toàn một địa chỉ khỏi tài khoản người dùng.")
     public ApiResponse<String> deleteAddress(@PathVariable Long id) {
         addressService.deleteAddress(id);
         return ApiResponse.<String>builder()
@@ -67,7 +67,7 @@ public class AddressController {
     }
 
     @PutMapping("/{id}/set-default")
-    @Operation(summary = "Set address as default")
+    @Operation(summary = "Đặt làm địa chỉ mặc định", description = "Thiết lập một địa chỉ cụ thể làm địa chỉ giao hàng ưu tiên (mặc định) cho các đơn hàng sau này.")
     public ApiResponse<AddressResponse> setDefault(@PathVariable Long id) {
         return ApiResponse.<AddressResponse>builder()
                 .success(true)
