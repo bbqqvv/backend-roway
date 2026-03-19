@@ -1,4 +1,4 @@
-name: Ultimate Enterprise CI/CD Pipeline (Production-Grade)
+name: Ultimate Production-Grade CI/CD Pipeline (Staff Level)
 
 on:
   push:
@@ -6,8 +6,13 @@ on:
   pull_request:
     branches: [ "main", "develop" ]
 
+# 🚥 4. Concurrency Control: Ngăn chặn deploy chồng chéo
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # 🛡️ 1. QUALITY GATE: Build, Verify (Coverage & Unit Test)
+  # 🛡️ 1. QUALITY GATE: Build & Verify (Unit Test + Coverage Check)
   quality-gate:
     name: Build & Verify (Quality Gate)
     runs-on: ubuntu-latest
@@ -37,13 +42,12 @@ jobs:
           cache: maven
 
       - name: Hardcore Security Scan (Snyk)
-        uses: snyk/actions/maven@master
-        # Chặn build trên main nếu có lỗi bảo mật
-        continue-on-error: ${{ github.ref != 'refs/heads/main' }} 
+        uses: snyk/actions/maven@v1.2.1 # Pin version cụ thể
+        continue-on-error: ${{ github.ref != 'refs/heads/main' }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Build & Verify (Test + Jacoco Coverage Check)
+      - name: Build & Verify (Enforce Coverage Rule)
         env:
           DB_URL: jdbc:postgresql://localhost:5432/roway_db
           DB_USERNAME: postgres
@@ -56,23 +60,14 @@ jobs:
           chmod +x mvnw
           ./mvnw clean verify jacoco:check -Pproduction
 
-      - name: Export Quality Artifacts
-        if: always()
+      - name: Save Artifact (SHA based)
         uses: actions/upload-artifact@v4
         with:
-          name: quality-reports
-          path: |
-            target/site/jacoco/
-            target/surefire-reports/
-
-      - name: Save Clean Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-jar
+          name: app-${{ github.sha }}
           path: target/*.jar
           retention-days: 1
 
-  # 🐳 2. CONTAINER & SECURITY: Dockerize and Scan SHA Image
+  # 🐳 2. CONTAINER & SECURITY: Dockerize and Image Scanning
   container-security:
     name: Dockerize & Security Scan
     needs: quality-gate
@@ -80,10 +75,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download JAR Artifact
+      - name: Download Artifact SHA
         uses: actions/download-artifact@v4
         with:
-          name: production-jar
+          name: app-${{ github.sha }}
           path: target/
 
       - name: Login to DockerHub
@@ -92,7 +87,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker Image (GHA Cache enabled)
+      - name: Build and Load Image (Cache enabled)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -102,13 +97,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Hardcore Docker Scan (Trivy)
-        uses: aquasecurity/trivy-action@master
+      - name: Docker Image Security Scan (Trivy - SHA Based)
+        uses: aquasecurity/trivy-action@v0.20.0 # Pin version
         with:
           image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:${{ github.sha }}'
           format: 'table'
-          # Chặn build nếu có lỗi HIGH/CRITICAL
-          exit-code: 1 
+          exit-code: 1
           severity: 'CRITICAL,HIGH'
 
       - name: Atomic Push (LATEST + SHA)
@@ -117,9 +111,9 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:latest
 
-  # 🚀 3. CD: Real Dynamic Deployment with Rollback Logic
+  # 🚀 3. CD: Advanced Blue-Green Deployment with Fast Health-Check & Rollback
   deployment:
-    name: Professional Deployment
+    name: Enterprise Deployment (Zero-Downtime Lite)
     needs: container-security
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
@@ -128,38 +122,62 @@ jobs:
       url: ${{ github.ref == 'refs/heads/main' && secrets.PROD_URL || secrets.STAGING_URL }}
     
     steps:
-      - name: Deploy via SSH (Real Deployment)
-        uses: appleboy/ssh-action@master
+      - name: Automated Cluster Deployment via SSH
+        uses: appleboy/ssh-action@v1.0.3 # Pin version
         with:
           host: ${{ github.ref == 'refs/heads/main' && secrets.PROD_HOST || secrets.STAGING_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Deploying ${{ github.sha }} to Server..."
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:${{ github.sha }}
+            IMG_TAG=${{ github.sha }}
+            IMG_NAME=${{ secrets.DOCKERHUB_USERNAME }}/roway-backend
             
-            # Zero-Downtime / Rollback Logic (Basic)
-            docker stop roway-backend-old || true
-            docker rename roway-backend roway-backend-old || true
+            echo "Step 1: Pulling Image $IMG_TAG..."
+            docker pull $IMG_NAME:$IMG_TAG
             
-            docker run -d --name roway-backend \
+            echo "Step 2: Starting New Instance (Side-by-side)..."
+            # Chạy bản mới với port tạm 8081 để check
+            docker run -d --name roway_backend_new \
               --restart always \
-              -p 8080:8080 \
+              -p 8081:8080 \
               -e DB_URL=${{ secrets.DB_URL }} \
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:${{ github.sha }}
+              $IMG_NAME:$IMG_TAG
             
-            # Health Check
-            sleep 30
-            if curl -f http://localhost:8080/api-docs; then
-              echo "Deployment Success! Cleaning old containers..."
-              docker rm -f roway-backend-old || true
+            echo "Step 3: Active Health Check (Looping)..."
+            UP=0
+            for i in {1..15}; do
+              if curl -s -f http://localhost:8081/api-docs > /dev/null; then
+                echo "Instance is HEALTHY after $i attempts!"
+                UP=1
+                break
+              fi
+              echo "Attempt $i: Not ready, waiting 5s..."
+              sleep 5
+            done
+            
+            if [ $UP -eq 1 ]; then
+              echo "Step 4: Hot-Switch (Minimizing Downtime)..."
+              docker stop roway_backend || true
+              docker rm roway_backend || true
+              docker stop roway_backend_new
+              docker rm roway_backend_new
+              
+              # Khởi hành bản thức với port 8080
+              docker run -d --name roway_backend \
+                --restart always \
+                -p 8080:8080 \
+                -e DB_URL=${{ secrets.DB_URL }} \
+                -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+                -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+                $IMG_NAME:$IMG_TAG
+              
+              echo "DEPLOYMENT COMPLETED SUCCESSFULLY!"
             else
-              echo "HEALTH CHECK FAILED! Rolling back..."
-              docker stop roway-backend || true
-              docker rm -f roway-backend || true
-              docker rename roway-backend-old roway-backend || true
-              docker start roway-backend || true
+              echo "CRITICAL: NEW INSTANCE IS UNHEALTHY! Cleaning up..."
+              docker stop roway_backend_new || true
+              docker rm roway_backend_new || true
+              echo "Rollback initiated: Old container remains active."
               exit 1
             fi
