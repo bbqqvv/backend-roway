@@ -28,22 +28,13 @@ public class FilterController {
         allParams.remove("size");
         // Truyền các tham số qua Service để lọc
         PageResponse<ProductResponse> productPage = filterService.filterProducts(allParams, pageable);
-
-        return ApiResponse.<PageResponse<ProductResponse>>builder()
-                .success(true)
-                .message("Products filtered successfully")
-                .data(productPage)
-                .build();
+        return ApiResponse.success(productPage, "Products filtered successfully");
     }
 
     @GetMapping("/options")
     public ApiResponse<Map<String, Object>> getFilterOptions() {
         Map<String, Object> options = filterService.getFilterOptions();
-        return ApiResponse.<Map<String, Object>>builder()
-                .success(true)
-                .message("Filter options fetched successfully")
-                .data(options)
-                .build();
+        return ApiResponse.success(options, "Filter options fetched successfully");
     }
 
 }

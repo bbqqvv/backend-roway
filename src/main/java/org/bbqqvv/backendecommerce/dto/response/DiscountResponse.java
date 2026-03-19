@@ -24,8 +24,8 @@ public class DiscountResponse {
     private LocalDateTime startDate;
     private LocalDateTime expiryDate;
     private boolean active;
-    private List<Long> applicableProducts;
-    private List<Long> applicableUsers;
+    private int applicableProductsCount;
+    private int applicableUsersCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

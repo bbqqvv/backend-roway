@@ -27,11 +27,7 @@ public class DiscountController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<DiscountResponse> createDiscount(@RequestBody @Valid DiscountRequest request) {
         DiscountResponse discountResponse = discountService.createDiscount(request);
-        return ApiResponse.<DiscountResponse>builder()
-                .success(true)
-                .data(discountResponse)
-                .message("Discount created successfully.")
-                .build();
+        return ApiResponse.success(discountResponse);
     }
 
 
@@ -39,105 +35,81 @@ public class DiscountController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<DiscountResponse> updateDiscount(@PathVariable Long id, @RequestBody @Valid DiscountRequest request) {
         DiscountResponse discountResponse = discountService.updateDiscount(id, request);
-        return ApiResponse.<DiscountResponse>builder()
-                .success(true)
-                .data(discountResponse)
-                .message("Discount updated successfully.")
-                .build();
+        return ApiResponse.success(discountResponse);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> deleteDiscount(@PathVariable Long id) {
         discountService.deleteDiscount(id);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Discount deleted successfully.")
-                .message("The discount has been removed successfully.")
-                .build();
+        return ApiResponse.success("Discount deleted successfully.");
     }
 
     @DeleteMapping("/{id}/clear")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> clearUsersAndProducts(@PathVariable Long id) {
         discountService.clearUsersAndProducts(id);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("All users and products removed from discount.")
-                .message("Users and products removed successfully.")
-                .build();
+        return ApiResponse.success("All users and products removed from discount.");
     }
 
     @DeleteMapping("/{id}/remove-products")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> removeProductsFromDiscount(@PathVariable Long id, @RequestBody List<Long> productIds) {
         discountService.removeProductsFromDiscount(id, productIds);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Selected products removed from discount.")
-                .message("Products removed successfully.")
-                .build();
+        return ApiResponse.success("Selected products removed from discount.");
     }
 
     @DeleteMapping("/{id}/remove-users")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> removeUsersFromDiscount(@PathVariable Long id, @RequestBody List<Long> userIds) {
         discountService.removeUsersFromDiscount(id, userIds);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Selected users removed from discount.")
-                .message("Users removed successfully.")
-                .build();
+        return ApiResponse.success("Selected users removed from discount.");
     }
 
     @GetMapping("/{id}")
     public ApiResponse<DiscountResponse> getDiscountById(@PathVariable Long id) {
         DiscountResponse discountResponse = discountService.getDiscountById(id);
-        return ApiResponse.<DiscountResponse>builder()
-                .success(true)
-                .data(discountResponse)
-                .message("Discount retrieved successfully.")
-                .build();
+        return ApiResponse.success(discountResponse);
     }
 
     @GetMapping
     public ApiResponse<PageResponse<DiscountResponse>> getAllDiscounts(@PageableDefault(size = 10) Pageable pageable) {
         PageResponse<DiscountResponse> discountResponses = discountService.getAllDiscounts(pageable);
-        return ApiResponse.<PageResponse<DiscountResponse>>builder()
-                .success(true)
-                .data(discountResponses)
-                .message("List of discounts retrieved successfully.")
-                .build();
+        return ApiResponse.success(discountResponses);
     }
 
     // 📌 Lấy danh sách mã giảm giá của user hiện tại
     @GetMapping("/me")
     public ApiResponse<PageResponse<DiscountResponse>> getUserDiscountCodes(@PageableDefault(size = 10) Pageable pageable) {
         PageResponse<DiscountResponse> discountResponses = discountService.getCurrentUserDiscount(pageable);
-        return ApiResponse.<PageResponse<DiscountResponse>>builder()
-                .success(true)
-                .message("User's discount codes retrieved successfully")
-                .data(discountResponses)
-                .build();
+        return ApiResponse.success(discountResponses);
     }
 
 
     // 📌 Xem trước số tiền giảm giá trước khi đặt hàng
     @PostMapping("/preview-discount")
     public ApiResponse<DiscountPreviewResponse> previewDiscount(@RequestBody @Valid DiscountPreviewRequest discountPreviewRequest) {
-        return ApiResponse.<DiscountPreviewResponse>builder()
-                .success(true)
-                .message("Discount preview calculated successfully")
-                .data(discountService.previewDiscount(discountPreviewRequest))
-                .build();
+        return ApiResponse.success(discountService.previewDiscount(discountPreviewRequest));
     }
     @PostMapping("/save")
     public ApiResponse<String> saveDiscount(@RequestParam @Valid String discountCode) {
         discountService.saveDiscount(discountCode);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Save discount successfully")
-                .message("successfully.")
-                .build();
+        return ApiResponse.success("Save discount successfully");
+    }
+
+    @GetMapping("/{id}/products")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PageResponse<Long>> getApplicableProductIds(
+            @PathVariable Long id,
+            @PageableDefault(size = 50) Pageable pageable) {
+        return ApiResponse.success(discountService.getApplicableProductIds(id, pageable));
+    }
+
+    @GetMapping("/{id}/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PageResponse<Long>> getApplicableUserIds(
+            @PathVariable Long id,
+            @PageableDefault(size = 50) Pageable pageable) {
+        return ApiResponse.success(discountService.getApplicableUserIds(id, pageable));
     }
 }

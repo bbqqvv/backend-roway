@@ -18,6 +18,9 @@ public interface DiscountUserRepository extends JpaRepository<DiscountUser, Long
     void deleteByDiscountId(Long discountId);
 
     List<DiscountUser> findByDiscountId(Long discountId);
+
+    @Query("SELECT du.user.id FROM DiscountUser du WHERE du.discount.id = :discountId")
+    Page<Long> findUserIdsByDiscountId(@Param("discountId") Long discountId, Pageable pageable);
     @Query("SELECT du.discount.code FROM DiscountUser du WHERE du.user.id = :userId")
     List<String> findDiscountCodesByUserId(@Param("userId") Long userId);
 

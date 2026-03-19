@@ -20,6 +20,7 @@ import org.bbqqvv.backendecommerce.service.payment.PaymentService;
 import org.bbqqvv.backendecommerce.util.PagingUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.bbqqvv.backendecommerce.service.ShippingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,15 +48,15 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final EmailService emailService;
     private final PaymentService paymentService;
+    private final ShippingService shippingService;
 
-    private static final BigDecimal FREE_SHIPPING_THRESHOLD = BigDecimal.valueOf(499000);
     private static final int EXPECTED_DELIVERY_DAYS = 5;
 
     public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                             UserRepository userRepository, ProductRepository productRepository, CartRepository cartRepository,
                             AddressRepository addressRepository, SizeProductVariantRepository sizeProductVariantRepository,
                             DiscountService discountService, DiscountRepository discountRepository, OrderMapper orderMapper, EmailService emailService, 
-                            PaymentService paymentService) {
+                            PaymentService paymentService, ShippingService shippingService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
@@ -68,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
         this.orderMapper = orderMapper;
         this.emailService = emailService;
         this.paymentService = paymentService;
+        this.shippingService = shippingService;
     }
 
     private User getAuthenticatedUser() {
@@ -207,20 +209,12 @@ public class OrderServiceImpl implements OrderService {
         return discount;
     }
 
-
-    private static final Map<String, BigDecimal> SHIPPING_FEES = Map.of(
-            "hồ chí minh", BigDecimal.valueOf(50000),
-            "hà nội", BigDecimal.valueOf(50000),
-            "đà nẵng", BigDecimal.valueOf(20000)
-    );
-
     private BigDecimal calculateShippingFee(Address address, BigDecimal orderTotal) {
-        if (orderTotal.compareTo(FREE_SHIPPING_THRESHOLD) >= 0) {
+        if (orderTotal.compareTo(shippingService.getFreeShippingThreshold()) >= 0) {
             return BigDecimal.ZERO;
         }
 
-        String province = address.getProvince().trim().toLowerCase();
-        return SHIPPING_FEES.getOrDefault(province, BigDecimal.valueOf(50000));
+        return shippingService.getShippingFeeByRegion(address.getProvince());
     }
 
     private Order buildOrder(OrderRequest orderRequest, User user, Address address,

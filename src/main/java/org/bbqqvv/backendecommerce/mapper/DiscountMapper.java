@@ -22,22 +22,13 @@ public interface DiscountMapper {
     @Mapping(source = "applicableProducts", target = "applicableProducts", ignore = true) // Chuyển sang service xử lý
     Discount toDiscount(DiscountRequest discountRequest);
 
-    @Mapping(source = "applicableUsers", target = "applicableUsers", qualifiedByName = "mapApplicableUserIds")
-    @Mapping(source = "applicableProducts", target = "applicableProducts", qualifiedByName = "mapApplicableProductIds")
+    @Mapping(source = "applicableUsers", target = "applicableUsersCount", qualifiedByName = "countList")
+    @Mapping(source = "applicableProducts", target = "applicableProductsCount", qualifiedByName = "countList")
     DiscountResponse toDiscountResponse(Discount discount);
 
-    @Named("mapApplicableUserIds")
-    default List<Long> mapApplicableUserIds(List<DiscountUser> users) {
-        return users == null ? new ArrayList<>() : users.stream()
-                .map(discountUser -> discountUser.getUser().getId())
-                .collect(Collectors.toList());
-    }
-
-    @Named("mapApplicableProductIds")
-    default List<Long> mapApplicableProductIds(List<DiscountProduct> products) {
-        return products == null ? new ArrayList<>() : products.stream()
-                .map(discountProduct -> discountProduct.getProduct().getId())
-                .collect(Collectors.toList());
+    @Named("countList")
+    default int countList(List<?> list) {
+        return list == null ? 0 : list.size();
     }
 
 }

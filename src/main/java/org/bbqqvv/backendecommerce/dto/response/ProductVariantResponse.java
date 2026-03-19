@@ -16,4 +16,5 @@ public class ProductVariantResponse {
     private List<SizeProductResponse> sizes;
     private String color;
     private String imageUrl;
+    private String publicId;
 }

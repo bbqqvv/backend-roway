@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.bbqqvv.backendecommerce.dto.request.CategoryRequest;
+import org.bbqqvv.backendecommerce.dto.request.ImageMetadata;
 import org.bbqqvv.backendecommerce.dto.response.CategoryResponse;
 import org.bbqqvv.backendecommerce.entity.Category;
 import org.bbqqvv.backendecommerce.entity.SizeCategory;
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,52 +46,98 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse createCategory(CategoryRequest categoryRequest) {
+        log.info("Creating category: {}", categoryRequest.getName());
         try {
             if (categoryRepository.existsCategoriesByName(categoryRequest.getName())) {
-                throw new AppException(UserErrorCode.USER_EXISTED);
+                throw new AppException(ProductErrorCode.CATEGORY_ALREADY_EXISTS);
             }
 
-            String imageUrl = handleImageUpload(categoryRequest.getImage());
-
             Category category = categoryMapper.categoryRequestToCategory(categoryRequest);
-            category.setImage(imageUrl);
+            
+            // Handle image and publicId
+            if (categoryRequest.getImageMetadata() != null && categoryRequest.getImageMetadata().getUrl() != null) {
+                category.setImage(categoryRequest.getImageMetadata().getUrl());
+                category.setPublicId(categoryRequest.getImageMetadata().getPublicId());
+            } else {
+                String imageUrl = handleImageUpload(categoryRequest.getImage());
+                category.setImage(imageUrl);
+            }
 
-            if (categoryRequest.getSizes() != null && !categoryRequest.getSizes().isEmpty()) {
-                List<SizeCategory> sizeCategories = mapSizeCategories(categoryRequest, category);
+            // Manually handle sizes to ensure bidirectional relationship is perfectly established
+            if (categoryRequest.getSizes() != null) {
+                List<SizeCategory> sizeCategories = categoryRequest.getSizes().stream()
+                        .filter(Objects::nonNull)
+                        .map(sizeReq -> {
+                            SizeCategory size = sizeMapper.toSize(sizeReq);
+                            if (size != null) {
+                                size.setCategory(category);
+                            }
+                            return size;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
                 category.setSizeCategories(sizeCategories);
             }
 
             Category savedCategory = categoryRepository.save(category);
+            log.info("Category saved with ID: {}", savedCategory.getId());
             return categoryMapper.categoryToCategoryResponse(savedCategory);
+        } catch (AppException e) {
+            throw e;
         } catch (IOException e) {
             log.error("Lỗi khi tải ảnh", e);
             throw new AppException(InfrastructureAddressErrorCode.IMAGE_UPLOAD_FAILED);
+        } catch (Exception e) {
+            log.error("Unhandled error creating category", e);
+            throw new RuntimeException("Lỗi không xác định khi tạo Category: " + e.getMessage(), e);
         }
     }
 
     @Override
     @Transactional
     public CategoryResponse updateCategory(Long id, CategoryRequest categoryRequest) {
+        log.info("Updating category ID: {}", id);
         try {
             Category category = categoryRepository.findById(id)
                     .orElseThrow(() -> new AppException(ProductErrorCode.CATEGORY_NOT_FOUND));
 
-            String imageUrl = handleImageUpload(categoryRequest.getImage());
+            // Handle image and publicId
+            if (categoryRequest.getImageMetadata() != null && categoryRequest.getImageMetadata().getUrl() != null) {
+                category.setImage(categoryRequest.getImageMetadata().getUrl());
+                category.setPublicId(categoryRequest.getImageMetadata().getPublicId());
+            } else if (categoryRequest.getImage() != null && !categoryRequest.getImage().isEmpty()) {
+                String imageUrl = handleImageUpload(categoryRequest.getImage());
+                category.setImage(imageUrl);
+            }
 
             category.setSlug(categoryRequest.getSlug());
             category.setName(categoryRequest.getName());
-            category.setImage(imageUrl);
 
-            if (categoryRequest.getSizes() != null && !categoryRequest.getSizes().isEmpty()) {
-                List<SizeCategory> sizeCategories = mapSizeCategories(categoryRequest, category);
+            if (categoryRequest.getSizes() != null) {
+                List<SizeCategory> sizeCategories = categoryRequest.getSizes().stream()
+                        .filter(Objects::nonNull)
+                        .map(sizeReq -> {
+                            SizeCategory size = sizeMapper.toSize(sizeReq);
+                            if (size != null) {
+                                size.setCategory(category);
+                            }
+                            return size;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
                 category.setSizeCategories(sizeCategories);
             }
 
             Category updatedCategory = categoryRepository.save(category);
             return categoryMapper.categoryToCategoryResponse(updatedCategory);
+        } catch (AppException e) {
+            throw e;
         } catch (IOException e) {
             log.error("Lỗi khi tải ảnh", e);
             throw new AppException(InfrastructureAddressErrorCode.IMAGE_UPLOAD_FAILED);
+        } catch (Exception e) {
+            log.error("Unhandled error updating category", e);
+            throw new RuntimeException("Lỗi không xác định khi cập nhật Category: " + e.getMessage(), e);
         }
     }
 
@@ -125,7 +173,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private String handleImageUpload(MultipartFile image) throws IOException {
         if (image != null && !image.isEmpty()) {
-            return cloudinaryService.uploadImage(image);
+            return cloudinaryService.uploadImage(image).getUrl();
         }
         return null;
     }

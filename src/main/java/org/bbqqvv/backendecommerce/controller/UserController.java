@@ -28,20 +28,13 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
         UserResponse userResponse = userService.createUser(request);
-        return ApiResponse.<UserResponse>builder()
-                .success(true)
-                .message("User created successfully")
-                .data(userResponse)
-                .build();
+        return ApiResponse.success(userResponse, "User created successfully");
     }
-    @PutMapping("/change-password")
+
+    @PatchMapping("/change-password")
     public ApiResponse<String> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
         userService.changePassword(request);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .message("Password changed successfully")
-                .data("Password updated")
-                .build();
+        return ApiResponse.success("Password updated", "Password changed successfully");
     }
 
     // Lấy người dùng theo ID
@@ -49,11 +42,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
         UserResponse userResponse = userService.getUserById(id);
-        return ApiResponse.<UserResponse>builder()
-                .success(true)
-                .message("User retrieved successfully")
-                .data(userResponse)
-                .build();
+        return ApiResponse.success(userResponse, "User retrieved successfully");
     }
 
     // Lấy tất cả người dùng
@@ -61,11 +50,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<PageResponse<UserResponse>> getAllUsers(Pageable pageable) {
         PageResponse<UserResponse> userResponses = userService.getAllUsers(pageable);
-        return ApiResponse.<PageResponse<UserResponse>>builder()
-                .success(true)
-                .message("User list retrieved successfully")
-                .data(userResponses)
-                .build();
+        return ApiResponse.success(userResponses, "User list retrieved successfully");
     }
 
     // Cập nhật thông tin người dùng
@@ -73,20 +58,13 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserResponse> updateUser(@PathVariable Long id, @RequestBody @Valid UserCreationRequest request) {
         UserResponse userResponse = userService.updateUser(id, request);
-        return ApiResponse.<UserResponse>builder()
-                .success(true)
-                .message("User updated successfully")
-                .data(userResponse)
-                .build();
+        return ApiResponse.success(userResponse, "User updated successfully");
     }
-    @PutMapping("/me/update-info")
+
+    @PatchMapping("/me/update-info")
     public ApiResponse<UserUpdateResponse> updateUserInfo(@RequestBody @Valid UserUpdateRequest request) {
         UserUpdateResponse updatedUser = userService.updateUserInfo(request);
-        return ApiResponse.<UserUpdateResponse>builder()
-                .success(true)
-                .message("User info updated successfully")
-                .data(updatedUser)
-                .build();
+        return ApiResponse.success(updatedUser, "User info updated successfully");
     }
 
     // Xóa người dùng
@@ -94,22 +72,13 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .message("User has been deleted successfully")
-                .data("User deleted")
-                .build();
+        return ApiResponse.success("User deleted", "User has been deleted successfully");
     }
 
-// Lấy thông tin user hiện tại từ token
+    // Lấy thông tin user hiện tại từ token
     @GetMapping("/me")
     public ApiResponse<UserResponse> getCurrentUser() {
         UserResponse userResponse = userService.getCurrentUser();
-        return ApiResponse.<UserResponse>builder()
-                .success(true)
-                .message("User retrieved successfully")
-                .data(userResponse)
-                .build();
+        return ApiResponse.success(userResponse, "User retrieved successfully");
     }
-
 }

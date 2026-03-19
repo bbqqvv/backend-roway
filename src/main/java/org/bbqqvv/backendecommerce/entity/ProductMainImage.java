@@ -24,5 +24,18 @@ public class ProductMainImage extends BaseEntity implements ProductImage {
 
     @Column(name = "image_url", nullable = false)  // Cột chứa URL của ảnh chính
     private String imageUrl;
+
+    @Column(name = "public_id")
+    private String publicId;
+
+    @Override
+    public String getImageUrl() {
+        return this.imageUrl;
+    }
+
+    @Override
+    public String getPublicId() {
+        return this.publicId;
+    }
 }
 

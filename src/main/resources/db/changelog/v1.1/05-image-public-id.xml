@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="add-public-id-to-images" author="antigravity">
+        <addColumn tableName="product_main_images">
+            <column name="public_id" type="VARCHAR(255)"/>
+        </addColumn>
+        <addColumn tableName="product_secondary_images">
+            <column name="public_id" type="VARCHAR(255)"/>
+        </addColumn>
+        <addColumn tableName="product_description_images">
+            <column name="public_id" type="VARCHAR(255)"/>
+        </addColumn>
+        <addColumn tableName="product_variants">
+            <column name="public_id" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

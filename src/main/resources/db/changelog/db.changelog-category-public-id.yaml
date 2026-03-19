@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-public-id-to-categories
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: categories
+            columns:
+              - column:
+                  name: public_id
+                  type: varchar(255)

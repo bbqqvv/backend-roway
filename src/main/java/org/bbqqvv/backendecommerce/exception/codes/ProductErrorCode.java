@@ -15,7 +15,8 @@ public enum ProductErrorCode implements ErrorCode {
     OUT_OF_STOCK(3006, "Sản phẩm đã hết hàng", HttpStatus.BAD_REQUEST),
     PRODUCT_PRICE_INVALID(3007, "Giá sản phẩm không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_PRODUCT_OPTION(3008, "Tùy chọn sản phẩm không hợp lệ", HttpStatus.BAD_REQUEST),
-    PRODUCT_VARIANT_NOT_FOUND(3009, "Biến thể sản phẩm không tìm thấy", HttpStatus.NOT_FOUND);
+    PRODUCT_VARIANT_NOT_FOUND(3009, "Biến thể sản phẩm không tìm thấy", HttpStatus.NOT_FOUND),
+    CATEGORY_ALREADY_EXISTS(3010, "Danh mục đã tồn tại", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

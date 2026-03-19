@@ -8,6 +8,8 @@ import org.bbqqvv.backendecommerce.entity.AuthProvider;
 import org.bbqqvv.backendecommerce.entity.Role;
 import org.bbqqvv.backendecommerce.entity.User;
 import org.bbqqvv.backendecommerce.mapper.UserMapper;
+import org.bbqqvv.backendecommerce.exception.AppException;
+import org.bbqqvv.backendecommerce.exception.codes.UserErrorCode;
 import org.bbqqvv.backendecommerce.repository.UserRepository;
 import org.bbqqvv.backendecommerce.util.ValidateUtils;
 import org.slf4j.Logger;
@@ -52,10 +54,10 @@ public class AuthenticationService {
 
             // Nếu tài khoản đã đăng ký bằng Google, không cho phép đăng ký lại bằng email/password
             if (user.getProvider() == AuthProvider.GOOGLE) {
-                throw new RuntimeException("Tài khoản đã được tạo bằng Google. Vui lòng đăng nhập bằng Google.");
+                throw new AppException(UserErrorCode.GOOGLE_ACCOUNT_EXISTED);
             }
 
-            throw new RuntimeException("Email này đã được đăng ký.");
+            throw new AppException(UserErrorCode.EMAIL_EXISTED);
         }
 
         // Mã hóa mật khẩu trước khi lưu vào database

@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
+import org.bbqqvv.backendecommerce.dto.request.ImageMetadata;
 import org.bbqqvv.backendecommerce.dto.request.ProductReviewRequest;
 import org.bbqqvv.backendecommerce.dto.response.ProductReviewResponse;
 import org.bbqqvv.backendecommerce.entity.*;
@@ -99,7 +100,8 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             existingReview.setReviewText(reviewRequest.getReviewText());
 
             if (reviewRequest.getImageFiles() != null && !reviewRequest.getImageFiles().isEmpty()) {
-                List<String> imageUrls = cloudinaryService.uploadImages(reviewRequest.getImageFiles());
+                List<String> imageUrls = cloudinaryService.uploadImages(reviewRequest.getImageFiles())
+                        .stream().map(ImageMetadata::getUrl).toList();
 
                 List<ProductReviewImage> reviewImages = imageUrls.stream()
                         .map(url -> ProductReviewImage.builder()
@@ -124,7 +126,8 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         newReview.setReviewText(reviewRequest.getReviewText());
 
         if (reviewRequest.getImageFiles() != null && !reviewRequest.getImageFiles().isEmpty()) {
-            List<String> imageUrls = cloudinaryService.uploadImages(reviewRequest.getImageFiles());
+            List<String> imageUrls = cloudinaryService.uploadImages(reviewRequest.getImageFiles())
+                    .stream().map(ImageMetadata::getUrl).toList();
 
             List<ProductReviewImage> reviewImages = imageUrls.stream()
                     .map(url -> ProductReviewImage.builder()

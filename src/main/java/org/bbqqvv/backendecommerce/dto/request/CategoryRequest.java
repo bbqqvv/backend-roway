@@ -19,4 +19,5 @@ public class CategoryRequest {
     private String slug;
     private List<SizeCategoryRequest> sizes;
     private MultipartFile image;
+    private ImageMetadata imageMetadata;
 }

@@ -10,12 +10,12 @@ import java.util.function.Function;
 public class PagingUtil {
     public static <T, R> PageResponse<R> toPageResponse(Page<T> page, Function<T, R> mapper) {
         List<R> items = page.stream().map(mapper).toList();
-        return PageResponse.<R>builder()
-                .currentPage(page.getNumber())
-                .totalPages(page.getTotalPages())
-                .pageSize(page.getSize())
-                .totalElements(page.getTotalElements())
-                .items(items)
-                .build();
+        return new PageResponse<>(
+                page.getNumber(),
+                page.getTotalPages(),
+                page.getSize(),
+                page.getTotalElements(),
+                items
+        );
     }
 }

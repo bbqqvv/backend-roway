@@ -53,4 +53,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     
     @EntityGraph(attributePaths = {"category", "mainImage"})
     Page<Product> findByFeaturedTrue(Pageable pageable);
+
+    @Query(value = "SELECT * FROM products WHERE product_code = :productCode LIMIT 1", nativeQuery = true)
+    Optional<Product> findAnyByProductCode(@Param("productCode") String productCode);
+
+    @Query(value = "SELECT * FROM products WHERE name = :name LIMIT 1", nativeQuery = true)
+    Optional<Product> findAnyByName(@Param("name") String name);
+
+    @Query(value = "SELECT * FROM products WHERE slug = :slug LIMIT 1", nativeQuery = true)
+    Optional<Product> findAnyBySlug(@Param("slug") String slug);
 }

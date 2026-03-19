@@ -16,14 +16,19 @@ import java.util.stream.Collectors;
 public interface ProductMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(source = "mainImageUrl", target = "mainImage")
+    @Mapping(target = "mainImage", ignore = true)
+    @Mapping(target = "secondaryImages", ignore = true)
+    @Mapping(target = "descriptionImages", ignore = true)
     @Mapping(target = "tags", ignore = true) // Handled manually in Service layer for DB consistency
     Product toProduct(ProductRequest productRequest);
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "mainImage.imageUrl", target = "mainImageUrl")
+    @Mapping(source = "mainImage.publicId", target = "mainImagePublicId")
     @Mapping(source = "slug", target = "slug")
     @Mapping(source = "secondaryImages", target = "secondaryImageUrls", qualifiedByName = "mapSecondaryImageUrls")
+    @Mapping(source = "secondaryImages", target = "secondaryImagePublicIds", qualifiedByName = "mapSecondaryImagePublicIds")
     @Mapping(source = "descriptionImages", target = "descriptionImageUrls", qualifiedByName = "mapDescriptionImageUrls")
+    @Mapping(source = "descriptionImages", target = "descriptionImagePublicIds", qualifiedByName = "mapDescriptionImagePublicIds")
     @Mapping(source = "tags", target = "tags", qualifiedByName = "mapTagsToTagNames") // ✨ Convert Set<Tag> → Set<String>
     @Mapping(target = "reviewCount", expression = "java(product.getReviews() != null ? product.getReviews().size() : 0)")
     ProductResponse toProductResponse(Product product);
@@ -31,13 +36,26 @@ public interface ProductMapper {
     default List<String> mapSecondaryImageUrls(List<ProductSecondaryImage> images) {
         return mapImageUrls(images);
     }
+    @Named("mapSecondaryImagePublicIds")
+    default List<String> mapSecondaryImagePublicIds(List<ProductSecondaryImage> images) {
+        return mapImagePublicIds(images);
+    }
     @Named("mapDescriptionImageUrls")
     default List<String> mapDescriptionImageUrls(List<ProductDescriptionImage> images) {
         return mapImageUrls(images);
     }
+    @Named("mapDescriptionImagePublicIds")
+    default List<String> mapDescriptionImagePublicIds(List<ProductDescriptionImage> images) {
+        return mapImagePublicIds(images);
+    }
     default List<String> mapImageUrls(List<? extends ProductImage> images) {
         return images == null ? null : images.stream()
                 .map(ProductImage::getImageUrl)
+                .collect(Collectors.toList());
+    }
+    default List<String> mapImagePublicIds(List<? extends ProductImage> images) {
+        return images == null ? null : images.stream()
+                .map(ProductImage::getPublicId)
                 .collect(Collectors.toList());
     }
     @Named("mapTagNamesToTags")

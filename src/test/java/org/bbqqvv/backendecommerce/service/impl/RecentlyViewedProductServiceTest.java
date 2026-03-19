@@ -85,7 +85,7 @@ class RecentlyViewedProductServiceTest {
 
             PageResponse<ProductResponse> response = recentlyViewedProductService.getRecentlyViewedProducts(pageable);
 
-            assertThat(response.getItems()).hasSize(1);
+            assertThat(response.items()).hasSize(1);
             verify(repository, never()).findByUserOrderByUpdatedAtDesc(any(), any());
         }
     }
@@ -108,7 +108,7 @@ class RecentlyViewedProductServiceTest {
 
             PageResponse<ProductResponse> response = recentlyViewedProductService.getRecentlyViewedProducts(pageable);
 
-            assertThat(response.getItems()).hasSize(1);
+            assertThat(response.items()).hasSize(1);
             verify(repository).findByUserOrderByUpdatedAtDesc(user, pageable);
         }
     }

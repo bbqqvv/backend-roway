@@ -28,6 +28,12 @@ public class SizeProductVariant extends BaseEntity {
     @Column(nullable = false)
     private int stock;
 
+    @Column(name = "price")
+    private java.math.BigDecimal price;
+
+    @Column(name = "price_after_discount")
+    private java.math.BigDecimal priceAfterDiscount;
+
     @Version
     private Long version;
 }

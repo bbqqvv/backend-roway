@@ -21,11 +21,7 @@ public class CartController {
      */
     @PostMapping("/add-or-update")
     public ApiResponse<CartResponse> addOrUpdateProductInCart(@RequestBody @Valid CartRequest cartRequest) {
-        return ApiResponse.<CartResponse>builder()
-                .success(true)
-                .data(cartService.addOrUpdateProductInCart(cartRequest))
-                .message("Cart updated successfully")
-                .build();
+        return ApiResponse.success(cartService.addOrUpdateProductInCart(cartRequest), "Cart updated successfully");
     }
 
     /**
@@ -37,11 +33,7 @@ public class CartController {
             @RequestParam String sizeName,
             @RequestParam String color) {
 
-        return ApiResponse.<CartResponse>builder()
-                .success(true)
-                .data(cartService.removeProductFromCart(productId, sizeName, color))
-                .message("Product removed from cart")
-                .build();
+        return ApiResponse.success(cartService.removeProductFromCart(productId, sizeName, color), "Product removed from cart");
     }
 
     /**
@@ -49,22 +41,14 @@ public class CartController {
      */
     @GetMapping
     public ApiResponse<CartResponse> getCartByUser() {
-        return ApiResponse.<CartResponse>builder()
-                .success(true)
-                .data(cartService.getCartByUserId())
-                .message("Cart retrieved successfully")
-                .build();
+        return ApiResponse.success(cartService.getCartByUserId(), "Cart retrieved successfully");
     }
     /**
      * Tăng số lượng sản phẩm trong giỏ hàng
      */
     @PostMapping("/increase")
     public ApiResponse<CartResponse> increaseProductQuantity(@RequestBody @Valid CartRequest cartRequest) {
-        return ApiResponse.<CartResponse>builder()
-                .success(true)
-                .data(cartService.increaseProductQuantity(cartRequest))
-                .message("Product quantity increased")
-                .build();
+        return ApiResponse.success(cartService.increaseProductQuantity(cartRequest), "Product quantity increased");
     }
 
     /**
@@ -72,11 +56,7 @@ public class CartController {
      */
     @PostMapping("/decrease")
     public ApiResponse<CartResponse> decreaseProductQuantity(@RequestBody @Valid CartRequest cartRequest) {
-        return ApiResponse.<CartResponse>builder()
-                .success(true)
-                .data(cartService.decreaseProductQuantity(cartRequest))
-                .message("Product quantity decreased")
-                .build();
+        return ApiResponse.success(cartService.decreaseProductQuantity(cartRequest), "Product quantity decreased");
     }
 
     /**
@@ -85,10 +65,6 @@ public class CartController {
     @DeleteMapping("/clear")
     public ApiResponse<String> clearCart() {
         cartService.clearCart();
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Cart cleared successfully")
-                .message("Cart has been emptied")
-                .build();
+        return ApiResponse.success("Cart cleared successfully", "Cart has been emptied");
     }
 }

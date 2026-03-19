@@ -33,6 +33,9 @@ public class Category extends BaseEntity {
     @Column(length = 200)
     private String image;
 
+    @Column(name = "public_id")
+    private String publicId;
+
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SizeCategory> sizeCategories;
 }

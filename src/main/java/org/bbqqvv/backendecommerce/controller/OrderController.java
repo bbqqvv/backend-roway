@@ -24,32 +24,20 @@ public class OrderController {
     @PostMapping
     @Operation(summary = "Tạo đơn hàng mới", description = "Tạo một đơn hàng mới từ giỏ hàng hiện tại. Hỗ trợ áp dụng mã giảm giá và tự động trừ kho.")
     public ApiResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest orderRequest) {
-        return ApiResponse.<OrderResponse>builder()
-                .success(true)
-                .message("Order created successfully")
-                .data(orderService.createOrder(orderRequest))
-                .build();
+        return ApiResponse.success(orderService.createOrder(orderRequest), "Order created successfully");
     }
 
     @GetMapping("/{orderCode}")
     @Operation(summary = "Lấy chi tiết đơn hàng theo mã (Order Code)", description = "Xem thông tin chi tiết của một đơn hàng cụ thể dựa trên mã code.")
     public ApiResponse<OrderResponse> getOrderByCode(@PathVariable String orderCode) {
-        return ApiResponse.<OrderResponse>builder()
-                .success(true)
-                .message("Order details retrieved successfully")
-                .data(orderService.getOrderByCode(orderCode))
-                .build();
+        return ApiResponse.success(orderService.getOrderByCode(orderCode), "Order details retrieved successfully");
     }
 
     @GetMapping("/me")
     @Operation(summary = "Lấy lịch sử đơn hàng của tôi", description = "Trả về danh sách đơn hàng có phân trang của người dùng hiện tại đang đăng nhập.")
     public ApiResponse<PageResponse<OrderResponse>> getMyOrders(@PageableDefault(page = 0, size = 10) Pageable pageable) {
         PageResponse<OrderResponse> orderPage = orderService.getOrdersByUser(pageable);
-        return ApiResponse.<PageResponse<OrderResponse>>builder()
-                .success(true)
-                .message("User's orders retrieved successfully")
-                .data(orderPage)
-                .build();
+        return ApiResponse.success(orderPage, "User's orders retrieved successfully");
     }
 
     @GetMapping("/check-delivery/{productId}")
@@ -57,11 +45,7 @@ public class OrderController {
     public ApiResponse<Boolean> checkProductDelivery(
             @PathVariable Long productId) {
         boolean isDelivered = orderService.isProductDeliveredToCurrentUser(productId);
-        return ApiResponse.<Boolean>builder()
-                .success(true)
-                .message("Product delivery status checked successfully")
-                .data(isDelivered)
-                .build();
+        return ApiResponse.success(isDelivered, "Product delivery status checked successfully");
     }
 
     @GetMapping
@@ -69,56 +53,27 @@ public class OrderController {
     @Operation(summary = "Lấy toàn bộ đơn hàng hệ thống (Admin)", description = "Dành cho Admin: Xem và quản lý tất cả đơn hàng từ mọi người dùng trên hệ thống.")
     public ApiResponse<PageResponse<OrderResponse>> getAllOrders(@PageableDefault(page = 0, size = 10) Pageable pageable) {
         PageResponse<OrderResponse> orderPage = orderService.getAllOrders(pageable);
-        return ApiResponse.<PageResponse<OrderResponse>>builder()
-                .success(true)
-                .message("All orders retrieved successfully")
-                .data(orderPage)
-                .build();
+        return ApiResponse.success(orderPage, "All orders retrieved successfully");
     }
-    
-    // Fix the builder above ^ (was building a double PageResponse wrapper in my mind, wait)
-    // Actually it is:
-    /*
-    public ApiResponse<PageResponse<OrderResponse>> getAllOrders(...) {
-        PageResponse<OrderResponse> orderPage = orderService.getAllOrders(pageable);
-        return ApiResponse.<PageResponse<OrderResponse>>builder()
-                .success(true)
-                .message("All orders retrieved successfully")
-                .data(orderPage)
-                .build();
-    }
-    */
 
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật đơn hàng", description = "Chỉnh sửa thông tin đơn hàng cụ thể theo ID.")
     public ApiResponse<OrderResponse> updateOrder(@PathVariable Long id, @RequestBody @Valid OrderRequest orderRequest) {
-        return ApiResponse.<OrderResponse>builder()
-                .success(true)
-                .message("Order updated successfully")
-                .data(orderService.updateOrder(id, orderRequest))
-                .build();
+        return ApiResponse.success(orderService.updateOrder(id, orderRequest), "Order updated successfully");
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật trạng thái đơn hàng (Admin)", description = "Dành cho Admin: Cập nhật trạng thái của đơn hàng (CONFIRMED, SHIPPED, DELIVERED, CANCELLED...).")
     public ApiResponse<OrderResponse> updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
-        return ApiResponse.<OrderResponse>builder()
-                .success(true)
-                .message("Order status updated successfully")
-                .data(orderService.updateOrderStatus(id, status))
-                .build();
+        return ApiResponse.success(orderService.updateOrderStatus(id, status), "Order status updated successfully");
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Hủy đơn hàng", description = "Người dùng tự hủy đơn hàng của mình. Hệ thống sẽ tự động hoàn lại kho và lượt dùng mã giảm giá.")
     public ApiResponse<String> cancelOrder(@PathVariable Long id) {
         orderService.cancelOrder(id);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .message("Order has been canceled successfully")
-                .data("Order canceled")
-                .build();
+        return ApiResponse.success("Order canceled", "Order has been canceled successfully");
     }
 
     @DeleteMapping("/{id}/delete")
@@ -126,10 +81,6 @@ public class OrderController {
     @Operation(summary = "Xóa đơn hàng vĩnh viễn (Admin)", description = "Dành cho Admin: Xóa hoàn toàn bản ghi đơn hàng khỏi cơ sở dữ liệu.")
     public ApiResponse<String> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .message("Order has been deleted successfully")
-                .data("Order deleted")
-                .build();
+        return ApiResponse.success("Order deleted", "Order has been deleted successfully");
     }
 }

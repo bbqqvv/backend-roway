@@ -3,6 +3,7 @@ package org.bbqqvv.backendecommerce.controller;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.bbqqvv.backendecommerce.dto.ApiResponse;
 import org.bbqqvv.backendecommerce.entity.Notification;
 import org.bbqqvv.backendecommerce.service.NotificationService;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +23,12 @@ public class NotificationController {
 	}
 
     @PostMapping
-    public ResponseEntity<Notification> createNotification(@RequestBody Notification notification) {
-        return ResponseEntity.ok(notificationService.createNotification(notification));
+    public ApiResponse<Notification> createNotification(@RequestBody Notification notification) {
+        return ApiResponse.success(notificationService.createNotification(notification));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Notification>> getNotificationsByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(notificationService.getNotificationsByUserId(userId));
+    public ApiResponse<List<Notification>> getNotificationsByUserId(@PathVariable Long userId) {
+        return ApiResponse.success(notificationService.getNotificationsByUserId(userId));
     }
 }

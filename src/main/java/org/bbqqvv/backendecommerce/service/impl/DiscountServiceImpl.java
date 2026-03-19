@@ -59,8 +59,6 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public DiscountResponse createDiscount(DiscountRequest request) {
-        validateDiscountRequest(request);
-
         if (discountRepository.existsByCode(request.getCode())) {
             throw new AppException(SocialMarketingErrorCode.DUPLICATE_DISCOUNT_CODE);
         }
@@ -141,28 +139,6 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
 
-    private void validateDiscountRequest(DiscountRequest request) {
-        String code = Optional.ofNullable(request.getCode()).orElse("").trim();
-        BigDecimal discountAmount = Optional.ofNullable(request.getDiscountAmount()).orElse(BigDecimal.ZERO);
-        BigDecimal maxDiscountAmount = Optional.ofNullable(request.getMaxDiscountAmount()).orElse(BigDecimal.ZERO);
-        BigDecimal minOrderValue = Optional.ofNullable(request.getMinOrderValue()).orElse(BigDecimal.ZERO);
-        Integer usageLimit = Optional.ofNullable(request.getUsageLimit()).orElse(0);
-        LocalDateTime startDate = request.getStartDate();
-        LocalDateTime expiryDate = request.getExpiryDate();
-
-        if (code.isEmpty()) throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_CODE);
-        if (discountAmount.compareTo(BigDecimal.ZERO) <= 0) throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_AMOUNT);
-        if (maxDiscountAmount.compareTo(BigDecimal.ZERO) < 0)
-            throw new AppException(SocialMarketingErrorCode.INVALID_MAX_DISCOUNT_AMOUNT);
-        if (discountAmount.compareTo(maxDiscountAmount) > 0)
-            throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_AMOUNT_LIMIT);
-        if (request.getDiscountType() == null) throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_TYPE);
-        if (minOrderValue.compareTo(BigDecimal.ZERO) < 0) throw new AppException(SocialMarketingErrorCode.INVALID_MIN_ORDER_VALUE);
-        if (usageLimit < 1) throw new AppException(SocialMarketingErrorCode.INVALID_USAGE_LIMIT);
-        if (startDate == null || expiryDate == null || startDate.isAfter(expiryDate)) {
-            throw new AppException(SocialMarketingErrorCode.INVALID_DISCOUNT_DATES);
-        }
-    }
 
 
     @Override
@@ -182,7 +158,6 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     public DiscountResponse updateDiscount(Long id, DiscountRequest request) {
         Discount discount = findDiscountById(id);
-        validateDiscountRequest(request);
 
         if (discount.isExpired()) {
             throw new AppException(SocialMarketingErrorCode.DISCOUNT_ALREADY_EXPIRED);
@@ -350,15 +325,20 @@ public class DiscountServiceImpl implements DiscountService {
     public BigDecimal calculateDiscountAmount(Discount discount, List<Long> productIds, List<BigDecimal> subtotals, BigDecimal totalAmount) {
         BigDecimal applicableTotal = BigDecimal.ZERO;
         
+        Set<Long> applicableProductIds = Collections.emptySet();
         boolean hasSpecificProducts = discount.getApplicableProducts() != null && !discount.getApplicableProducts().isEmpty();
+        
+        if (hasSpecificProducts) {
+            applicableProductIds = discount.getApplicableProducts().stream()
+                    .map(dp -> dp.getProduct().getId())
+                    .collect(Collectors.toSet());
+        }
         
         for (int i = 0; i < productIds.size(); i++) {
             Long pid = productIds.get(i);
             BigDecimal subtotal = subtotals.get(i);
             
-            // Nếu mã có list sản phẩm -> chỉ cộng tiền các sp đó
-            // Nếu mã KHÔNG có list sản phẩm -> cộng tất cả
-            if (!hasSpecificProducts || discount.getApplicableProducts().stream().anyMatch(dp -> dp.getProduct().getId().equals(pid))) {
+            if (!hasSpecificProducts || applicableProductIds.contains(pid)) {
                 applicableTotal = applicableTotal.add(subtotal);
             }
         }
@@ -426,6 +406,20 @@ public class DiscountServiceImpl implements DiscountService {
 
         discount.setTimesUsed(discount.getTimesUsed() + 1);
         discountRepository.save(discount);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<Long> getApplicableProductIds(Long discountId, Pageable pageable) {
+        Page<Long> productIdPage = discountProductRepository.findProductIdsByDiscountId(discountId, pageable);
+        return toPageResponse(productIdPage, id -> id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<Long> getApplicableUserIds(Long discountId, Pageable pageable) {
+        Page<Long> userIdPage = discountUserRepository.findUserIdsByDiscountId(discountId, pageable);
+        return toPageResponse(userIdPage, id -> id);
     }
 
     private Discount findDiscountById(Long id) {

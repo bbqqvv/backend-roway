@@ -13,7 +13,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductVariantRequest {
-    private MultipartFile imageUrl;
+    private MultipartFile image;
+    private ImageMetadata imageMetadata;
     private List<SizeProductRequest> sizes;
     private String color;
+    private java.math.BigDecimal price;
+    private Integer stock;
+
+    public void setQuantity(Integer quantity) {
+        this.stock = quantity;
+    }
 }

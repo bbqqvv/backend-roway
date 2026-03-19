@@ -5,6 +5,7 @@ import org.bbqqvv.backendecommerce.exception.codes.*;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.bbqqvv.backendecommerce.dto.request.ImageMetadata;
 import org.bbqqvv.backendecommerce.dto.request.SupportItemRequest;
 import org.bbqqvv.backendecommerce.dto.response.SupportItemResponse;
 import org.bbqqvv.backendecommerce.entity.SupportItem;
@@ -60,7 +61,7 @@ public class SupportItemServiceImpl implements SupportItemsService {
 
         String imageUrl = null;
         if (request.getImg() != null && !request.getImg().isEmpty()) {
-            imageUrl = cloudinaryService.uploadImage(request.getImg());
+            imageUrl = cloudinaryService.uploadImage(request.getImg()).getUrl();
         }
 
         SupportItem supportItem = SupportItem.builder()
@@ -84,7 +85,7 @@ public class SupportItemServiceImpl implements SupportItemsService {
 
         String imageUrl = existing.getImg(); // mặc định giữ nguyên ảnh cũ
         if (request.getImg() != null && !request.getImg().isEmpty()) {
-            imageUrl = cloudinaryService.uploadImage(request.getImg());
+            imageUrl = cloudinaryService.uploadImage(request.getImg()).getUrl();
         }
 
         existing.setTitle(request.getTitle());

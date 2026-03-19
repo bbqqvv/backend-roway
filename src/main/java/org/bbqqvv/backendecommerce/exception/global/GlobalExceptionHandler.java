@@ -29,74 +29,89 @@ public class GlobalExceptionHandler {
 
     // Bắt tất cả các loại ngoại lệ không xác định
     @ExceptionHandler(value = Exception.class)
-    ResponseEntity<ApiResponse> handleAllExceptions(Exception exception) {
+    ResponseEntity<ApiResponse<Object>> handleAllExceptions(Exception exception) {
         log.error("Unexpected error occurred: ", exception);
-        ApiResponse apiResponse = new ApiResponse();
-
-        apiResponse.setCode(CommonErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        apiResponse.setMessage(CommonErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                CommonErrorCode.UNCATEGORIZED_EXCEPTION.getCode(),
+                false,
+                exception.getMessage() != null ? exception.getMessage() : CommonErrorCode.UNCATEGORIZED_EXCEPTION.getMessage(),
+                null,
+                null
+        );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
     }
 
     // Bắt AppException, khi lỗi được định nghĩa rõ ràng trong ErrorCode
     @ExceptionHandler(value = AppException.class)
-    ResponseEntity<ApiResponse> handleAppException(AppException exception) {
+    ResponseEntity<ApiResponse<Object>> handleAppException(AppException exception) {
         ErrorCode errorCode = exception.getErrorCode();
-        ApiResponse apiResponse = ApiResponse.builder()
-                .code(errorCode.getCode())
-                .message(exception.getMessage())
-                .success(false)
-                .build();
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                errorCode.getCode(),
+                false,
+                exception.getMessage(),
+                null,
+                null
+        );
 
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
 
     // Bắt lỗi xác thực (sai mật khẩu, tài khoản không tồn tại, v.v.)
     @ExceptionHandler(value = {AuthenticationException.class, BadCredentialsException.class})
-    ResponseEntity<ApiResponse> handleAuthenticationException(AuthenticationException exception) {
+    ResponseEntity<ApiResponse<Object>> handleAuthenticationException(AuthenticationException exception) {
         ErrorCode errorCode = CommonErrorCode.UNAUTHENTICATED;
-        ApiResponse apiResponse = ApiResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .success(false)
-                .build();
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                errorCode.getCode(),
+                false,
+                errorCode.getMessage(),
+                null,
+                null
+        );
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
     }
 
     // Bắt lỗi vi phạm ràng buộc database (duy nhất, khóa ngoại...)
     @ExceptionHandler(value = DataIntegrityViolationException.class)
-    ResponseEntity<ApiResponse> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
+    ResponseEntity<ApiResponse<Object>> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         log.error("Database integrity violation: ", exception);
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode(CommonErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        apiResponse.setMessage("Database conflict: possible duplicate data or constraint violation.");
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                CommonErrorCode.UNCATEGORIZED_EXCEPTION.getCode(),
+                false,
+                "Database conflict: possible duplicate data or constraint violation.",
+                null,
+                null
+        );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(apiResponse);
     }
 
     // Bắt lỗi commit transaction thất bại (thường do JPA Auditing hoặc Validation)
     @ExceptionHandler(value = TransactionSystemException.class)
-    ResponseEntity<ApiResponse> handleTransactionSystemException(TransactionSystemException exception) {
+    ResponseEntity<ApiResponse<Object>> handleTransactionSystemException(TransactionSystemException exception) {
         log.error("Transaction failed: ", exception);
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode(CommonErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        apiResponse.setMessage("Transaction failure. Check data constraints and auditing fields.");
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                CommonErrorCode.UNCATEGORIZED_EXCEPTION.getCode(),
+                false,
+                "Transaction failure. Check data constraints and auditing fields.",
+                null,
+                null
+        );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
     }
 
     // Bắt AccessDeniedException, khi người dùng không có quyền truy cập
     @ExceptionHandler(value = AccessDeniedException.class)
-    ResponseEntity<ApiResponse> handleAccessDeniedException(AccessDeniedException exception) {
+    ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(AccessDeniedException exception) {
         ErrorCode errorCode = CommonErrorCode.ACCESS_DENIED;
-        ApiResponse apiResponse = buildApiResponse(errorCode);
+        ApiResponse<Object> apiResponse = buildApiResponse(errorCode);
 
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
 
     // Bắt MethodArgumentNotValidException, khi validation thất bại
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException exception) {
+    ResponseEntity<ApiResponse<Object>> handleValidationExceptions(MethodArgumentNotValidException exception) {
         String enumKey = exception.getBindingResult().getFieldError().getDefaultMessage();
         ErrorCode errorCode = CommonErrorCode.INVALID_KEY;
         Map<String, Object> attributes = null;
@@ -109,19 +124,20 @@ public class GlobalExceptionHandler {
             log.warn("Could not map validation error key '{}' to ErrorCode: {}", enumKey, e.getMessage());
         }
 
-        ApiResponse apiResponse = ApiResponse.builder()
-                .code(errorCode.getCode())
-                .message(Objects.nonNull(attributes)
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                errorCode.getCode(),
+                false,
+                Objects.nonNull(attributes)
                         ? mapAttributes(errorCode.getMessage(), attributes)
-                        : errorCode.getMessage())
-                .success(false)
-                .details(exception.getBindingResult().getFieldErrors().stream()
+                        : errorCode.getMessage(),
+                null,
+                exception.getBindingResult().getFieldErrors().stream()
                         .collect(Collectors.toMap(
                                 org.springframework.validation.FieldError::getField,
                                 fieldErr -> Objects.requireNonNullElse(fieldErr.getDefaultMessage(), "Invalid value"),
                                 (existing, replacement) -> existing
-                        )))
-                .build();
+                        ))
+        );
 
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
@@ -137,12 +153,14 @@ public class GlobalExceptionHandler {
     }
 
     // Xử lý riêng để xây dựng ApiResponse
-    private ApiResponse buildApiResponse(ErrorCode errorCode) {
-        return ApiResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .success(false)
-                .build();
+    private ApiResponse<Object> buildApiResponse(ErrorCode errorCode) {
+        return new ApiResponse<>(
+                errorCode.getCode(),
+                false,
+                errorCode.getMessage(),
+                null,
+                null
+        );
     }
 
     // Thay thế giá trị tham số trong thông điệp với các thuộc tính

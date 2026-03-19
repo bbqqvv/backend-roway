@@ -102,8 +102,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
                 "https://roway-shop.vercel.app"
-                ));
-        config.addAllowedOriginPattern("*"); //Cấu hình tạm thời
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);

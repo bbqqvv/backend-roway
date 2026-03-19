@@ -27,6 +27,8 @@ public interface DiscountService {
 
     DiscountPreviewResponse previewDiscount(DiscountPreviewRequest discountPreviewRequest);
     void saveDiscount(@Valid String discountCode);
+    PageResponse<Long> getApplicableProductIds(Long discountId, Pageable pageable);
+    PageResponse<Long> getApplicableUserIds(Long discountId, Pageable pageable);
 
     Discount getDiscountByCode(String code);
     BigDecimal calculateDiscountAmount(Discount discount, List<Long> productIds, List<BigDecimal> subtotals, BigDecimal totalAmount);

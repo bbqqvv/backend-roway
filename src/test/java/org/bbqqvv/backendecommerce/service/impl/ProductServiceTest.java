@@ -141,7 +141,7 @@ class ProductServiceTest {
 
         // Assert
         assertThat(response).isNotNull();
-        assertThat(response.getItems()).hasSize(1);
+        assertThat(response.items()).hasSize(1);
     }
 
     @Test
@@ -155,8 +155,8 @@ class ProductServiceTest {
         PageResponse<ProductResponse> response = productService.searchProductsByName("Unknown", pageable);
 
         // Assert
-        assertThat(response.getItems()).isEmpty();
-        assertThat(response.getTotalElements()).isZero();
+        assertThat(response.items()).isEmpty();
+        assertThat(response.totalElements()).isZero();
     }
 
     @Test
@@ -172,7 +172,7 @@ class ProductServiceTest {
         PageResponse<ProductResponse> response = productService.searchProductsByName("", pageable);
 
         // Assert
-        assertThat(response.getItems()).isNotEmpty();
+        assertThat(response.items()).isNotEmpty();
         verify(productRepository).searchByKeyword(eq(""), any(Pageable.class));
     }
 }

@@ -23,7 +23,7 @@ public class SizeProduct extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String sizeName;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private BigDecimal price;
 
     @Column(nullable = true)

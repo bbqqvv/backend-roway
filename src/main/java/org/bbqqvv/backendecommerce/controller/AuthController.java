@@ -36,11 +36,7 @@ public class AuthController {
     @Operation(summary = "Đăng ký tài khoản", description = "Tạo tài khoản người dùng mới với các thông tin cơ bản.")
     public ApiResponse<UserResponse> register(@RequestBody @Valid UserCreationRequest creationRequest) {
         UserResponse userResponse = authenticationService.register(creationRequest);
-        return ApiResponse.<UserResponse>builder()
-                .success(true)
-                .message("User registered successfully")
-                .data(userResponse)
-                .build();
+        return ApiResponse.success(userResponse, "User registered successfully");
     }
 
     // Đăng nhập người dùng
@@ -48,11 +44,7 @@ public class AuthController {
     @Operation(summary = "Đăng nhập truyền thống", description = "Xác thực người dùng bằng username và password, trả về JWT token.")
     public ApiResponse<JwtResponse> login(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
         String token = authenticationService.login(authenticationRequest);
-        return ApiResponse.<JwtResponse>builder()
-                .success(true)
-                .message("Login successful")
-                .data(new JwtResponse(token))
-                .build();
+        return ApiResponse.success(new JwtResponse(token), "Login successful");
     }
 
 
@@ -61,11 +53,7 @@ public class AuthController {
     @Operation(summary = "Đăng nhập Google", description = "Xác thực và đăng nhập bằng Google ID Token.")
     public ApiResponse<JwtResponse> googleLogin(@RequestBody @Valid OAuth2LoginRequest request) {
         String jwtToken = oAuth2Service.loginWithGoogle(request.getToken());
-        return ApiResponse.<JwtResponse>builder()
-                .success(true)
-                .message("Google login successful")
-                .data(new JwtResponse(jwtToken))
-                .build();
+        return ApiResponse.success(new JwtResponse(jwtToken), "Google login successful");
     }
 
     // 🔹 Đăng nhập bằng Facebook OAuth2
@@ -73,11 +61,7 @@ public class AuthController {
     @Operation(summary = "Đăng nhập Facebook", description = "Xác thực và đăng nhập bằng Facebook Access Token.")
     public ApiResponse<JwtResponse> facebookLogin(@RequestBody @Valid OAuth2LoginRequest request) {
         String jwtToken = oAuth2Service.loginWithFacebook(request.getToken());
-        return ApiResponse.<JwtResponse>builder()
-                .success(true)
-                .message("Facebook login successful")
-                .data(new JwtResponse(jwtToken))
-                .build();
+        return ApiResponse.success(new JwtResponse(jwtToken), "Facebook login successful");
     }
 
     /**
@@ -87,11 +71,7 @@ public class AuthController {
     @Operation(summary = "Quên mật khẩu", description = "Gửi mã OTP đến email của người dùng để thực hiện khôi phục mật khẩu.")
     public ApiResponse<OtpResponse> forgotPassword(@RequestBody @Valid OtpRequest request) {
         String message = otpService.sendOtp(request.getEmail());
-        return ApiResponse.<OtpResponse>builder()
-                .success(true)
-                .message("OTP sent successfully")
-                .data(new OtpResponse(message, request.getEmail()))
-                .build();
+        return ApiResponse.success(new OtpResponse(message, request.getEmail()), "OTP sent successfully");
     }
 
     /**
@@ -102,12 +82,7 @@ public class AuthController {
     public ApiResponse<OtpVerificationResponse> verifyOtp(@RequestBody @Valid OtpVerificationRequest request) {
         String result = otpService.verifyOtp(request.getEmail(), request.getOtp());
         boolean success = result.equals("OTP verified successfully!");
-
-        return ApiResponse.<OtpVerificationResponse>builder()
-                .success(success)
-                .message(result)
-                .data(new OtpVerificationResponse(result, success))
-                .build();
+        return ApiResponse.success(new OtpVerificationResponse(result, success), result);
     }
 
     /**
@@ -118,11 +93,6 @@ public class AuthController {
     public ApiResponse<ResetPasswordResponse> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         String result = otpService.resetPassword(request.getEmail(), request.getNewPassword());
         boolean success = result.equals("Password reset successful!");
-
-        return ApiResponse.<ResetPasswordResponse>builder()
-                .success(success)
-                .message(result)
-                .data(new ResetPasswordResponse(result, success))
-                .build();
+        return ApiResponse.success(new ResetPasswordResponse(result, success), result);
     }
 }

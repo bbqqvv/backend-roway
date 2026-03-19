@@ -128,7 +128,7 @@ class FavouriteServiceTest {
 
             PageResponse<FavouriteResponse> response = favouriteService.getUserFavourites(pageable);
 
-            assertThat(response.getItems()).hasSize(1);
+            assertThat(response.items()).hasSize(1);
         }
     }
 }

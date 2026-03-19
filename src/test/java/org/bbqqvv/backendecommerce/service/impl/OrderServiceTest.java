@@ -44,6 +44,7 @@ class OrderServiceTest {
     @Mock private OrderMapper orderMapper;
     @Mock private EmailService emailService;
     @Mock private PaymentService paymentService;
+    @Mock private org.bbqqvv.backendecommerce.service.ShippingService shippingService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -108,6 +109,8 @@ class OrderServiceTest {
             when(orderRepository.save(any(Order.class))).thenReturn(order);
             when(paymentService.createPaymentUrl(any())).thenReturn("http://payment.url");
             when(orderMapper.toOrderResponse(any())).thenReturn(new OrderResponse());
+            when(shippingService.getFreeShippingThreshold()).thenReturn(BigDecimal.valueOf(500000));
+            when(shippingService.getShippingFeeByRegion(anyString())).thenReturn(BigDecimal.valueOf(30000));
 
             OrderResponse response = orderService.createOrder(request);
 

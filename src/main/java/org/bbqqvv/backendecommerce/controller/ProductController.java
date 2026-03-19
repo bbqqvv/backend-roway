@@ -31,11 +31,7 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> createProduct(@ModelAttribute @Valid ProductRequest productRequest) {
         ProductResponse product = productService.createProduct(productRequest);
-        return ApiResponse.<ProductResponse>builder()
-                .success(true)
-                .message("Product created successfully")
-                .data(product)
-                .build();
+        return ApiResponse.success(product);
     }
 
     // Lấy danh sách tất cả sản phẩm với phân trang
@@ -43,44 +39,28 @@ public class ProductController {
     @Operation(summary = "Lấy danh sách sản phẩm", description = "Lấy toàn bộ danh sách sản phẩm có hỗ trợ phân trang (mặc định 10 sản phẩm/trang).")
     public ApiResponse<PageResponse<ProductResponse>> getAllProducts(@PageableDefault(page = 0, size = 10) Pageable pageable) {
         PageResponse<ProductResponse> productPage = productService.getAllProducts(pageable);
-        return ApiResponse.<PageResponse<ProductResponse>>builder()
-                .success(true)
-                .message("Product list retrieved successfully")
-                .data(productPage)
-                .build();
+        return ApiResponse.success(productPage);
     }
     // Lấy sản phẩm nổi bật (featured) với phân trang
     @GetMapping("/featured")
     public ApiResponse<PageResponse<ProductResponse>> getFeaturedProducts(
             @PageableDefault(size = 8) Pageable pageable) {
         PageResponse<ProductResponse> featuredProducts = productService.getFeaturedProducts(pageable);
-        return ApiResponse.<PageResponse<ProductResponse>>builder()
-                .success(true)
-                .message("Featured products retrieved successfully")
-                .data(featuredProducts)
-                .build();
+        return ApiResponse.success(featuredProducts);
     }
 
     // Lấy sản phẩm theo ID
     @GetMapping("/{id}")
     public ApiResponse<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse product = productService.getProductById(id);
-        return ApiResponse.<ProductResponse>builder()
-                .success(true)
-                .message("Product retrieved successfully")
-                .data(product)
-                .build();
+        return ApiResponse.success(product);
     }
 
     // Lấy sản phẩm theo Slug
     @GetMapping("slug/{slug}")
     public ApiResponse<ProductResponse> getProductBySlug(@PathVariable String slug) {
         ProductResponse product = productService.getProductBySlug(slug);
-        return ApiResponse.<ProductResponse>builder()
-                .success(true)
-                .message("Product retrieved successfully")
-                .data(product)
-                .build();
+        return ApiResponse.success(product);
     }
 
 
@@ -91,11 +71,7 @@ public class ProductController {
             @PathVariable String slug,
             @PageableDefault(size = 9) Pageable pageable) {
         PageResponse<ProductResponse> productPage = productService.findProductByCategorySlug(slug, pageable);
-        return ApiResponse.<PageResponse<ProductResponse>>builder()
-                .success(true)
-                .message("Products retrieved by category successfully")
-                .data(productPage)
-                .build();
+        return ApiResponse.success(productPage);
     }
 
     // Cập nhật thông tin sản phẩm
@@ -103,11 +79,7 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> updateProduct(@PathVariable Long id, @ModelAttribute @Valid ProductRequest productRequest) {
         ProductResponse updatedProduct = productService.updateProduct(id, productRequest);
-        return ApiResponse.<ProductResponse>builder()
-                .success(true)
-                .message("Product updated successfully")
-                .data(updatedProduct)
-                .build();
+        return ApiResponse.success(updatedProduct);
     }
 
     // Xóa sản phẩm
@@ -115,11 +87,7 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> deleteProduct(@PathVariable Long id) {
         boolean deleted = productService.deleteProduct(id);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .message(deleted ? "Product deleted successfully" : "Product not found")
-                .data(deleted ? "Deleted" : "Not found")
-                .build();
+        return ApiResponse.success(deleted ? "Deleted" : "Not found");
     }
 
     // Tìm kiếm sản phẩm theo tên
@@ -128,11 +96,7 @@ public class ProductController {
             @RequestParam String name,
             @PageableDefault(page = 0, size = 9) Pageable pageable) {
         PageResponse<ProductResponse> productPage = productService.searchProductsByName(name, pageable);
-        return ApiResponse.<PageResponse<ProductResponse>>builder()
-                .success(true)
-                .message("Products retrieved successfully")
-                .data(productPage)
-                .build();
+        return ApiResponse.success(productPage);
     }
 
     /**
@@ -141,11 +105,7 @@ public class ProductController {
     @PostMapping("/{productId}/mark")
     public ApiResponse<String> markProductAsViewed(@PathVariable Long productId) {
         recentlyViewedProductService.markProductAsViewed(productId);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Product marked as viewed")
-                .message("Marked successfully")
-                .build();
+        return ApiResponse.success("Product marked as viewed");
     }
 
     /**
@@ -155,19 +115,11 @@ public class ProductController {
     public ApiResponse<PageResponse<ProductResponse>> getRecentlyViewedProducts(
             @PageableDefault(size = 10) Pageable pageable) {
         PageResponse<ProductResponse> response = recentlyViewedProductService.getRecentlyViewedProducts(pageable);
-        return ApiResponse.<PageResponse<ProductResponse>>builder()
-                .success(true)
-                .data(response)
-                .message("Fetched successfully")
-                .build();
+        return ApiResponse.success(response);
     }
     @PostMapping("/viewed-sync")
     public ApiResponse<String> syncViewedProducts(@RequestBody List<Long> productIds) {
         recentlyViewedProductService.syncViewedProducts(productIds);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Synced successfully")
-                .message("Local viewed products synced")
-                .build();
+        return ApiResponse.success("Synced successfully");
     }
 }

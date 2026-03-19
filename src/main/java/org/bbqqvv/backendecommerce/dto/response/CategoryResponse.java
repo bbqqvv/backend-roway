@@ -15,6 +15,7 @@ public class CategoryResponse {
     private String name;
     private String slug;
     private String image;
+    private String publicId;
     private List<SizeCategoryResponse> sizes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

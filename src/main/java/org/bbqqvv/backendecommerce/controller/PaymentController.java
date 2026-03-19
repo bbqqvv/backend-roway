@@ -33,11 +33,7 @@ public class PaymentController {
         
         boolean isValid = paymentService.verifyCallback(PaymentMethod.VNPAY, queryParams);
         if (!isValid) {
-            return ApiResponse.<String>builder()
-                    .success(false)
-                    .message("Invalid signature")
-                    .data("Failed")
-                    .build();
+            return ApiResponse.error("Invalid signature");
         }
 
         String orderCode = queryParams.get("vnp_TxnRef");
@@ -47,10 +43,7 @@ public class PaymentController {
 
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
-            return ApiResponse.<String>builder()
-                    .success(false)
-                    .message("Order not found")
-                    .build();
+            return ApiResponse.error("Order not found");
         }
 
         // 00 = Success in VNPay
@@ -70,17 +63,10 @@ public class PaymentController {
             paymentRepository.save(payment);
 
             log.info("Order {} marked as CONFIRMED after successful VNPay payment", orderCode);
-            return ApiResponse.<String>builder()
-                    .success(true)
-                    .message("Payment successful")
-                    .data("Success")
-                    .build();
+            return ApiResponse.success("Success", "Payment successful");
         } else {
             log.warn("Payment failed for Order {} with ResponseCode {}", orderCode, responseCode);
-            return ApiResponse.<String>builder()
-                    .success(false)
-                    .message("Payment failed with code: " + responseCode)
-                    .build();
+            return ApiResponse.error("Payment failed with code: " + responseCode);
         }
     }
 }

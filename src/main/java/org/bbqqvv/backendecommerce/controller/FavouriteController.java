@@ -20,30 +20,18 @@ public class FavouriteController {
     @PostMapping
     public ApiResponse<FavouriteResponse> addFavourite(@RequestBody @Valid FavouriteRequest favouriteRequest) {
         FavouriteResponse favouriteResponse = favouriteService.addFavourite(favouriteRequest.getProductId());
-        return ApiResponse.<FavouriteResponse>builder()
-                .success(true)
-                .data(favouriteResponse)
-                .message("Product added to favourites successfully.")
-                .build();
+        return ApiResponse.success(favouriteResponse, "Product added to favourites successfully.");
     }
 
     @DeleteMapping("/{productId}")
     public ApiResponse<String> removeFavourite(@PathVariable Long productId) {
         favouriteService.removeFavourite(productId);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Favourite successfully removed.")
-                .message("The product has been removed from favourites.")
-                .build();
+        return ApiResponse.success("Favourite successfully removed.", "The product has been removed from favourites.");
     }
 
     @GetMapping
     public ApiResponse<PageResponse<FavouriteResponse>> getUserFavourites(@PageableDefault(size = 10) Pageable pageable) {
         PageResponse<FavouriteResponse> favouriteResponses = favouriteService.getUserFavourites(pageable);
-        return ApiResponse.<PageResponse<FavouriteResponse>>builder()
-                .success(true)
-                .data(favouriteResponses)
-                .message("Paged list of user favourites retrieved successfully.")
-                .build();
+        return ApiResponse.success(favouriteResponses, "Paged list of user favourites retrieved successfully.");
     }
 }

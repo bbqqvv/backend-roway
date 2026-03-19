@@ -34,12 +34,39 @@ public class ProductRequest {
     @Max(value = 100, message = "Sale percentage must be less than or equal to 100")
     private int salePercentage;
     private boolean featured;
+    private java.math.BigDecimal price;
+
+    // Support both 'tags' and 'tag' (for convenience in form-data)
     private Set<String> tags;
+
+    public void setTag(String tag) {
+        processTags(tag);
+    }
+
+    public void setTags(String tags) {
+        processTags(tags);
+    }
+
+    private void processTags(String input) {
+        if (input != null && !input.isBlank()) {
+            if (this.tags == null) this.tags = new java.util.HashSet<>();
+            java.util.Arrays.stream(input.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .forEach(this.tags::add);
+        }
+    }
+
     private boolean sale;
-    private boolean active ;
+    private boolean active;
     private boolean isOldProduct = false;
-    private MultipartFile mainImageUrl;
-    private List<MultipartFile> secondaryImageUrls;
-    private List<MultipartFile> descriptionImageUrls;
+    private MultipartFile mainImage;
+    private ImageMetadata mainImageMetadata;
+
+    private List<MultipartFile> secondaryImages;
+    private List<ImageMetadata> secondaryImageMetadata;
+
+    private List<MultipartFile> descriptionImages;
+    private List<ImageMetadata> descriptionImageMetadata;
     private List<ProductVariantRequest> variants;
 }

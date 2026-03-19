@@ -22,33 +22,21 @@ public class ProductReviewController {
      */
     @PostMapping("/add-or-update")
     public ApiResponse<ProductReviewResponse> addOrUpdateReview(@ModelAttribute @Valid ProductReviewRequest reviewRequest) {
-        return ApiResponse.<ProductReviewResponse>builder()
-                .success(true)
-                .data(productReviewService.addOrUpdateReview(reviewRequest))
-                .message("Review added/updated successfully")
-                .build();
+        return ApiResponse.success(productReviewService.addOrUpdateReview(reviewRequest), "Review added/updated successfully");
     }
     @GetMapping("/product/{productId}")
     public ApiResponse<PageResponse<ProductReviewResponse>> getReviewsByProduct(
             @PathVariable Long productId,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByProduct(productId, pageable);
-        return ApiResponse.<PageResponse<ProductReviewResponse>>builder()
-                .success(true)
-                .message("Reviews retrieved successfully")
-                .data(response)
-                .build();
+        return ApiResponse.success(response, "Reviews retrieved successfully");
     }
 
     @GetMapping("/user")
     public ApiResponse<PageResponse<ProductReviewResponse>> getReviewsByUser(
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByUser(pageable);
-        return ApiResponse.<PageResponse<ProductReviewResponse>>builder()
-                .success(true)
-                .message("User reviews retrieved successfully")
-                .data(response)
-                .build();
+        return ApiResponse.success(response, "User reviews retrieved successfully");
     }
 
     /**
@@ -57,10 +45,6 @@ public class ProductReviewController {
     @DeleteMapping("/remove/{reviewId}")
     public ApiResponse<String> deleteReview(@PathVariable Long reviewId) {
         productReviewService.deleteReview(reviewId);
-        return ApiResponse.<String>builder()
-                .success(true)
-                .data("Review deleted successfully")
-                .message("Review removed")
-                .build();
+        return ApiResponse.success("Review deleted successfully", "Review removed");
     }
 }

@@ -19,4 +19,8 @@ public class SizeProductRequest {
     private int stock;
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
     private BigDecimal price;
+
+    public void setQuantity(int quantity) {
+        this.stock = quantity;
+    }
 }

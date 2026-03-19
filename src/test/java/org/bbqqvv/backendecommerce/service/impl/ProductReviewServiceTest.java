@@ -154,7 +154,7 @@ class ProductReviewServiceTest {
 
         PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByProduct(101L, pageable);
 
-        assertThat(response.getItems()).hasSize(1);
+        assertThat(response.items()).hasSize(1);
     }
 
     @Test

@@ -12,6 +12,10 @@ import org.bbqqvv.backendecommerce.mapper.DiscountMapper;
 import org.bbqqvv.backendecommerce.repository.*;
 import org.bbqqvv.backendecommerce.service.CartService;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -215,5 +220,35 @@ class DiscountServiceTest {
             assertThat(response.getValid()).isFalse();
             assertThat(response.getDiscountAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         }
+    }
+
+    @Test
+    @DisplayName("getApplicableProductIds - Trả về phân trang IDs")
+    void getApplicableProductIds_shouldReturnPageResponse() {
+        // Arrange
+        Page<Long> page = new PageImpl<>(List.of(101L, 102L));
+        when(discountProductRepository.findProductIdsByDiscountId(eq(1L), any(Pageable.class))).thenReturn(page);
+
+        // Act
+        var response = discountService.getApplicableProductIds(1L, PageRequest.of(0, 10));
+
+        // Assert
+        assertThat(response.items()).hasSize(2);
+        assertThat(response.items()).containsExactly(101L, 102L);
+    }
+
+    @Test
+    @DisplayName("getApplicableUserIds - Trả về phân trang IDs")
+    void getApplicableUserIds_shouldReturnPageResponse() {
+        // Arrange
+        Page<Long> page = new PageImpl<>(List.of(1L, 2L));
+        when(discountUserRepository.findUserIdsByDiscountId(eq(1L), any(Pageable.class))).thenReturn(page);
+
+        // Act
+        var response = discountService.getApplicableUserIds(1L, PageRequest.of(0, 10));
+
+        // Assert
+        assertThat(response.items()).hasSize(2);
+        assertThat(response.items()).containsExactly(1L, 2L);
     }
 }

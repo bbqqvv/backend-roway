@@ -13,3 +13,11 @@ databaseChangeLog:
       file: db/changelog/v1.1/03-user-fields.xml
   - include:
       file: db/changelog/v1.1/04-version-column.xml
+  - include:
+      file: db/changelog/v1.1/05-image-public-id.xml
+  - include:
+      file: db/changelog/db.changelog-shipping.yaml
+  - include:
+      file: db/changelog/db.changelog-category-public-id.yaml
+  - include:
+      file: db/changelog/db.changelog-variant-size-price.yaml

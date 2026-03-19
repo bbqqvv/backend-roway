@@ -28,8 +28,11 @@ public class ProductResponse {
     private Set<String> tags;
     private String categoryName;
     private String mainImageUrl;
+    private String mainImagePublicId;
     private List<String> secondaryImageUrls;
+    private List<String> secondaryImagePublicIds;
     private List<String> descriptionImageUrls;
+    private List<String> descriptionImagePublicIds;
     private List<ProductVariantResponse> variants;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface SizeProductMapper {
     @Mapping(target = "sizeName", source = "sizeProduct.sizeName")
-    @Mapping(target = "price", source = "sizeProduct.price")
-    @Mapping(target = "priceAfterDiscount", source = "sizeProduct.priceAfterDiscount")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "priceAfterDiscount", source = "priceAfterDiscount")
     SizeProductResponse toSizeProductVariantResponse(SizeProductVariant sizeProductVariant);
 }

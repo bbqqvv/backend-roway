@@ -4,8 +4,10 @@ target/
 
 # Log & Temp files
 *.log
+*.txt
 app_log.txt
 test_out.txt
+test_output*.txt
 results_all_*.txt
 results_full.txt
 run_locally.ps1

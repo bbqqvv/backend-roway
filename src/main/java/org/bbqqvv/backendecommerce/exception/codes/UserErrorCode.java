@@ -13,7 +13,9 @@ public enum UserErrorCode implements ErrorCode {
     ACCOUNT_LOCKED(2004, "Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
     ACCOUNT_DISABLED(2005, "Tài khoản đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
     PASSWORDS_DO_NOT_MATCH(2006, "Mật khẩu không khớp", HttpStatus.BAD_REQUEST),
-    INVALID_OLD_PASSWORD(2007, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST);
+    INVALID_OLD_PASSWORD(2007, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST),
+    EMAIL_EXISTED(2008, "Email này đã được đăng ký", HttpStatus.BAD_REQUEST),
+    GOOGLE_ACCOUNT_EXISTED(2009, "Tài khoản đã được tạo bằng Google. Vui lòng đăng nhập bằng Google.", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

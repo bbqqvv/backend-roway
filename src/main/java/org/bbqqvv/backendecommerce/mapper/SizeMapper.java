@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface SizeMapper {
-    @Mapping(target = "category.id",source = "categoryId")
+    @Mapping(target = "category", ignore = true)
     SizeCategory toSize(SizeCategoryRequest sizeCategoryRequest);
     @Mapping(target = "categoryId",source = "category.id")
     SizeCategoryResponse toResponse(SizeCategory sizeCategory);

@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-price-to-variant-size
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: product_variant_size
+            columns:
+              - column:
+                  name: price
+                  type: numeric(38, 2)
+              - column:
+                  name: price_after_discount
+                  type: numeric(38, 2)
+  - changeSet:
+      id: make-size-product-price-nullable
+      author: antigravity
+      changes:
+        - dropNotNullConstraint:
+            tableName: size_product
+            columnName: price
+            columnDataType: numeric(38, 2)

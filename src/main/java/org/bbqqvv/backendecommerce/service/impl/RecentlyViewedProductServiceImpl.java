@@ -93,12 +93,13 @@ public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductSe
         User currentUser = getAuthenticatedUser();
         // Nếu là khách, không có dữ liệu trên Backend để trả về
         if (currentUser == null) {
-            return PageResponse.<ProductResponse>builder()
-                    .items(List.of())
-                    .currentPage(pageable.getPageNumber())
-                    .pageSize(pageable.getPageSize())
-                    .totalElements(0)
-                    .build();
+            return new PageResponse<>(
+                    pageable.getPageNumber(),
+                    0,
+                    pageable.getPageSize(),
+                    0L,
+                    List.of()
+            );
         }
 
         String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
@@ -120,12 +121,15 @@ public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductSe
                     .map(id -> productMapper.toProductResponse(productMap.get(id)))
                     .collect(Collectors.toList());
 
-            return PageResponse.<ProductResponse>builder()
-                    .items(sortedResponses)
-                    .currentPage(pageable.getPageNumber())
-                    .pageSize(pageable.getPageSize())
-                    .totalElements(redisTemplate.opsForZSet().size(redisKey))
-                    .build();
+            long totalElements = redisTemplate.opsForZSet().size(redisKey);
+            int totalPages = (int) Math.ceil((double) totalElements / pageable.getPageSize());
+            return new PageResponse<>(
+                    pageable.getPageNumber(),
+                    totalPages,
+                    pageable.getPageSize(),
+                    totalElements,
+                    sortedResponses
+            );
         }
 
         // Nếu Redis trống, lấy từ DB và nạp vào Redis
@@ -143,13 +147,13 @@ public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductSe
                 .map(rvp -> productMapper.toProductResponse(rvp.getProduct()))
                 .collect(Collectors.toList());
 
-        return PageResponse.<ProductResponse>builder()
-                .items(productResponses)
-                .currentPage(pageResult.getNumber())
-                .pageSize(pageResult.getSize())
-                .totalPages(pageResult.getTotalPages())
-                .totalElements(pageResult.getTotalElements())
-                .build();
+        return new PageResponse<>(
+                pageResult.getNumber(),
+                pageResult.getTotalPages(),
+                pageResult.getSize(),
+                pageResult.getTotalElements(),
+                productResponses
+        );
     }
 
     @Override

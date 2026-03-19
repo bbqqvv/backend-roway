@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260319-create-shipping-tables
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: shipping_settings
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: setting_key
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: setting_value
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: shipping_region_fees
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: region_name
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: fee
+                  type: DECIMAL(19, 2)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 20260319-seed-shipping-data
+      author: antigravity
+      changes:
+        - insert:
+            tableName: shipping_settings
+            columns:
+              - column: { name: setting_key, value: "FREE_SHIPPING_THRESHOLD" }
+              - column: { name: setting_value, value: "499000" }
+        - insert:
+            tableName: shipping_settings
+            columns:
+              - column: { name: setting_key, value: "DEFAULT_SHIPPING_FEE" }
+              - column: { name: setting_value, value: "50000" }
+        - insert:
+            tableName: shipping_region_fees
+            columns:
+              - column: { name: region_name, value: "hồ chí minh" }
+              - column: { name: fee, value: 50000 }
+        - insert:
+            tableName: shipping_region_fees
+            columns:
+              - column: { name: region_name, value: "hà nội" }
+              - column: { name: fee, value: 50000 }
+        - insert:
+            tableName: shipping_region_fees
+            columns:
+              - column: { name: region_name, value: "đà nẵng" }
+              - column: { name: fee, value: 20000 }
+
+  - changeSet:
+      id: 20260319-add-audit-columns-to-shipping
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: shipping_settings
+            columns:
+              - column: { name: created_at, type: TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP }
+              - column: { name: deleted, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+        - addColumn:
+            tableName: shipping_region_fees
+            columns:
+              - column: { name: created_at, type: TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP }
+              - column: { name: deleted, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }

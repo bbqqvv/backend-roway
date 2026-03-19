@@ -19,30 +19,18 @@ public class SearchHistoryController {
     // 🟢 Lưu lịch sử tìm kiếm của current user
     @PostMapping
     public ApiResponse<SearchHistoryResponse> saveSearchQuery(@RequestBody SearchHistoryRequest request) {
-        return ApiResponse.<SearchHistoryResponse>builder()
-                .success(true)
-                .message("Search history saved successfully")
-                .data(searchHistoryService.saveSearchQuery(request))
-                .build();
+        return ApiResponse.success(searchHistoryService.saveSearchQuery(request), "Search history saved successfully");
     }
 
     // 🟢 Lấy lịch sử tìm kiếm của current user
     @GetMapping
     public ApiResponse<List<SearchHistoryResponse>> getUserSearchHistory() {
-        return ApiResponse.<List<SearchHistoryResponse>>builder()
-                .success(true)
-                .message("User search history retrieved successfully")
-                .data(searchHistoryService.getUserSearchHistory())
-                .build();
+        return ApiResponse.success(searchHistoryService.getUserSearchHistory(), "User search history retrieved successfully");
     }
 
     // 🟢 Gợi ý tìm kiếm (autocomplete)
     @GetMapping("/suggestions")
     public ApiResponse<List<SearchHistoryResponse>> getSearchSuggestions(@RequestParam String query) {
-        return ApiResponse.<List<SearchHistoryResponse>>builder()
-                .success(true)
-                .message("Search suggestions retrieved successfully")
-                .data(searchHistoryService.getSearchSuggestions(query))
-                .build();
+        return ApiResponse.success(searchHistoryService.getSearchSuggestions(query), "Search suggestions retrieved successfully");
     }
 }

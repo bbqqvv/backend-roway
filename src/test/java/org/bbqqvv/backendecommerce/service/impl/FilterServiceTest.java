@@ -87,7 +87,7 @@ class FilterServiceTest {
 
         PageResponse<ProductResponse> response = filterService.filterProducts(params, pageable);
 
-        assertThat(response.getItems()).hasSize(1);
+        assertThat(response.items()).hasSize(1);
         verify(productRepository).findAll(any(Specification.class), eq(pageable));
     }
 }

@@ -29,6 +29,9 @@ public class ProductVariant extends BaseEntity {
     @Column(nullable = true)
     private String imageUrl;
 
+    @Column(name = "public_id")
+    private String publicId;
+
     @Column(nullable = false)
     private String color;
 }
