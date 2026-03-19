@@ -1,61 +1,15 @@
-name: Java CI/CD Enterprise Pipeline
+name: Java Enterprise CI/CD Pipeline (Production Ready)
 
 on:
   push:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main", "master", "develop" ]
-
-env:
-  # Các biến môi trường dùng chung cho toàn bộ Pipeline
-  DB_URL: jdbc:postgresql://localhost:5432/roway_db
-  DB_USERNAME: postgres
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD || 'password' }}
-  REDIS_HOST: localhost
-  REDIS_PORT: 6379
-  REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD || 'password' }}
-  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY || 'dGhpcy1pcy1hLTMyLWJ5dGUtc2VjcmV0LWtleS0xMjM=' }}
-  MAIL_HOST: ${{ secrets.MAIL_HOST || 'smtp.gmail.com' }}
-  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME || 'test@example.com' }}
-  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD || 'test' }}
-  CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-  CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-  CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-  VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
-  VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
-  VNPAY_RETURN_URL: ${{ secrets.VNPAY_RETURN_URL }}
-  VNPAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    branches: [ "main", "develop" ]
 
 jobs:
-  build:
-    name: Build & Package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Make mvnw executable
-        run: chmod +x mvnw
-
-      - name: Build with Maven (Skip Tests for Packaging)
-        run: ./mvnw clean package -DskipTests
-
-      - name: Upload JAR Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-jar
-          path: target/*.jar
-          retention-days: 1
-
-  unit-test:
-    name: Core Unit Testing
-    needs: build
+  # 1. Pipeline Cốt lõi: Build, Test và Quality Check
+  build-and-test:
+    name: Build, Verify & Quality Gate
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -63,10 +17,7 @@ jobs:
         env:
           POSTGRES_DB: roway_db
           POSTGRES_USER: postgres
-          # Sử dụng mật khẩu từ Secret, nếu thiếu sẽ dùng 'password' mặc định
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD || 'password' }}
-          # Đảm bảo Postgres luôn khởi động thành công trong môi trường CI
-          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }} # Bắt buộc dùng secret
         ports: [5432:5432]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
@@ -77,6 +28,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -84,12 +36,42 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run 8 Enterprise Unit Tests
-        run: ./mvnw test
+      - name: Code Quality & Dependency Scan (Snyk)
+        uses: snyk/actions/maven@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # Nếu bạn có Snyk token
+        continue-on-error: true # Không chặn build nếu scan chưa pass (tùy policy)
 
-  docker:
-    name: Containerize & DockerHub
-    needs: unit-test
+      - name: Build & Verify (Includes Unit & Integration Tests)
+        env:
+          DB_URL: jdbc:postgresql://localhost:5432/roway_db
+          DB_USERNAME: postgres
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify -Pproduction
+
+      - name: Upload JaCoCo Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+
+      - name: Upload JAR Artifact (Only if tests pass)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+          retention-days: 1
+
+  # 2. Pipeline Container & Security Scan
+  containerize:
+    name: Dockerize & Security Scan
+    needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,10 +91,47 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: Build Docker Image with Cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false # Chưa push để scan bảo mật trước
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:latest, ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true # Load load image vào local để scan
+
+      - name: Docker Image Security Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:latest'
+          format: 'table'
+          exit-code: '1' # Fail build nếu có lỗi HIGH hoặc CRITICAL
+          severity: 'CRITICAL,HIGH'
+
+      - name: Push Docker Image (If scan pass)
         run: |
-          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/roway-backend
-          COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$COMMIT_SHA .
-          docker push $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:$COMMIT_SHA
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:${{ github.sha }}
+
+  # 3. CD - Deployment (Placeholder/SSH Example)
+  deploy:
+    name: Deployment to Staging/Prod
+    needs: containerize
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine Environment
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "ENV=PROD" >> $GITHUB_ENV
+          else
+            echo "ENV=STAGING" >> $GITHUB_ENV
+          fi
+
+      - name: Simulated SSH Deployment
+        run: |
+          echo "Deploying to ${{ env.ENV }} server..."
+          echo "Pulling latest image: ${{ secrets.DOCKERHUB_USERNAME }}/roway-backend:latest"
+          echo "Updating containers..."
+          # Lệnh thực tế: ssh user@host "docker compose pull && docker compose up -d"
