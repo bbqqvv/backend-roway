@@ -10,13 +10,14 @@ env:
   # Các biến môi trường dùng chung cho toàn bộ Pipeline
   DB_URL: jdbc:postgresql://localhost:5432/roway_db
   DB_USERNAME: postgres
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD || 'password' }}
   REDIS_HOST: localhost
   REDIS_PORT: 6379
-  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-  MAIL_HOST: ${{ secrets.MAIL_HOST }}
-  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+  REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD || 'password' }}
+  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY || 'dGhpcy1pcy1hLTMyLWJ5dGUtc2VjcmV0LWtleS0xMjM=' }}
+  MAIL_HOST: ${{ secrets.MAIL_HOST || 'smtp.gmail.com' }}
+  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME || 'test@example.com' }}
+  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD || 'test' }}
   CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
   CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
   CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
@@ -62,7 +63,10 @@ jobs:
         env:
           POSTGRES_DB: roway_db
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          # Sử dụng mật khẩu từ Secret, nếu thiếu sẽ dùng 'password' mặc định
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD || 'password' }}
+          # Đảm bảo Postgres luôn khởi động thành công trong môi trường CI
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports: [5432:5432]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
