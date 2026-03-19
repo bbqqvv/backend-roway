@@ -16,9 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,56 +43,63 @@ class AddressServiceTest {
     @BeforeEach
     void setUp() {
         user = User.builder().id(1L).username("testuser").build();
-        address = Address.builder()
-                .id(1L)
-                .user(user)
-                .recipientName("Van Quoc Bui")
-                .phoneNumber("0123456789")
-                .addressLine("123 Street")
-                .defaultAddress(false)
-                .build();
-
+        address = Address.builder().id(101L).user(user).defaultAddress(false).build();
+        
         addressRequest = new AddressRequest();
-        addressRequest.setRecipientName("Van Quoc Bui");
-        addressRequest.setPhoneNumber("0123456789");
-        addressRequest.setAddressLine("123 Street");
-        addressRequest.setDefaultAddress(false);
+        addressRequest.setProvince("Hồ Chí Minh");
+        addressRequest.setDefaultAddress(true);
     }
 
     @Test
-    @DisplayName("Thêm địa chỉ mới thành công")
-    void createAddress_shouldReturnAddressResponse() {
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            // Arrange
+    @DisplayName("Tạo địa chỉ mặc định mới - Phải reset các địa chỉ cũ")
+    void createAddress_shouldResetOldDefaults_whenNewIsDefault() {
+        try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            when(addressMapper.toAddress(any())).thenReturn(address);
-            when(addressRepository.save(any())).thenReturn(address);
+            
+            Address newAddress = new Address();
+            when(addressMapper.toAddress(any())).thenReturn(newAddress);
+            when(addressRepository.findAllByUserId(1L)).thenReturn(List.of(address));
+            when(addressRepository.save(any())).thenReturn(newAddress);
             when(addressMapper.toAddressResponse(any())).thenReturn(new AddressResponse());
 
-            // Act
-            AddressResponse response = addressService.createAddress(addressRequest);
+            addressService.createAddress(addressRequest);
 
-            // Assert
-            assertThat(response).isNotNull();
-            verify(addressRepository).save(any(Address.class));
+            assertThat(address.isDefaultAddress()).isFalse();
+            verify(addressRepository).saveAll(anyList());
+            verify(addressRepository).save(newAddress);
         }
     }
 
     @Test
-    @DisplayName("Xóa địa chỉ thất bại - Không thể xóa địa chỉ mặc định")
-    void deleteAddress_shouldThrowException_whenDeletingDefaultAddress() {
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            // Arrange
-            address.setDefaultAddress(true);
+    @DisplayName("Xóa địa chỉ thất bại - Không được xóa địa chỉ mặc định")
+    void deleteAddress_shouldThrowException_whenDefault() {
+        address.setDefaultAddress(true);
+        try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            when(addressRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(address));
+            when(addressRepository.findByIdAndUserId(101L, 1L)).thenReturn(Optional.of(address));
 
-            // Act & Assert
-            assertThatThrownBy(() -> addressService.deleteAddress(1L))
+            assertThatThrownBy(() -> addressService.deleteAddress(101L))
                     .isInstanceOf(AppException.class)
                     .hasFieldOrPropertyWithValue("errorCode", InfrastructureAddressErrorCode.ADDRESS_DEFAULT_CANNOT_DELETE);
+        }
+    }
+
+    @Test
+    @DisplayName("Thiết lập địa chỉ mặc định thành công")
+    void setDefaultAddress_shouldUpdateFlags() {
+        try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+            when(addressRepository.findByIdAndUserId(101L, 1L)).thenReturn(Optional.of(address));
+            when(addressRepository.findAllByUserId(1L)).thenReturn(List.of(address));
+
+            addressService.setDefaultAddress(101L);
+
+            assertThat(address.isDefaultAddress()).isTrue();
+            verify(addressRepository).saveAll(anyList());
+            verify(addressRepository).save(address);
         }
     }
 }

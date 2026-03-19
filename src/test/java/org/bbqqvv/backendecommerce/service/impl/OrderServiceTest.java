@@ -1,30 +1,32 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
-import org.bbqqvv.backendecommerce.dto.request.OrderItemRequest;
+import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.bbqqvv.backendecommerce.dto.request.OrderRequest;
 import org.bbqqvv.backendecommerce.dto.response.OrderResponse;
 import org.bbqqvv.backendecommerce.entity.*;
 import org.bbqqvv.backendecommerce.exception.AppException;
+import org.bbqqvv.backendecommerce.exception.codes.CartOrderErrorCode;
+import org.bbqqvv.backendecommerce.mapper.OrderMapper;
 import org.bbqqvv.backendecommerce.repository.*;
+import org.bbqqvv.backendecommerce.service.DiscountService;
 import org.bbqqvv.backendecommerce.service.email.EmailService;
 import org.bbqqvv.backendecommerce.service.payment.PaymentService;
-import org.bbqqvv.backendecommerce.mapper.OrderMapper;
-import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +39,7 @@ class OrderServiceTest {
     @Mock private CartRepository cartRepository;
     @Mock private AddressRepository addressRepository;
     @Mock private SizeProductVariantRepository sizeProductVariantRepository;
+    @Mock private DiscountService discountService;
     @Mock private DiscountRepository discountRepository;
     @Mock private OrderMapper orderMapper;
     @Mock private EmailService emailService;
@@ -46,138 +49,121 @@ class OrderServiceTest {
     private OrderServiceImpl orderService;
 
     private User user;
-    private OrderRequest orderRequest;
     private Address address;
+    private Cart cart;
     private Product product;
-    private SizeProductVariant productVariant;
+    private ProductVariant variant;
+    private SizeProductVariant sizeVariant;
 
     @BeforeEach
     void setUp() {
-        user = User.builder().id(1L).username("test_user").email("user@example.com").build();
-        address = Address.builder()
-                .id(1L)
-                .user(user)
-                .recipientName("Van Quoc Bui")
-                .phoneNumber("0123456789")
-                .addressLine("123 Street")
+        user = User.builder().id(1L).username("testuser").email("test@example.com").build();
+        address = Address.builder().id(1L).province("Hồ Chí Minh").build();
+        
+        product = Product.builder().id(101L).name("Jeans").build();
+        variant = ProductVariant.builder().id(201L).product(product).color("Blue").build();
+        
+        SizeProduct sizeProduct = SizeProduct.builder()
+                .sizeName("M")
+                .priceAfterDiscount(BigDecimal.valueOf(100000))
                 .build();
-        product = Product.builder().id(1L).name("Roway T-Shirt").build();
+        
+        sizeVariant = SizeProductVariant.builder()
+                .id(301L)
+                .productVariant(variant)
+                .sizeProduct(sizeProduct)
+                .stock(10)
+                .build();
 
-        orderRequest = OrderRequest.builder()
-                .addressId(1L)
-                .paymentMethod(PaymentMethod.VNPAY)
+        sizeProduct.setProductVariantSizes(List.of(sizeVariant));
+
+        CartItem cartItem = CartItem.builder()
+                .product(product)
+                .color("Blue")
+                .sizeName("M")
+                .quantity(2)
+                .subtotal(BigDecimal.valueOf(200000))
                 .build();
+        
+        cart = Cart.builder().id(1L).user(user).cartItems(List.of(cartItem)).build();
     }
 
     @Test
-    @DisplayName("Đặt hàng thành công - Quy trình giao dịch giả lập")
-    void createOrder_shouldReturnOrderResponse_whenValidRequest() {
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            // Arrange
-            mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("test_user"));
-            when(userRepository.findByUsername("test_user")).thenReturn(Optional.of(user));
+    @DisplayName("Tạo đơn hàng thành công")
+    void createOrder_shouldSaveOrderAndItems() {
+        OrderRequest request = new OrderRequest();
+        request.setAddressId(1L);
+        request.setPaymentMethod(PaymentMethod.VNPAY);
+
+        try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
-            
-            Cart cart = new Cart();
-            cart.setCartItems(List.of(CartItem.builder()
-                    .product(product)
-                    .color("Black")
-                    .sizeName("L")
-                    .quantity(2)
-                    .price(BigDecimal.valueOf(500000))
-                    .build()));
             when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+            when(sizeProductVariantRepository.findByProductIdIn(anyList())).thenReturn(List.of(sizeVariant));
             
-            SizeProduct sizeProduct = SizeProduct.builder()
-                    .sizeName("L")
-                    .price(BigDecimal.valueOf(500000))
-                    .priceAfterDiscount(BigDecimal.valueOf(500000))
-                    .build();
-            
-            productVariant = SizeProductVariant.builder()
-                    .id(1L)
-                    .stock(10)
-                    .productVariant(ProductVariant.builder()
-                            .color("Black")
-                            .product(product)
-                            .build())
-                    .sizeProduct(sizeProduct)
-                    .build();
-            
-            sizeProduct.setProductVariantSizes(List.of(productVariant));
+            Order order = new Order();
+            order.setId(1L);
+            order.setOrderItems(Collections.emptyList());
+            when(orderRepository.save(any(Order.class))).thenReturn(order);
+            when(paymentService.createPaymentUrl(any())).thenReturn("http://payment.url");
+            when(orderMapper.toOrderResponse(any())).thenReturn(new OrderResponse());
 
-            when(sizeProductVariantRepository.findByProductIdIn(anyList())).thenReturn(List.of(productVariant));
-            when(orderRepository.save(any(Order.class))).thenAnswer(i -> {
-                Order order = i.getArgument(0);
-                order.setId(100L);
-                return order;
-            });
-            when(paymentService.createPaymentUrl(any())).thenReturn("http://vnpay.com/pay");
-            when(orderMapper.toOrderResponse(any(Order.class))).thenReturn(new OrderResponse());
+            OrderResponse response = orderService.createOrder(request);
 
-            // Act
-            OrderResponse response = orderService.createOrder(orderRequest);
-
-            // Assert
             assertThat(response).isNotNull();
-            verify(orderRepository, times(1)).save(any(Order.class));
-            verify(sizeProductVariantRepository, times(1)).save(any(SizeProductVariant.class));
-            assertThat(productVariant.getStock()).isEqualTo(8);
+            verify(orderRepository).save(any(Order.class));
+            verify(orderItemRepository).saveAll(anyList());
+            verify(cartRepository).deleteByUserId(1L);
+            verify(emailService).sendOrderConfirmationEmail(any(), anyString());
         }
     }
 
     @Test
-    @DisplayName("Đặt hàng thất bại - Hết hàng")
-    void createOrder_shouldThrowException_whenOutOfStock() {
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            // Arrange
-            mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("test_user"));
-            when(userRepository.findByUsername("test_user")).thenReturn(Optional.of(user));
-            when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
-            
-            Cart cart = new Cart();
-            cart.setCartItems(List.of(CartItem.builder()
-                    .product(product)
-                    .color("Black")
-                    .sizeName("L")
-                    .quantity(100) // Much more than stock
-                    .price(BigDecimal.valueOf(500000))
-                    .build()));
-            when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
-            
-            SizeProduct sizeProduct = SizeProduct.builder()
-                    .sizeName("L")
-                    .price(BigDecimal.valueOf(500000))
-                    .priceAfterDiscount(BigDecimal.valueOf(500000))
-                    .build();
-            
-            // In a real SizeProduct, getStockQuantity would sum all productVariantSizes.
-            // Since it's a real object in our test (not mock), we need to set the list or mock the method.
-            // But SizeProduct is just an entity here. Let's see if we can just mock it or if we should use a real list.
-            
-            productVariant = SizeProductVariant.builder()
-                    .id(1L)
-                    .stock(5)
-                    .productVariant(ProductVariant.builder().color("Black").product(product).build())
-                    .sizeProduct(sizeProduct)
-                    .build();
-            
-            sizeProduct.setProductVariantSizes(List.of(productVariant));
+    @DisplayName("Hủy đơn hàng thành công - Hoàn lại kho")
+    void cancelOrder_shouldRestoreStock() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.PENDING);
+        
+        OrderItem item = OrderItem.builder()
+                .product(product)
+                .sizeName("M")
+                .quantity(2)
+                .build();
+        order.setOrderItems(List.of(item));
 
-            when(sizeProductVariantRepository.findByProductIdIn(anyList())).thenReturn(List.of(productVariant));
+        try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(sizeProductVariantRepository.findByProductIdAndSizeName(101L, "M")).thenReturn(Optional.of(sizeVariant));
 
-            // Act & Assert
-            try {
-                orderService.createOrder(orderRequest);
-            } catch (AppException e) {
-                assertThat(e.getErrorCode()).isNotNull();
-            }
+            orderService.cancelOrder(1L);
 
-            // In OrderServiceImpl, the order is saved BEFORE buildOrderItem loop fails
-            verify(orderRepository, times(1)).save(any(Order.class));
-            // Ensure items are NEVER saved if stock validation fails
-            verify(orderItemRepository, never()).saveAll(any());
-            verify(sizeProductVariantRepository, never()).save(any(SizeProductVariant.class));
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
+            assertThat(sizeVariant.getStock()).isEqualTo(12); // 10 + 2
+            verify(orderRepository).save(order);
+        }
+    }
+
+    @Test
+    @DisplayName("Hủy đơn hàng thất bại - Trạng thái không hợp lệ")
+    void cancelOrder_shouldThrowException_whenDelivered() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.DELIVERED);
+
+        try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+            assertThatThrownBy(() -> orderService.cancelOrder(1L))
+                    .isInstanceOf(AppException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", CartOrderErrorCode.CANNOT_CANCEL_ORDER);
         }
     }
 }
