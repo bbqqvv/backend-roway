@@ -2,6 +2,7 @@ package org.bbqqvv.backendecommerce.service.impl;
 
 import org.bbqqvv.backendecommerce.config.jwt.SecurityUtils;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
+import org.bbqqvv.backendecommerce.dto.request.FavouriteRequest;
 import org.bbqqvv.backendecommerce.dto.response.FavouriteResponse;
 import org.bbqqvv.backendecommerce.entity.Favourite;
 import org.bbqqvv.backendecommerce.entity.Product;
@@ -14,6 +15,7 @@ import org.bbqqvv.backendecommerce.mapper.FavouriteMapper;
 import org.bbqqvv.backendecommerce.repository.FavouriteRepository;
 import org.bbqqvv.backendecommerce.repository.ProductRepository;
 import org.bbqqvv.backendecommerce.repository.UserRepository;
+import org.bbqqvv.backendecommerce.repository.SizeProductVariantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,7 @@ class FavouriteServiceTest {
     @Mock private ProductRepository productRepository;
     @Mock private UserRepository userRepository;
     @Mock private FavouriteMapper favouriteMapper;
+    @Mock private SizeProductVariantRepository sizeProductVariantRepository;
 
     @InjectMocks
     private FavouriteServiceImpl favouriteService;
@@ -71,7 +74,7 @@ class FavouriteServiceTest {
             when(favouriteRepository.save(any())).thenReturn(favourite);
             when(favouriteMapper.toFavouriteResponse(any())).thenReturn(new FavouriteResponse());
 
-            FavouriteResponse response = favouriteService.addFavourite(101L);
+            FavouriteResponse response = favouriteService.addFavourite(FavouriteRequest.builder().productId(101L).build());
 
             assertThat(response).isNotNull();
             verify(favouriteRepository).save(any(Favourite.class));
@@ -87,7 +90,7 @@ class FavouriteServiceTest {
             when(productRepository.findById(101L)).thenReturn(Optional.of(product));
             when(favouriteRepository.existsByProductIdAndUserId(101L, 1L)).thenReturn(true);
 
-            assertThatThrownBy(() -> favouriteService.addFavourite(101L))
+            assertThatThrownBy(() -> favouriteService.addFavourite(FavouriteRequest.builder().productId(101L).build()))
                     .isInstanceOf(AppException.class)
                     .hasFieldOrPropertyWithValue("errorCode", SocialMarketingErrorCode.FAVOURITE_ALREADY_EXISTS);
         }

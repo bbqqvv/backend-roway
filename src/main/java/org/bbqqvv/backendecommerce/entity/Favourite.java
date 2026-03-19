@@ -2,6 +2,7 @@ package org.bbqqvv.backendecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.bbqqvv.backendecommerce.entity.SizeProductVariant;
 
 
 @Entity
@@ -21,5 +22,9 @@ public class Favourite extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "product_variant_size_id")
+    private SizeProductVariant sizeProductVariant;
 }
 

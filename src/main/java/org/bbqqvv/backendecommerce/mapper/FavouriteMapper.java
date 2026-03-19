@@ -17,23 +17,42 @@ public interface FavouriteMapper {
     @Mapping(target = "nameProduct", source = "product.name")
     @Mapping(target = "productUrl", source = "product.slug")
     @Mapping(target = "stockStatus", ignore = true)
-    @Mapping(target = "imageUrl", source = "product.mainImage.imageUrl")
+    @Mapping(target = "imageUrl", expression = "java(resolveImageUrl(favourite))")
     @Mapping(target = "price", expression = "java(calculatePrice(favourite))")
+    @Mapping(target = "color", source = "sizeProductVariant.productVariant.color")
+    @Mapping(target = "size", source = "sizeProductVariant.sizeProduct.sizeName")
+    @Mapping(target = "sizeProductVariantId", source = "sizeProductVariant.id")
     FavouriteResponse toFavouriteResponse(Favourite favourite);
 
+    default String resolveImageUrl(Favourite favourite) {
+        if (favourite.getSizeProductVariant() != null && 
+            favourite.getSizeProductVariant().getProductVariant() != null &&
+            favourite.getSizeProductVariant().getProductVariant().getImageUrl() != null) {
+            return favourite.getSizeProductVariant().getProductVariant().getImageUrl();
+        }
+        return favourite.getProduct() != null && favourite.getProduct().getMainImage() != null ? 
+               favourite.getProduct().getMainImage().getImageUrl() : null;
+    }
+
     default java.math.BigDecimal calculatePrice(Favourite favourite) {
+        if (favourite.getSizeProductVariant() != null) {
+            var spv = favourite.getSizeProductVariant();
+            return spv.getPriceAfterDiscount() != null ? spv.getPriceAfterDiscount() : spv.getPrice();
+        }
+
         if (favourite.getProduct() == null ||
                 favourite.getProduct().getVariants() == null ||
                 favourite.getProduct().getVariants().isEmpty()) {
             return java.math.BigDecimal.ZERO;
         }
 
-        var firstVariant = favourite.getProduct().getVariants().get(0);
-        if (firstVariant.getProductVariantSizes() == null ||
-                firstVariant.getProductVariantSizes().isEmpty()) {
-            return java.math.BigDecimal.ZERO;
-        }
-
-        return firstVariant.getProductVariantSizes().get(0).getSizeProduct().getPrice();
+        // Tìm giá thấp nhất từ các biến thể và kích thước
+        return favourite.getProduct().getVariants().stream()
+                .filter(v -> v.getProductVariantSizes() != null)
+                .flatMap(v -> v.getProductVariantSizes().stream())
+                .map(spv -> spv.getPriceAfterDiscount() != null ? spv.getPriceAfterDiscount() : spv.getPrice())
+                .filter(java.util.Objects::nonNull)
+                .min(java.math.BigDecimal::compareTo)
+                .orElse(java.math.BigDecimal.ZERO);
     }
 }

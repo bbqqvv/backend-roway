@@ -78,7 +78,10 @@ public class User extends BaseEntity {
     private AuthProvider provider;
 
     public boolean isAdmin() {
-        return authorities != null && authorities.contains(Role.ROLE_ADMIN);
+        return authorities != null && authorities.contains(Role.ROLE_USER);
     }
-}
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = true;
+}

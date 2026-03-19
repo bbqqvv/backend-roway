@@ -8,26 +8,32 @@ import org.springframework.http.HttpStatusCode;
 @Getter
 public enum UserErrorCode implements ErrorCode {
     USER_NOT_FOUND(2001, "Người dùng không tồn tại", HttpStatus.NOT_FOUND),
-    USER_EXISTED(2002, "Người dùng đã tồn tại", HttpStatus.BAD_REQUEST),
-    INVALID_USER_CREDENTIALS(2003, "Tên đăng nhập hoặc mật khẩu không đúng", HttpStatus.UNAUTHORIZED),
-    ACCOUNT_LOCKED(2004, "Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
-    ACCOUNT_DISABLED(2005, "Tài khoản đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
-    PASSWORDS_DO_NOT_MATCH(2006, "Mật khẩu không khớp", HttpStatus.BAD_REQUEST),
-    INVALID_OLD_PASSWORD(2007, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST),
-    EMAIL_EXISTED(2008, "Email này đã được đăng ký", HttpStatus.BAD_REQUEST),
-    GOOGLE_ACCOUNT_EXISTED(2009, "Tài khoản đã được tạo bằng Google. Vui lòng đăng nhập bằng Google.", HttpStatus.BAD_REQUEST);
+    USER_ALREADY_EXISTS(2002, "Người dùng đã tồn tại", HttpStatus.CONFLICT),
+    USER_EXISTED(2002, "Người dùng đã tồn tại", HttpStatus.CONFLICT),
+    INVALID_CREDENTIALS(2003, "Thông tin đăng nhập không chính xác", HttpStatus.UNAUTHORIZED),
+    ACCOUNT_LOCKED(2004, "Tài khoản bị khóa", HttpStatus.FORBIDDEN),
+    UNAUTHORIZED(2005, "Không có quyền thực hiện hành động này", HttpStatus.FORBIDDEN),
+    INVALID_OTP(2006, "Mã OTP không hợp lệ hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
+    EMAIL_ALREADY_EXISTS(2007, "Email đã tồn tại", HttpStatus.CONFLICT),
+    EMAIL_EXISTED(2007, "Email đã tồn tại", HttpStatus.CONFLICT),
+    GOOGLE_ACCOUNT_EXISTED(2008, "Tài khoản Google đã tồn tại", HttpStatus.CONFLICT),
+    INVALID_PASSWORD(2009, "Mật khẩu không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_OLD_PASSWORD(2010, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST),
+    PASSWORDS_DO_NOT_MATCH(2011, "Mật khẩu xác nhận không khớp", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_FOUND(2012, "Quyền người dùng không tồn tại", HttpStatus.NOT_FOUND),
+    USER_ERROR(2999, "Lỗi người dùng không xác định", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;
-    private final HttpStatusCode statusCode;
+    private final HttpStatus statusCode;
 
-    @Override
-    public HttpStatusCode getStatusCode() { return statusCode; }
+    @Override public int getCode() { return code; }
+    @Override public String getMessage() { return message; }
+    @Override public HttpStatusCode getStatusCode() { return statusCode; }
 
     UserErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;
-        this.statusCode = statusCode;
+        this.statusCode = (HttpStatus) statusCode;
     }
 }
-

@@ -9,4 +9,5 @@ import lombok.*;
 @Builder
 public class FavouriteRequest {
     private Long productId;
+    private Long sizeProductVariantId;
 }

@@ -16,14 +16,15 @@ public enum CommonErrorCode implements ErrorCode {
 
     private final int code;
     private final String message;
-    private final HttpStatusCode statusCode;
-
-    @Override
-    public HttpStatusCode getStatusCode() { return statusCode; }
+    private final HttpStatus statusCode;
 
     CommonErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;
-        this.statusCode = statusCode;
+        this.statusCode = (HttpStatus) statusCode;
     }
+
+    @Override public int getCode() { return code; }
+    @Override public String getMessage() { return message; }
+    @Override public HttpStatusCode getStatusCode() { return statusCode; }
 }

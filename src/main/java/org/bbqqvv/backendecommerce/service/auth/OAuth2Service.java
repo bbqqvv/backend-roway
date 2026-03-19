@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
+@Slf4j
 public class OAuth2Service implements UserDetailsService {
 
     private final UserRepository userRepository;

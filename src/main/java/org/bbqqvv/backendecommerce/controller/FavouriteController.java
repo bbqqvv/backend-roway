@@ -19,7 +19,7 @@ public class FavouriteController {
 
     @PostMapping
     public ApiResponse<FavouriteResponse> addFavourite(@RequestBody @Valid FavouriteRequest favouriteRequest) {
-        FavouriteResponse favouriteResponse = favouriteService.addFavourite(favouriteRequest.getProductId());
+        FavouriteResponse favouriteResponse = favouriteService.addFavourite(favouriteRequest);
         return ApiResponse.success(favouriteResponse, "Product added to favourites successfully.");
     }
 

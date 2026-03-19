@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/payment")
+@RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Payment Management", description = "Xử lý thanh toán và Callback từ cổng thanh toán")
