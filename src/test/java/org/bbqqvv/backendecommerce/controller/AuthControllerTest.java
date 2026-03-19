@@ -16,7 +16,7 @@ public class AuthControllerTest extends BaseIntegrationTest {
         request.setUsername("invalid_user");
         request.setPassword("wrong_password");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());

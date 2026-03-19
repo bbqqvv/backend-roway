@@ -103,6 +103,8 @@ class OrderServiceTest {
                             .build())
                     .sizeProduct(sizeProduct)
                     .build();
+            
+            sizeProduct.setProductVariantSizes(List.of(productVariant));
 
             when(sizeProductVariantRepository.findByProductIdIn(anyList())).thenReturn(List.of(productVariant));
             when(orderRepository.save(any(Order.class))).thenAnswer(i -> {
