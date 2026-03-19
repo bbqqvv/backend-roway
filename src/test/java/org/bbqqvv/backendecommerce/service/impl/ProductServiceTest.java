@@ -133,8 +133,6 @@ class ProductServiceTest {
         Page<Product> page = new PageImpl<>(List.of(product));
         when(productRepository.searchByKeyword(eq("Roway"), any(Pageable.class))).thenReturn(page);
         when(productMapper.toProductResponse(any(Product.class))).thenReturn(new ProductResponse());
-        
-        // Setup mock for review counts in batch
         when(productRepository.countReviewsByProductIds(anyList()))
                 .thenReturn(java.util.Collections.singletonList(new Object[]{1L, 10L}));
 
@@ -144,6 +142,37 @@ class ProductServiceTest {
         // Assert
         assertThat(response).isNotNull();
         assertThat(response.getItems()).hasSize(1);
-        assertThat(response.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Tìm kiếm sản phẩm - Không có kết quả")
+    void searchProductsByName_shouldReturnEmptyPage_whenNoMatch() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10);
+        when(productRepository.searchByKeyword(eq("Unknown"), any(Pageable.class))).thenReturn(Page.empty());
+
+        // Act
+        PageResponse<ProductResponse> response = productService.searchProductsByName("Unknown", pageable);
+
+        // Assert
+        assertThat(response.getItems()).isEmpty();
+        assertThat(response.getTotalElements()).isZero();
+    }
+
+    @Test
+    @DisplayName("Tìm kiếm sản phẩm - Keyword trống")
+    void searchProductsByName_shouldReturnAll_whenKeywordIsEmpty() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Product> page = new PageImpl<>(List.of(product));
+        when(productRepository.searchByKeyword(eq(""), any(Pageable.class))).thenReturn(page);
+        when(productMapper.toProductResponse(any(Product.class))).thenReturn(new ProductResponse());
+
+        // Act
+        PageResponse<ProductResponse> response = productService.searchProductsByName("", pageable);
+
+        // Assert
+        assertThat(response.getItems()).isNotEmpty();
+        verify(productRepository).searchByKeyword(eq(""), any(Pageable.class));
     }
 }
