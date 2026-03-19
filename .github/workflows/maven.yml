@@ -1,4 +1,4 @@
-name: Java CI with Maven
+name: Java CI with Maven (Enterprise Ready)
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      # Khởi tạo Postgres cho Integration Test nếu cần
+      # Database Service
       postgres:
         image: postgres:15
         env:
@@ -26,6 +26,17 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # Redis Service
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
     
@@ -36,11 +47,37 @@ jobs:
         distribution: 'temurin'
         cache: maven
         
-    - name: Build and Run Tests with Maven
+    - name: Build and Run Tests with All Secrets
       env:
+        # DB Configuration
         DB_URL: jdbc:postgresql://localhost:5432/roway_db
         DB_USERNAME: postgres
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        
+        # Security & Auth
         JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-        # Thêm các biến khác nếu test yêu cầu
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        
+        # Redis
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        
+        # Email Service
+        MAIL_HOST: ${{ secrets.MAIL_HOST }}
+        MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+        MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        
+        # Cloud Storage
+        CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+        CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+        CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        
+        # Payment Gateway (VNPay Sandbox Default)
+        VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
+        VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
+        VNPAY_RETURN_URL: ${{ secrets.VNPAY_RETURN_URL }}
+        VNPAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+        
       run: mvn clean test
