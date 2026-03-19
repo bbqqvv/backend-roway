@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -48,6 +50,19 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
+    }
+
+    // Bắt lỗi xác thực (sai mật khẩu, tài khoản không tồn tại, v.v.)
+    @ExceptionHandler(value = {AuthenticationException.class, BadCredentialsException.class})
+    ResponseEntity<ApiResponse> handleAuthenticationException(AuthenticationException exception) {
+        ErrorCode errorCode = CommonErrorCode.UNAUTHENTICATED;
+        ApiResponse apiResponse = ApiResponse.builder()
+                .code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .success(false)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
     }
 
     // Bắt lỗi vi phạm ràng buộc database (duy nhất, khóa ngoại...)
