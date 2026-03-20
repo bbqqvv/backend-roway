@@ -12,7 +12,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/reviews")
+@RequestMapping("/api/v1/products-review")
 @RequiredArgsConstructor
 public class ProductReviewController {
     private final ProductReviewService productReviewService;

@@ -101,7 +101,6 @@ class ProductServiceTest {
         when(productRepository.existsByProductCode("PROD001")).thenReturn(false);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         when(productMapper.toProduct(any(ProductRequest.class))).thenReturn(product);
-        when(productRepository.findSlugsByPattern(anyString())).thenReturn(List.of());
         when(productRepository.save(any(Product.class))).thenReturn(product);
         when(productMapper.toProductResponse(any(Product.class))).thenReturn(new ProductResponse());
 
