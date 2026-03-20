@@ -34,3 +34,6 @@ Thumbs.db
 # Secrets
 .env
 .gemini/
+
+.antigravity/
+antigravity-awesome-skills/
