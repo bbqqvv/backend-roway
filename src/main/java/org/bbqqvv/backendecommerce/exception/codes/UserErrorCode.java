@@ -21,6 +21,8 @@ public enum UserErrorCode implements ErrorCode {
     INVALID_OLD_PASSWORD(2010, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST),
     PASSWORDS_DO_NOT_MATCH(2011, "Mật khẩu xác nhận không khớp", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(2012, "Quyền người dùng không tồn tại", HttpStatus.NOT_FOUND),
+    REFRESH_TOKEN_EXPIRED(2013, "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_INVALID(2014, "Mã refresh token không hợp lệ", HttpStatus.UNAUTHORIZED),
     USER_ERROR(2999, "Lỗi người dùng không xác định", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;

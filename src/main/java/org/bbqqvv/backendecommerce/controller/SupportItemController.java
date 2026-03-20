@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/support-items")
+@RequestMapping("/api/v1/support")
 @RequiredArgsConstructor
 public class SupportItemController {
 
@@ -20,7 +20,7 @@ public class SupportItemController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<SupportItemResponse> createSupportItem(@RequestBody @Valid SupportItemRequest request) {
+    public ApiResponse<SupportItemResponse> createSupportItem(@Valid SupportItemRequest request) {
         SupportItemResponse response = supportItemsService.createSupportItem(request);
         return ApiResponse.success(response, "Support item created successfully.");
     }
@@ -39,7 +39,7 @@ public class SupportItemController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<SupportItemResponse> updateSupportItem(@PathVariable Long id, @RequestBody @Valid SupportItemRequest request) {
+    public ApiResponse<SupportItemResponse> updateSupportItem(@PathVariable Long id, @Valid SupportItemRequest request) {
         SupportItemResponse response = supportItemsService.updateSupportItem(id, request);
         return ApiResponse.success(response, "Support item updated successfully.");
     }

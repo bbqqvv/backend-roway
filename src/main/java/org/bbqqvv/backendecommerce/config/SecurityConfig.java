@@ -41,6 +41,7 @@ public class SecurityConfig {
             "/api/v1/reviews/**",
             "/api/v1/filter/**",
             "/api/v1/blogs/**",
+            "/api/v1/blogs/**",
 
             // Swagger URLs
             "/swagger-ui.html",
@@ -73,7 +74,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Cấu hình CORS
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF cho API REST
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(WHITE_LIST_URL).permitAll() 
+                        .requestMatchers(WHITE_LIST_URL).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/support/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/support/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/v1/support/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/support/**").hasRole("ADMIN")
                         .requestMatchers(ADMIN_URL_PATTERNS).hasRole("ADMIN")
                         .requestMatchers(USER_URL_PATTERNS).hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()

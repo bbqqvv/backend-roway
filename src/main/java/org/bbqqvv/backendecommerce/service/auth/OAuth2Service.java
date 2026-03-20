@@ -2,7 +2,9 @@ package org.bbqqvv.backendecommerce.service.auth;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bbqqvv.backendecommerce.config.jwt.JwtTokenUtil;
+import org.bbqqvv.backendecommerce.dto.response.JwtResponse;
 import org.bbqqvv.backendecommerce.entity.AuthProvider;
+import org.bbqqvv.backendecommerce.entity.RefreshToken;
 import org.bbqqvv.backendecommerce.entity.Role;
 import org.bbqqvv.backendecommerce.entity.User;
 import org.bbqqvv.backendecommerce.repository.UserRepository;
@@ -29,18 +31,20 @@ public class OAuth2Service implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final JwtTokenUtil jwtTokenUtil;
+    private final RefreshTokenService refreshTokenService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${spring.security.oauth2.client.provider.google.user-info-uri}")
     private String googleUserInfoUrl;
 
-    public OAuth2Service(UserRepository userRepository, JwtTokenUtil jwtTokenUtil) {
+    public OAuth2Service(UserRepository userRepository, JwtTokenUtil jwtTokenUtil, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.jwtTokenUtil = jwtTokenUtil;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Transactional
-    public String loginWithFacebook(String facebookToken) {
+    public JwtResponse loginWithFacebook(String facebookToken) {
         log.info("Validating Facebook token...");
 
         // Mock bypass for testing
@@ -85,7 +89,7 @@ public class OAuth2Service implements UserDetailsService {
     }
 
     @Transactional
-    public String loginWithGoogle(String googleToken) {
+    public JwtResponse loginWithGoogle(String googleToken) {
         log.info("Validating Google token...");
 
         if ("mock-google-token".equals(googleToken)) {
@@ -119,12 +123,7 @@ public class OAuth2Service implements UserDetailsService {
     }
 
     @Transactional
-    protected String handleSuccessfulOAuth2Login(String email, String name, String providerId, AuthProvider provider, String avatarUrl) {
-        if (email == null || providerId == null) {
-            log.error("{} token missing required fields", provider);
-            throw new RuntimeException("Invalid " + provider + " user data");
-        }
-
+    protected JwtResponse handleSuccessfulOAuth2Login(String email, String name, String providerId, AuthProvider provider, String avatarUrl) {
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
@@ -159,7 +158,16 @@ public class OAuth2Service implements UserDetailsService {
         }
 
         UserDetails userDetails = this.loadUserByUsername(email);
-        return jwtTokenUtil.generateToken(userDetails);
+        String token = jwtTokenUtil.generateToken(userDetails);
+        
+        // Luôn xoay vòng Token (Xóa cũ tạo mới)
+        refreshTokenService.deleteByUser(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return JwtResponse.builder()
+                .token(token)
+                .refreshToken(refreshToken.getToken())
+                .build();
     }
 
     @Override

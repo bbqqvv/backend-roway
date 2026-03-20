@@ -25,3 +25,5 @@ databaseChangeLog:
       file: db/changelog/v1.1/06-favourite-selection.xml
   - include:
       file: db/changelog/v1.1/07-user-enabled.xml
+  - include:
+      file: db/changelog/v1.1/08-refresh-token.xml

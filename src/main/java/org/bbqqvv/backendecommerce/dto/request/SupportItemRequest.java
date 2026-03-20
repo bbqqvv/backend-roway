@@ -1,5 +1,7 @@
 package org.bbqqvv.backendecommerce.dto.request;
+
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -8,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @Builder
 public class SupportItemRequest {
-    @NotBlank(message = "Hình ảnh không được để trống")
+    @NotNull(message = "Hình ảnh không được để trống")
     private MultipartFile img;
 
     @NotBlank(message = "Tiêu đề không được để trống")

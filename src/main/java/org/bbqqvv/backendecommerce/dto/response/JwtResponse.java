@@ -10,5 +10,10 @@ import lombok.*;
 @AllArgsConstructor
 public class JwtResponse {
     private String token;
+    private String refreshToken;
+
+    public JwtResponse(String token) {
+        this.token = token;
+    }
 }
 

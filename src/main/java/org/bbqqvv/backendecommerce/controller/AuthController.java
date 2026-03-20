@@ -11,9 +11,6 @@ import org.bbqqvv.backendecommerce.dto.response.*;
 import org.bbqqvv.backendecommerce.service.OtpService;
 import org.bbqqvv.backendecommerce.service.auth.AuthenticationService;
 import org.bbqqvv.backendecommerce.service.auth.OAuth2Service;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,6 +22,7 @@ public class AuthController {
     AuthenticationService authenticationService;
     OtpService otpService;
     OAuth2Service oAuth2Service;
+
     public AuthController(AuthenticationService authenticationService, OtpService otpService, OAuth2Service oAuth2Service) {
         this.authenticationService = authenticationService;
         this.otpService = otpService;
@@ -43,25 +41,32 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Đăng nhập truyền thống", description = "Xác thực người dùng bằng username và password, trả về JWT token.")
     public ApiResponse<JwtResponse> login(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
-        String token = authenticationService.login(authenticationRequest);
-        return ApiResponse.success(new JwtResponse(token), "Login successful");
+        JwtResponse response = authenticationService.login(authenticationRequest);
+        return ApiResponse.success(response, "Login successful");
     }
 
+    // 🔹 Refresh Token
+    @PostMapping("/refresh-token")
+    @Operation(summary = "Làm mới Access Token", description = "Sử dụng Refresh Token để lấy cặp Access/Refresh Token mới.")
+    public ApiResponse<JwtResponse> refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
+        JwtResponse response = authenticationService.refreshToken(request);
+        return ApiResponse.success(response, "Token refreshed successfully");
+    }
 
     // 🔹 Đăng nhập bằng Google OAuth2
     @PostMapping("/oauth2/google")
     @Operation(summary = "Đăng nhập Google", description = "Xác thực và đăng nhập bằng Google ID Token.")
     public ApiResponse<JwtResponse> googleLogin(@RequestBody @Valid OAuth2LoginRequest request) {
-        String jwtToken = oAuth2Service.loginWithGoogle(request.getToken());
-        return ApiResponse.success(new JwtResponse(jwtToken), "Google login successful");
+        JwtResponse response = oAuth2Service.loginWithGoogle(request.getToken());
+        return ApiResponse.success(response, "Google login successful");
     }
 
     // 🔹 Đăng nhập bằng Facebook OAuth2
     @PostMapping("/oauth2/facebook")
     @Operation(summary = "Đăng nhập Facebook", description = "Xác thực và đăng nhập bằng Facebook Access Token.")
     public ApiResponse<JwtResponse> facebookLogin(@RequestBody @Valid OAuth2LoginRequest request) {
-        String jwtToken = oAuth2Service.loginWithFacebook(request.getToken());
-        return ApiResponse.success(new JwtResponse(jwtToken), "Facebook login successful");
+        JwtResponse response = oAuth2Service.loginWithFacebook(request.getToken());
+        return ApiResponse.success(response, "Facebook login successful");
     }
 
     /**

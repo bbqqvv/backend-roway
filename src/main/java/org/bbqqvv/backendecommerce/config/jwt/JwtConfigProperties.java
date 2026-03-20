@@ -13,5 +13,6 @@ public class JwtConfigProperties {
 
     private String secretKey;
     private long expiration;
+    private long refreshExpiration;
 
 }

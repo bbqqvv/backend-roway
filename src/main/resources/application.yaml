@@ -26,6 +26,7 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-root.yaml
     enabled: true
+    drop-first: true
 
   jpa:
     hibernate:
@@ -89,7 +90,8 @@ application:
   security:
     jwt:
       secret-key: ${JWT_SECRET_KEY:dGhpcy1pcy1hLTMyLWJ5dGUtc2VjcmV0LWtleS0xMjM=}
-      expiration: 86400000 # 1 day in milliseconds
+      expiration: 900000 # 15 minutes in milliseconds
+      refresh-expiration: 604800000 # 7 days in milliseconds
   cloudinary:
     cloud-name: ${CLOUDINARY_CLOUD_NAME:name}
     api-key: ${CLOUDINARY_API_KEY:key}

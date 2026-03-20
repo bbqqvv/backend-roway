@@ -9,6 +9,9 @@ import org.bbqqvv.backendecommerce.entity.User;
 import org.bbqqvv.backendecommerce.mapper.UserMapper;
 import org.bbqqvv.backendecommerce.repository.UserRepository;
 import org.bbqqvv.backendecommerce.config.jwt.JwtTokenUtil;
+import org.bbqqvv.backendecommerce.dto.response.JwtResponse;
+import org.bbqqvv.backendecommerce.entity.RefreshToken;
+import org.bbqqvv.backendecommerce.service.auth.RefreshTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +50,9 @@ class AuthenticationServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -116,24 +122,30 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    @DisplayName("Đăng nhập thành công - Trả về JWT token")
-    void login_shouldReturnToken_whenValidCredentials() {
+    @DisplayName("Đăng nhập thành công - Trả về JwtResponse")
+    void login_shouldReturnJwtResponse_whenValidCredentials() {
         // Arrange
         AuthenticationRequest loginRequest = new AuthenticationRequest("test_user", "password123");
         Authentication authentication = mock(Authentication.class);
         UserDetails userDetails = mock(UserDetails.class);
+        RefreshToken refreshToken = RefreshToken.builder().token("mock_refresh_token").build();
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+        when(userDetails.getUsername()).thenReturn("test_user");
+        when(userRepository.findByUsername("test_user")).thenReturn(Optional.of(user));
         when(jwtTokenUtil.generateToken(any(UserDetails.class))).thenReturn("mock_jwt_token");
+        when(refreshTokenService.createRefreshToken(any(User.class))).thenReturn(refreshToken);
 
         // Act
-        String token = authenticationService.login(loginRequest);
+        JwtResponse response = authenticationService.login(loginRequest);
 
         // Assert
-        assertThat(token).isEqualTo("mock_jwt_token");
+        assertThat(response).isNotNull();
+        assertThat(response.getToken()).isEqualTo("mock_jwt_token");
+        assertThat(response.getRefreshToken()).isEqualTo("mock_refresh_token");
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtTokenUtil, times(1)).generateToken(any(UserDetails.class));
+        verify(refreshTokenService, times(1)).createRefreshToken(any(User.class));
     }
 }
