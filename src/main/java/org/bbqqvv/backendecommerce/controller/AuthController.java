@@ -29,6 +29,11 @@ public class AuthController {
         this.oAuth2Service = oAuth2Service;
     }
 
+    @GetMapping("/ping")
+    public String ping() {
+        return "pong";
+    }
+
     // Đăng ký người dùng
     @PostMapping("/register")
     @Operation(summary = "Đăng ký tài khoản", description = "Tạo tài khoản người dùng mới với các thông tin cơ bản.")

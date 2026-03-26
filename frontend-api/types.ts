@@ -1,5 +1,26 @@
 /**
  * ==========================================================
+ * ENUMS
+ * ==========================================================
+ */
+export type OrderStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'RETURNED'
+  | 'FAILED';
+
+export type PaymentMethod = 'CASH_ON_DELIVERY' | 'VNPAY' | 'STRIPE';
+
+export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+
+export type DiscountType = 'FIXED_AMOUNT' | 'PERCENTAGE';
+
+/**
+ * ==========================================================
  * GENERIC API WRAPPERS
  * ==========================================================
  */
@@ -21,11 +42,17 @@ export interface PageResponse<T> {
 
 /**
  * ==========================================================
- * AUTHENTICATION & USER
+ * AUTHENTICATION & USER – RESPONSES
  * ==========================================================
  */
 export interface JwtResponse {
   token: string;
+  refreshToken: string;
+}
+
+export interface AuthenticationResponse {
+  token: string;
+  refreshToken: string;
 }
 
 export interface UserResponse {
@@ -82,7 +109,7 @@ export interface ResetPasswordResponse {
 
 /**
  * ==========================================================
- * PRODUCT & CATEGORY
+ * PRODUCT & CATEGORY – RESPONSES
  * ==========================================================
  */
 export interface ProductResponse {
@@ -100,8 +127,11 @@ export interface ProductResponse {
   tags: string[];
   categoryName: string;
   mainImageUrl: string;
+  mainImagePublicId?: string;
   secondaryImageUrls: string[];
+  secondaryImagePublicIds?: string[];
   descriptionImageUrls: string[];
+  descriptionImagePublicIds?: string[];
   variants: ProductVariantResponse[];
   createdAt: string;
   updatedAt: string;
@@ -112,6 +142,7 @@ export interface ProductVariantResponse {
   sizes: SizeProductResponse[];
   color: string;
   imageUrl?: string;
+  publicId?: string;
 }
 
 export interface SizeProductResponse {
@@ -126,6 +157,7 @@ export interface CategoryResponse {
   name: string;
   slug: string;
   image?: string;
+  publicId?: string;
   sizes: SizeCategoryResponse[];
   createdAt: string;
   updatedAt: string;
@@ -135,6 +167,12 @@ export interface SizeCategoryResponse {
   id: number;
   name: string;
   categoryId: number;
+}
+
+export interface CategoryResponseForFilter {
+  id: number;
+  name: string;
+  slug: string;
 }
 
 export interface FilterOptionsResponse {
@@ -148,7 +186,7 @@ export interface FilterOptionsResponse {
 
 /**
  * ==========================================================
- * CART & ORDER
+ * CART & ORDER – RESPONSES
  * ==========================================================
  */
 export interface CartResponse {
@@ -180,14 +218,15 @@ export interface OrderResponse {
   phoneNumber: string;
   notes: string;
   orderCode: string;
-  status: string;
-  paymentMethod: 'CASH_ON_DELIVERY' | 'VNPAY' | 'STRIPE';
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
   shippingFee: number;
   discountCode?: string;
   discountAmount: number;
   expectedDeliveryDate?: string;
   orderItems: OrderItemResponse[];
   totalAmount: number;
+  paymentUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -205,7 +244,7 @@ export interface OrderItemResponse {
 
 /**
  * ==========================================================
- * BLOG
+ * BLOG – RESPONSES
  * ==========================================================
  */
 export interface BlogPostResponse {
@@ -218,6 +257,7 @@ export interface BlogPostResponse {
   date: string;
   imageUrl: string;
   category: string;
+  categorySlug?: string;
   tags?: string[];
   readingTime?: string;
   gallery?: string[];
@@ -232,7 +272,40 @@ export interface BlogCategoryResponse {
 
 /**
  * ==========================================================
- * MISCELLANEOUS
+ * DISCOUNT – RESPONSES
+ * ==========================================================
+ */
+export interface DiscountResponse {
+  id: number;
+  code: string;
+  discountAmount: number;
+  maxDiscountAmount: number;
+  discountType: DiscountType;
+  minOrderValue: number;
+  usageLimit: number;
+  timesUsed: number;
+  startDate: string;
+  expiryDate: string;
+  active: boolean;
+  applicableProductsCount: number;
+  applicableUsersCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiscountPreviewResponse {
+  discountCode: string;
+  discountType: DiscountType;
+  originalTotalAmount: number;
+  discountAmount: number;
+  finalAmount: number;
+  valid: boolean;
+  message: string;
+}
+
+/**
+ * ==========================================================
+ * MISCELLANEOUS – RESPONSES
  * ==========================================================
  */
 export interface FavouriteResponse {
@@ -258,24 +331,6 @@ export interface ProductReviewResponse {
   createdAt: string;
 }
 
-export interface DiscountResponse {
-  id: number;
-  code: string;
-  discountAmount: number;
-  maxDiscountAmount: number;
-  discountType: 'FIXED_AMOUNT' | 'PERCENTAGE';
-  minOrderValue: number;
-  usageLimit: number;
-  timesUsed: number;
-  startDate: string;
-  expiryDate: string;
-  active: boolean;
-  applicableProducts: number[];
-  applicableUsers: number[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SearchHistoryResponse {
   id: number;
   searchQuery: string;
@@ -294,7 +349,7 @@ export interface SupportItemResponse {
 
 /**
  * ==========================================================
- * REQUEST PAYLOADS
+ * AUTHENTICATION – REQUESTS
  * ==========================================================
  */
 export interface AuthenticationRequest {
@@ -310,7 +365,11 @@ export interface UserCreationRequest {
   username: string;
   password?: string;
   email: string;
-  name: string;
+  name?: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
 }
 
 export interface OtpRequest {
@@ -327,6 +386,22 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+/**
+ * ==========================================================
+ * USER & ADDRESS – REQUESTS
+ * ==========================================================
+ */
+export interface UserUpdateRequest {
+  name: string;
+  bio: string;
+}
+
 export interface AddressRequest {
   recipientName: string;
   country: string;
@@ -338,4 +413,113 @@ export interface AddressRequest {
   email: string;
   defaultAddress: boolean;
   note?: string;
+}
+
+/**
+ * ==========================================================
+ * CART – REQUESTS
+ * ==========================================================
+ */
+export interface CartItemRequest {
+  productId: number;
+  quantity: number;
+  sizeName?: string;
+  color?: string;
+}
+
+/**
+ * ==========================================================
+ * ORDER – REQUESTS
+ * ==========================================================
+ */
+export interface OrderRequest {
+  addressId: number;
+  cartId: number;
+  discountCode?: string;
+  paymentMethod: PaymentMethod;
+}
+
+export interface OrderItemRequest {
+  productId: number;
+  quantity: number;
+  color: string;
+  sizeName: string;
+}
+
+/**
+ * ==========================================================
+ * PRODUCT & REVIEW – REQUESTS
+ * ==========================================================
+ */
+export interface ProductReviewRequest {
+  productId: number;
+  rating: number;
+  reviewText: string;
+  imageFiles?: File[];
+}
+
+export interface FavouriteRequest {
+  productId: number;
+  sizeProductVariantId: number;
+}
+
+export interface ImageMetadata {
+  publicId?: string;
+  url?: string;
+}
+
+export interface SizeProductRequest {
+  sizeName: string;
+  stock: number;
+  price?: number;
+}
+
+export interface ProductVariantRequest {
+  image?: File;
+  imageMetadata?: ImageMetadata;
+  sizes: SizeProductRequest[];
+  color: string;
+  price?: number;
+  stock?: number;
+}
+
+export interface ProductRequest {
+  name: string;
+  shortDescription?: string;
+  description?: string;
+  productCode: string;
+  categoryId: number;
+  salePercentage?: number;
+  featured?: boolean;
+  price?: number;
+  tags?: string[];
+  sale?: boolean;
+  active?: boolean;
+  isOldProduct?: boolean;
+  mainImage?: File;
+  mainImageMetadata?: ImageMetadata;
+  secondaryImages?: File[];
+  secondaryImageMetadata?: ImageMetadata[];
+  descriptionImages?: File[];
+  descriptionImageMetadata?: ImageMetadata[];
+  variants?: ProductVariantRequest[];
+}
+
+/**
+ * ==========================================================
+ * DISCOUNT – REQUESTS
+ * ==========================================================
+ */
+export interface DiscountPreviewRequest {
+  cartId: number;
+  discountCode: string;
+}
+
+/**
+ * ==========================================================
+ * SEARCH – REQUESTS
+ * ==========================================================
+ */
+export interface SearchHistoryRequest {
+  searchQuery: string;
 }

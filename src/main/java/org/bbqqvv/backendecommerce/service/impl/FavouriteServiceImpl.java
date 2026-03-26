@@ -83,7 +83,7 @@ public class FavouriteServiceImpl implements FavouriteService {
         Favourite savedFavourite = favouriteRepository.save(favourite);
         FavouriteResponse response = favouriteMapper.toFavouriteResponse(savedFavourite);
 
-        // ✅ Tính toán stockStatus trong service
+        //  Tính toán stockStatus trong service
         response.setStockStatus(getStockStatus(product));
 
         return response;
@@ -91,10 +91,10 @@ public class FavouriteServiceImpl implements FavouriteService {
 
     @Override
     @Transactional
-    public FavouriteResponse removeFavourite(Long favouriteId) {
+    public FavouriteResponse removeFavourite(Long productId) {
         User user = getAuthenticatedUser();
 
-        Favourite existingFavourite = favouriteRepository.findById(favouriteId)
+        Favourite existingFavourite = favouriteRepository.findByUserIdAndProductId(user.getId(), productId)
                 .orElseThrow(() -> new AppException(SocialMarketingErrorCode.FAVOURITE_NOT_FOUND));
 
         favouriteRepository.delete(existingFavourite);
@@ -102,12 +102,13 @@ public class FavouriteServiceImpl implements FavouriteService {
         FavouriteResponse response = FavouriteResponse.builder()
                 .id(existingFavourite.getId())
                 .userId(existingFavourite.getUser().getId())
+                .productId(existingFavourite.getProduct().getId())
                 .nameProduct(existingFavourite.getProduct().getName())
                 .imageUrl(existingFavourite.getProduct().getMainImage().getImageUrl())
-                .productUrl(existingFavourite.getProduct().getSlug()) // ✅ Lấy productUrl
+                .productUrl(existingFavourite.getProduct().getSlug()) // Lấy productUrl
                 .build();
 
-        // ✅ Tính toán stockStatus trong service
+        // Tính toán stockStatus trong service
         response.setStockStatus(getStockStatus(existingFavourite.getProduct()));
 
         return response;
@@ -136,7 +137,7 @@ public class FavouriteServiceImpl implements FavouriteService {
     }
 
     /**
-     * ✅ Phương thức tính toán StockStatus (Còn hàng / Hết hàng)
+     * Phương thức tính toán StockStatus (Còn hàng / Hết hàng)
      */
     private String getStockStatus(Product product) {
         return product.getVariants().stream()

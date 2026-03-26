@@ -1,0 +1,11 @@
+package org.bbqqvv.backendecommerce.entity;
+
+public enum Permission {
+    VIEW_DASHBOARD,
+    VIEW_USERS, MANAGE_USERS,
+    VIEW_PRODUCTS, MANAGE_PRODUCTS,
+    VIEW_ORDERS, MANAGE_ORDERS,
+    VIEW_BLOGS, MANAGE_BLOGS,
+    VIEW_DISCOUNTS, MANAGE_DISCOUNTS,
+    VIEW_REVIEWS, MANAGE_REVIEWS
+}

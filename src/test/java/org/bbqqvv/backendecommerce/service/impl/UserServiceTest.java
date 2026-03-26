@@ -123,4 +123,53 @@ class UserServiceTest {
                     .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.INVALID_OLD_PASSWORD);
         }
     }
+
+    @Test
+    @DisplayName("Cập nhật quyền Role thành công")
+    void updateRole_shouldReturnUserResponse_whenValidRequest() {
+        org.bbqqvv.backendecommerce.dto.request.RoleUpdateRequest request = new org.bbqqvv.backendecommerce.dto.request.RoleUpdateRequest("ADMIN");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userMapper.toUserResponse(any(User.class))).thenReturn(new UserResponse());
+
+        UserResponse response = userService.updateRole(1L, request);
+
+        assertThat(response).isNotNull();
+        assertThat(user.getAuthorities()).contains(org.bbqqvv.backendecommerce.entity.Role.ROLE_ADMIN);
+        verify(userRepository).save(user);
+    }
+    
+    @Test
+    @DisplayName("Cập nhật quyền Role thất bại - Role không hợp lệ")
+    void updateRole_shouldThrowException_whenInvalidRole() {
+        org.bbqqvv.backendecommerce.dto.request.RoleUpdateRequest request = new org.bbqqvv.backendecommerce.dto.request.RoleUpdateRequest("SUPERMAN");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userService.updateRole(1L, request))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorCode", org.bbqqvv.backendecommerce.exception.codes.CommonErrorCode.UNCATEGORIZED_EXCEPTION);
+    }
+
+    @Test
+    @DisplayName("Cập nhật Permission thành công")
+    void updatePermissions_shouldReturnUserResponse_whenValidRequest() {
+        java.util.Set<String> perms = new java.util.HashSet<>();
+        perms.add("VIEW_USERS");
+        perms.add("INVALID_FAKE_PERMISSION");
+        org.bbqqvv.backendecommerce.dto.request.PermissionsUpdateRequest request = 
+                new org.bbqqvv.backendecommerce.dto.request.PermissionsUpdateRequest(perms);
+        
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userMapper.toUserResponse(any(User.class))).thenReturn(new UserResponse());
+
+        UserResponse response = userService.updatePermissions(1L, request);
+
+        assertThat(response).isNotNull();
+        assertThat(user.getPermissions()).contains(org.bbqqvv.backendecommerce.entity.Permission.VIEW_USERS);
+        assertThat(user.getPermissions()).doesNotContain(org.bbqqvv.backendecommerce.entity.Permission.MANAGE_USERS);
+        // Invalid permission string is ignored, so the size is 1
+        assertThat(user.getPermissions()).hasSize(1);
+        verify(userRepository).save(user);
+    }
 }

@@ -61,9 +61,23 @@ public class UserController {
         return ApiResponse.success(userResponse, "User updated successfully");
     }
 
-    @PatchMapping("/me/update-info")
-    public ApiResponse<UserUpdateResponse> updateUserInfo(@RequestBody @Valid UserUpdateRequest request) {
-        UserUpdateResponse updatedUser = userService.updateUserInfo(request);
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<UserResponse> updateRole(@PathVariable Long id, @RequestBody @Valid org.bbqqvv.backendecommerce.dto.request.RoleUpdateRequest request) {
+        UserResponse userResponse = userService.updateRole(id, request);
+        return ApiResponse.success(userResponse, "User role updated successfully");
+    }
+
+    @PutMapping("/{id}/permissions")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<UserResponse> updatePermissions(@PathVariable Long id, @RequestBody @Valid org.bbqqvv.backendecommerce.dto.request.PermissionsUpdateRequest request) {
+        UserResponse userResponse = userService.updatePermissions(id, request);
+        return ApiResponse.success(userResponse, "User permissions updated successfully");
+    }
+
+    @PatchMapping(value = "/me/update-info", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<UserResponse> updateUserInfo(@ModelAttribute @Valid UserUpdateRequest request) {
+        UserResponse updatedUser = userService.updateUserInfo(request);
         return ApiResponse.success(updatedUser, "User info updated successfully");
     }
 

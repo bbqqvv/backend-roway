@@ -27,12 +27,13 @@ public class ProductResponse {
     private int salePercentage;
     private Set<String> tags;
     private String categoryName;
+    private Long categoryId;
     private String mainImageUrl;
     private String mainImagePublicId;
+    private ImageMetadataResponse mainImageMetadata;
     private List<String> secondaryImageUrls;
     private List<String> secondaryImagePublicIds;
-    private List<String> descriptionImageUrls;
-    private List<String> descriptionImagePublicIds;
+    private List<ImageMetadataResponse> secondaryImages;
     private List<ProductVariantResponse> variants;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

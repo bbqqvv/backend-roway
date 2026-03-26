@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="seed-admin-user-vanbui" author="antigravity">
+        <!-- Chèn User Admin -->
+        <insert tableName="users">
+            <column name="id" valueNumeric="100"/>
+            <column name="username" value="vanbui262004"/>
+            <column name="email" value="vanbui0966467356@gmail.com"/>
+            <!-- Mật khẩu: 123123 (đã được mã hóa BCrypt) -->
+            <column name="password" value="$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.TVuHOn2"/>
+            <column name="name" value="Van Bui Quoc"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="deleted" valueBoolean="false"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="provider" value="LOCAL"/>
+        </insert>
+
+        <insert tableName="user_roles">
+            <column name="user_id" valueNumeric="100"/>
+            <column name="role" value="ROLE_ADMIN"/>
+        </insert>
+
+        <!-- Cấp quyền USER (mặc định) -->
+        <insert tableName="user_roles">
+            <column name="user_id" valueNumeric="100"/>
+            <column name="role" value="ROLE_USER"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

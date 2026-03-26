@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.bbqqvv.backendecommerce.service.img.CloudinaryService;
 
 import static org.bbqqvv.backendecommerce.util.PagingUtil.toPageResponse;
 
@@ -34,11 +35,13 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    CloudinaryService cloudinaryService;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder, CloudinaryService cloudinaryService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @Override
@@ -113,6 +116,11 @@ public class UserServiceImpl implements UserService {
                 new AppException(UserErrorCode.USER_NOT_FOUND)
         );
 
+        // Prevent deleting an ADMIN
+        if (user.getAuthorities() != null && user.getAuthorities().contains(org.bbqqvv.backendecommerce.entity.Role.ROLE_ADMIN)) {
+            throw new AppException(UserErrorCode.UNAUTHORIZED);
+        }
+
         // Xóa người dùng
         userRepository.deleteById(id);
     }
@@ -125,7 +133,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserUpdateResponse updateUserInfo(UserUpdateRequest request) {
+    public UserResponse updateUserInfo(UserUpdateRequest request) {
         String username = SecurityUtils.getCurrentUserLogin()
                 .orElseThrow(() -> new AppException(CommonErrorCode.UNAUTHENTICATED));
 
@@ -139,9 +147,16 @@ public class UserServiceImpl implements UserService {
         if (request.getBio() != null) {
             user.setBio(request.getBio());
         }
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            org.bbqqvv.backendecommerce.dto.request.ImageMetadata metadata = cloudinaryService.uploadImage(request.getAvatar());
+            user.setAvatar(metadata.getUrl());
+        }
 
         userRepository.save(user);
-        return new UserUpdateResponse(user.getName(), user.getBio());
+        return userMapper.toUserResponse(user);
     }
 
     @Override
@@ -178,6 +193,58 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserResponse(user);
     }
 
+    @Override
+    @Transactional
+    public UserResponse updateRole(Long id, org.bbqqvv.backendecommerce.dto.request.RoleUpdateRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new AppException(UserErrorCode.USER_NOT_FOUND)
+        );
+
+        String roleStr = request.getRole().toUpperCase();
+        if (!roleStr.startsWith("ROLE_")) {
+            roleStr = "ROLE_" + roleStr;
+        }
+
+        try {
+            org.bbqqvv.backendecommerce.entity.Role newRole = org.bbqqvv.backendecommerce.entity.Role.valueOf(roleStr);
+            if (user.getAuthorities() == null) {
+                user.setAuthorities(new java.util.HashSet<>());
+            } else {
+                user.getAuthorities().clear();
+            }
+            user.getAuthorities().add(newRole);
+            User updatedUser = userRepository.save(user);
+            return userMapper.toUserResponse(updatedUser);
+        } catch (IllegalArgumentException e) {
+            throw new AppException(CommonErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updatePermissions(Long id, org.bbqqvv.backendecommerce.dto.request.PermissionsUpdateRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new AppException(UserErrorCode.USER_NOT_FOUND)
+        );
+
+        if (user.getPermissions() == null) {
+            user.setPermissions(new java.util.HashSet<>());
+        } else {
+            user.getPermissions().clear();
+        }
+
+        if (request.getPermissions() != null) {
+            for (String perm : request.getPermissions()) {
+                try {
+                    user.getPermissions().add(org.bbqqvv.backendecommerce.entity.Permission.valueOf(perm.toUpperCase()));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+
+        User updatedUser = userRepository.save(user);
+        return userMapper.toUserResponse(updatedUser);
+    }
 
 }
 

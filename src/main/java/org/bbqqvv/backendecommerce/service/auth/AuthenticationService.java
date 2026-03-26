@@ -98,24 +98,41 @@ public class AuthenticationService {
 
     @Transactional
     public JwtResponse login(AuthenticationRequest loginUserDto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginUserDto.getUsername(), loginUserDto.getPassword())
-        );
-        
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        User user = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+        try {
+            logger.info("Service: Start login process for user: {}", loginUserDto.getUsername());
+            
+            logger.info("Service: Authenticating with AuthenticationManager...");
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginUserDto.getUsername(), loginUserDto.getPassword())
+            );
+            logger.info("Service: Authentication successful for user: {}", loginUserDto.getUsername());
+            
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            logger.info("Service: Retrieving user from repository: {}", userDetails.getUsername());
+            User user = userRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
 
-        String token = jwtTokenUtil.generateToken(userDetails);
-        
-        // Luôn tạo refreshToken mới khi đăng nhập (Xóa cái cũ nếu có để tránh rác)
-        refreshTokenService.deleteByUser(user);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+            logger.info("Service: Generating JWT token...");
+            String token = jwtTokenUtil.generateToken(userDetails);
+            
+            logger.info("Service: Deleting old refresh tokens for user ID: {}", user.getId());
+            refreshTokenService.deleteByUser(user);
+            
+            logger.info("Service: Creating new refresh token...");
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return JwtResponse.builder()
-                .token(token)
-                .refreshToken(refreshToken.getToken())
-                .build();
+            logger.info("Service: Login process completed successfully for user: {}", loginUserDto.getUsername());
+            return JwtResponse.builder()
+                    .token(token)
+                    .refreshToken(refreshToken.getToken())
+                    .build();
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            logger.error("Service: Authentication failed for user {}: {}", loginUserDto.getUsername(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Service: Unexpected error during login for user {}: ", loginUserDto.getUsername(), e);
+            throw e;
+        }
     }
 
     @Transactional

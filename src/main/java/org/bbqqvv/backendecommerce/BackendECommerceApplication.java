@@ -5,10 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
-@EnableAsync  // Enables Spring's @Async processing
+@EnableAsync
 public class BackendECommerceApplication {
 
-    public static void main(String[]         args) {
+    public static void main(String[] args) {
         SpringApplication.run(BackendECommerceApplication.class, args);
     }
 

@@ -2,17 +2,13 @@ package org.bbqqvv.backendecommerce.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.springframework.web.multipart.MultipartFile;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdateRequest {
-    private String name;
-    private String bio;
-    private MultipartFile avatar;
-    private String phoneNumber;
+public class PermissionsUpdateRequest {
+    Set<String> permissions;
 }

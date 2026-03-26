@@ -2,7 +2,7 @@ server:
   port: ${PORT:8080}
 
 frontend:
-  url: https://roway-web-service.vercel.app/
+  url: https://frontend.bbqqvv-cloud.io.vn/
 
 spring:
   application:
@@ -93,7 +93,7 @@ application:
       expiration: 900000 # 15 minutes in milliseconds
       refresh-expiration: 604800000 # 7 days in milliseconds
   cloudinary:
-    cloud-name: ${CLOUDINARY_CLOUD_NAME:name}
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:do7dou7cw}
     api-key: ${CLOUDINARY_API_KEY:key}
     api-secret: ${CLOUDINARY_API_SECRET:secret}
 
@@ -103,4 +103,4 @@ payment:
     tmnCode: ${VNPAY_TMN_CODE:tmn_code}
     secretKey: ${VNPAY_SECRET_KEY:secret_key}
     version: 2.1.0
-    returnUrl: ${VNPAY_RETURN_URL:http://localhost:8080/api/v1/payment/vn-pay-callback}
+    returnUrl: ${VNPAY_RETURN_URL:https://backend.bbqqvv-cloud.io.vn/api/v1/payment/vn-pay-callback}

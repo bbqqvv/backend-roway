@@ -85,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
         Category category = getCategoryById(productRequest.getCategoryId());
         Product product = createOrUpdateProductEntity(productRequest, category);
 
-        product.setSlug(generateUniqueSlug(productRequest.getName()));
+        product.setSlug(productRequest.getSlug());
         Product savedProduct = productRepository.save(product);
         return toFullProductResponse(savedProduct);
     }
@@ -128,14 +128,20 @@ public class ProductServiceImpl implements ProductService {
         Category category = getCategoryById(productRequest.getCategoryId());
         Product product = createOrUpdateProductEntity(productRequest, category);
         product.setId(id);
+        product.setSlug(productRequest.getSlug());
 
-        if (!existingProduct.getName().equals(productRequest.getName())) {
-            product.setSlug(generateUniqueSlug(productRequest.getName()));
-        } else {
-            product.setSlug(existingProduct.getSlug());
-        }
-
+        // ⚡ Thu thập publicIds cũ để dọn dẹp sau khi lưu thành công
+        List<String> oldPublicIds = collectPublicIds(existingProduct);
+        
         Product savedProduct = productRepository.save(product);
+
+        // ⚡ Xóa các ảnh cũ không còn tồn tại trong sản phẩm mới khỏi Cloudinary
+        List<String> newPublicIds = collectPublicIds(savedProduct);
+        List<String> idsToDelete = oldPublicIds.stream()
+                .filter(idOld -> !newPublicIds.contains(idOld))
+                .collect(Collectors.toList());
+        cloudinaryService.deleteImages(idsToDelete);
+
         return toFullProductResponse(savedProduct);
     }
 
@@ -144,6 +150,9 @@ public class ProductServiceImpl implements ProductService {
     public boolean deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+        // ⚡ Xóa toàn bộ ảnh liên quan trên Cloudinary trước khi xóa mềm trong DB
+        cloudinaryService.deleteImages(collectPublicIds(product));
 
         // Giải phóng unique constraints bằng cách đổi tên/mã
         String suffix = "_deleted_" + System.currentTimeMillis();
@@ -198,12 +207,6 @@ public class ProductServiceImpl implements ProductService {
             }
         }
         
-        if (req.getDescriptionImages() != null) {
-            for (MultipartFile f : req.getDescriptionImages()) {
-                if (f != null && !f.isEmpty()) allFiles.add(f);
-            }
-        }
-        
         if (req.getVariants() != null) {
             req.getVariants().forEach(v -> {
                 if (v.getImage() != null && !v.getImage().isEmpty()) allFiles.add(v.getImage());
@@ -245,22 +248,6 @@ public class ProductServiceImpl implements ProductService {
             return s;
         }).collect(Collectors.toList()));
 
-        // Description Images
-        List<ImageMetadata> descList = new ArrayList<>();
-        if (req.getDescriptionImageMetadata() != null) descList.addAll(req.getDescriptionImageMetadata());
-        if (req.getDescriptionImages() != null) {
-            for (MultipartFile f : req.getDescriptionImages()) {
-                if (!f.isEmpty() && metaIterator.hasNext()) descList.add(metaIterator.next());
-            }
-        }
-        product.setDescriptionImages(descList.stream().map(mM -> {
-            ProductDescriptionImage d = new ProductDescriptionImage();
-            d.setImageUrl(mM.getUrl());
-            d.setPublicId(mM.getPublicId());
-            d.setProduct(product);
-            return d;
-        }).collect(Collectors.toList()));
-
         // 3. Map Tags
         if (req.getTags() != null) {
             Set<Tag> tags = req.getTags().stream()
@@ -278,6 +265,7 @@ public class ProductServiceImpl implements ProductService {
             for (ProductVariantRequest vReq : req.getVariants()) {
                 ProductVariant variant = new ProductVariant();
                 variant.setColor(vReq.getColor());
+                variant.setHexCode(vReq.getHexCode());
                 variant.setProduct(product);
 
                 // Variant Image
@@ -338,6 +326,29 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return product;
+    }
+
+    private List<String> collectPublicIds(Product product) {
+        List<String> ids = new ArrayList<>();
+        if (product.getMainImage() != null && product.getMainImage().getPublicId() != null) {
+            ids.add(product.getMainImage().getPublicId());
+        }
+        if (product.getSecondaryImages() != null) {
+            product.getSecondaryImages().forEach(img -> {
+                if (img.getPublicId() != null) ids.add(img.getPublicId());
+            });
+        }
+        if (product.getDescriptionImages() != null) {
+            product.getDescriptionImages().forEach(img -> {
+                if (img.getPublicId() != null) ids.add(img.getPublicId());
+            });
+        }
+        if (product.getVariants() != null) {
+            product.getVariants().forEach(v -> {
+                if (v.getPublicId() != null) ids.add(v.getPublicId());
+            });
+        }
+        return ids;
     }
 
 

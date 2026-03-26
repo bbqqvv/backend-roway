@@ -14,6 +14,7 @@ public interface FavouriteMapper {
     Favourite toFavourite(FavouriteRequest favouriteRequest);
 
     @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "nameProduct", source = "product.name")
     @Mapping(target = "productUrl", source = "product.slug")
     @Mapping(target = "stockStatus", ignore = true)

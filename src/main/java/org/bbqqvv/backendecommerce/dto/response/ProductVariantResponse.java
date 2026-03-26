@@ -15,6 +15,8 @@ public class ProductVariantResponse {
     private Long id;
     private List<SizeProductResponse> sizes;
     private String color;
+    private String hexCode;
     private String imageUrl;
     private String publicId;
+    private ImageMetadataResponse imageMetadata;
 }

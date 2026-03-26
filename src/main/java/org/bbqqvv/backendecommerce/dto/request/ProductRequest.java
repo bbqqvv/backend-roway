@@ -18,9 +18,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ProductRequest {
-    @NotBlank(message = "Product name is required")
     @Size(max = 100, message = "Product name must be less than 100 characters")
     private String name;
+    @NotBlank(message = "Product slug is required")
+    @Size(max = 100, message = "Product slug must be less than 100 characters")
+    private String slug;
     @Size(max = 200, message = "Short description must be less than 200 characters")
     private String shortDescription;
     @Size(max = 8000, message = "Description must be less than 8000 characters")
@@ -66,7 +68,5 @@ public class ProductRequest {
     private List<MultipartFile> secondaryImages;
     private List<ImageMetadata> secondaryImageMetadata;
 
-    private List<MultipartFile> descriptionImages;
-    private List<ImageMetadata> descriptionImageMetadata;
     private List<ProductVariantRequest> variants;
 }

@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 public class FavouriteResponse {
     private Long id;
     private Long userId;
+    private Long productId;
     private String nameProduct;
     private String imageUrl;
     private String productUrl;

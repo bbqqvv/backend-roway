@@ -19,6 +19,8 @@ public class UserResponse {
     String phoneNumber;
     String bio;
     RoleResponse authorities;
+    Set<String> permissions;
+    org.bbqqvv.backendecommerce.entity.AuthProvider provider;
 
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

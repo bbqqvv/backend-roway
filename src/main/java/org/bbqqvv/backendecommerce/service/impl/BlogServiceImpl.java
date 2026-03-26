@@ -1,44 +1,102 @@
 package org.bbqqvv.backendecommerce.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.bbqqvv.backendecommerce.dto.PageResponse;
+import org.bbqqvv.backendecommerce.dto.request.BlogCategoryRequest;
+import org.bbqqvv.backendecommerce.dto.request.BlogPostRequest;
+import org.bbqqvv.backendecommerce.dto.request.ImageMetadata;
 import org.bbqqvv.backendecommerce.dto.response.BlogCategoryResponse;
 import org.bbqqvv.backendecommerce.dto.response.BlogPostResponse;
+import org.bbqqvv.backendecommerce.entity.BlogCategory;
 import org.bbqqvv.backendecommerce.entity.BlogPost;
 import org.bbqqvv.backendecommerce.entity.Product;
 import org.bbqqvv.backendecommerce.repository.BlogCategoryRepository;
 import org.bbqqvv.backendecommerce.repository.BlogRepository;
+import org.bbqqvv.backendecommerce.repository.ProductRepository;
 import org.bbqqvv.backendecommerce.service.BlogService;
+import org.bbqqvv.backendecommerce.service.img.CloudinaryService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BlogServiceImpl implements BlogService {
 
     private final BlogRepository blogRepository;
     private final BlogCategoryRepository blogCategoryRepository;
+    private final ProductRepository productRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Override
+    @Transactional(readOnly = true)
     public List<BlogCategoryResponse> getAllCategories() {
         return blogCategoryRepository.findAll().stream()
-                .map(cat -> BlogCategoryResponse.builder()
-                        .id(cat.getId())
-                        .name(cat.getName())
-                        .slug(cat.getSlug())
-                        .build())
+                .map(this::mapCategoryToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<BlogPostResponse> getAllPosts() {
-        return blogRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    @Transactional
+    public BlogCategoryResponse createCategory(BlogCategoryRequest request) {
+        log.info("Creating blog category: {}", request.getName());
+        BlogCategory category = BlogCategory.builder()
+                .name(request.getName())
+                .slug(request.getSlug())
+                .build();
+        BlogCategory saved = blogCategoryRepository.save(category);
+        return mapCategoryToResponse(saved);
     }
 
     @Override
+    @Transactional
+    public BlogCategoryResponse updateCategory(Long id, BlogCategoryRequest request) {
+        log.info("Updating blog category ID: {}", id);
+        BlogCategory category = blogCategoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog category not found with id: " + id));
+        category.setName(request.getName());
+        category.setSlug(request.getSlug());
+        BlogCategory saved = blogCategoryRepository.save(category);
+        return mapCategoryToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCategory(Long id) {
+        log.info("Deleting blog category ID: {}", id);
+        BlogCategory category = blogCategoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog category not found with id: " + id));
+        blogCategoryRepository.delete(category);
+        log.info("Successfully deleted blog category ID: {}", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<BlogPostResponse> getAllPosts(Pageable pageable, String search) {
+        Page<BlogPostResponse> page;
+        if (search != null && !search.isBlank()) {
+            page = blogRepository.searchByKeyword(search.trim(), pageable).map(this::mapToResponse);
+        } else {
+            page = blogRepository.findAll(pageable).map(this::mapToResponse);
+        }
+        return new PageResponse<>(
+                page.getNumber(),
+                page.getTotalPages(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getContent()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<BlogPostResponse> getPostsByCategory(String categorySlug) {
         return blogRepository.findByCategorySlug(categorySlug).stream()
                 .map(this::mapToResponse)
@@ -46,12 +104,126 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BlogPostResponse getPostBySlug(String slug) {
         return blogRepository.findBySlug(slug)
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new RuntimeException("Blog post not found with slug: " + slug));
     }
 
+    @Override
+    @Transactional
+    public BlogPostResponse createPost(BlogPostRequest request) {
+        log.info("Creating new blog post: {}", request.getTitle());
+
+        BlogCategory category = blogCategoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Blog category not found with id: " + request.getCategoryId()));
+
+        // Tự động gán ngày hiện tại nếu request.date null/rỗng
+        String postDate = (request.getDate() != null && !request.getDate().isBlank()) 
+                            ? request.getDate() 
+                            : LocalDate.now().toString();
+
+        BlogPost post = BlogPost.builder()
+                .title(request.getTitle())
+                .slug(request.getSlug())
+                .summary(request.getSummary())
+                .content(request.getContent())
+                .author(request.getAuthor())
+                .date(postDate)
+                .readingTime(request.getReadingTime())
+                .category(category)
+                .tags(request.getTags() != null ? request.getTags() : List.of())
+                .gallery(request.getGallery() != null ? request.getGallery() : List.of())
+                .build();
+
+        if (request.getRelatedProductIds() != null && !request.getRelatedProductIds().isEmpty()) {
+            List<Product> products = productRepository.findAllById(request.getRelatedProductIds());
+            post.setRelatedProducts(products);
+        }
+
+        // Handle image
+        if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
+            post.setImageUrl(request.getImageUrl());
+        }
+
+        BlogPost saved = blogRepository.save(post);
+        log.info("Blog post saved with ID: {}", saved.getId());
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public BlogPostResponse updatePost(Long id, BlogPostRequest request) {
+        log.info("Updating blog post ID: {}", id);
+
+        BlogPost post = blogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog post not found with id: " + id));
+
+        BlogCategory category = blogCategoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Blog category not found with id: " + request.getCategoryId()));
+
+        // Cập nhật các trường cơ bản
+        post.setTitle(request.getTitle());
+        post.setSlug(request.getSlug());
+        post.setSummary(request.getSummary());
+        post.setContent(request.getContent());
+        post.setAuthor(request.getAuthor());
+        post.setReadingTime(request.getReadingTime());
+        post.setCategory(category);
+
+        if (request.getDate() != null && !request.getDate().isBlank()) {
+            post.setDate(request.getDate());
+        }
+        if (request.getTags() != null) {
+            post.setTags(request.getTags());
+        }
+        if (request.getGallery() != null) {
+            post.setGallery(request.getGallery());
+        }
+
+        if (request.getRelatedProductIds() != null) {
+            List<Product> products = productRepository.findAllById(request.getRelatedProductIds());
+            post.setRelatedProducts(products);
+        }
+
+        // Cập nhật ảnh bìa mới nếu có
+        if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
+            post.setImageUrl(request.getImageUrl());
+        }
+
+        BlogPost updatedPost = blogRepository.save(post);
+        log.info("Successfully updated blog post ID: {}", updatedPost.getId());
+        
+        return mapToResponse(updatedPost);
+    }
+
+    @Override
+    @Transactional
+    public void deletePost(Long id) {
+        log.info("Deleting blog post ID: {}", id);
+        BlogPost post = blogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog post not found with id: " + id));
+        
+        blogRepository.delete(post);
+        log.info("Successfully deleted blog post ID: {}", id);
+    }
+
+    // ==========================================
+    // PRIVATE HELPER METHODS
+    // ==========================================
+
+    private BlogCategoryResponse mapCategoryToResponse(BlogCategory cat) {
+        return BlogCategoryResponse.builder()
+                .id(cat.getId())
+                .name(cat.getName())
+                .slug(cat.getSlug())
+                .build();
+    }
+
+    /**
+     * Map Entity -> DTO Response
+     */
     private BlogPostResponse mapToResponse(BlogPost post) {
         return BlogPostResponse.builder()
                 .id(post.getId())
@@ -62,14 +234,15 @@ public class BlogServiceImpl implements BlogService {
                 .author(post.getAuthor())
                 .date(post.getDate())
                 .imageUrl(post.getImageUrl())
-                .category(post.getCategory().getName())
-                .categorySlug(post.getCategory().getSlug())
+                // Tránh NullPointerException bằng cách check category
+                .category(post.getCategory() != null ? post.getCategory().getName() : null)
+                .categorySlug(post.getCategory() != null ? post.getCategory().getSlug() : null)
                 .tags(post.getTags())
                 .readingTime(post.getReadingTime())
                 .gallery(post.getGallery())
-                .relatedProducts(post.getRelatedProducts().stream()
-                        .map(Product::getId)
-                        .collect(Collectors.toList()))
+                .relatedProducts(post.getRelatedProducts() != null 
+                        ? post.getRelatedProducts().stream().map(Product::getId).collect(Collectors.toList())
+                        : List.of())
                 .build();
     }
 }

@@ -73,6 +73,12 @@ public class User extends BaseEntity {
     @Column(name = "role")
     private Set<Role> authorities;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "permission")
+    private Set<Permission> permissions;
+
     @Column(name = "provider")
     @Enumerated(EnumType.STRING)
     private AuthProvider provider;

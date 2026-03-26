@@ -20,11 +20,15 @@ public interface UserService {
 
     void deleteUser(Long id);
 
+    UserResponse updateRole(Long id, org.bbqqvv.backendecommerce.dto.request.RoleUpdateRequest request);
+
+    UserResponse updatePermissions(Long id, org.bbqqvv.backendecommerce.dto.request.PermissionsUpdateRequest request);
+
     User getUserByUsernameEntity(String username);
 
     boolean existsByUsername(String username);
 //
-    UserUpdateResponse updateUserInfo(UserUpdateRequest request);
+    UserResponse updateUserInfo(UserUpdateRequest request);
 
     void changePassword(ChangePasswordRequest request);
 

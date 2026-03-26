@@ -1,0 +1,55 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="09-support-items-data" author="antigravity">
+        <!-- Chèn dữ liệu mẫu cho tab Support -->
+        <insert tableName="support_items">
+            <column name="img" value="/icons/icon_of_call.png"/>
+            <column name="title" value="Gọi tổng đài hỗ trợ"/>
+            <column name="hours" value="Hỗ trợ từ 08:00 - 22:00"/>
+            <column name="contact" value="1900 1234"/>
+            <column name="link" value="tel:19001234"/>
+            <column name="bg_color" value="#FFF3E0"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="deleted" valueBoolean="false"/>
+        </insert>
+        <insert tableName="support_items">
+            <column name="img" value="/icons/icon_of_email.png"/>
+            <column name="title" value="Gửi Email cho chúng tôi"/>
+            <column name="hours" value="Hỗ trợ phản hồi 24/7"/>
+            <column name="contact" value="cskh@roway.vn"/>
+            <column name="link" value="mailto:cskh@roway.vn"/>
+            <column name="bg_color" value="#E3F2FD"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="deleted" valueBoolean="false"/>
+        </insert>
+        <insert tableName="support_items">
+            <column name="img" value="/icons/icon_of_chat.png"/>
+            <column name="title" value="Chat trực tuyến (Live Chat)"/>
+            <column name="hours" value="Nhân viên luôn túc trực"/>
+            <column name="contact" value="Bắt đầu Chat"/>
+            <column name="link" value="#"/>
+            <column name="bg_color" value="#F3E5F5"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="deleted" valueBoolean="false"/>
+        </insert>
+        <insert tableName="support_items">
+            <column name="img" value="/icons/icon_of_faq.png"/>
+            <column name="title" value="Câu hỏi thường gặp"/>
+            <column name="hours" value="Tra cứu thông tin tự động"/>
+            <column name="contact" value="Xem ngay"/>
+            <column name="link" value="/hoi-dap"/>
+            <column name="bg_color" value="#E8F5E9"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="deleted" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,6 +1,7 @@
 package org.bbqqvv.backendecommerce.mapper;
 
 import org.bbqqvv.backendecommerce.dto.request.ProductRequest;
+import org.bbqqvv.backendecommerce.dto.response.ImageMetadataResponse;
 import org.bbqqvv.backendecommerce.dto.response.ProductResponse;
 import org.bbqqvv.backendecommerce.entity.*;
 import org.mapstruct.Builder;
@@ -19,19 +20,41 @@ public interface ProductMapper {
     @Mapping(target = "mainImage", ignore = true)
     @Mapping(target = "secondaryImages", ignore = true)
     @Mapping(target = "descriptionImages", ignore = true)
-    @Mapping(target = "tags", ignore = true) // Handled manually in Service layer for DB consistency
+    @Mapping(target = "tags", ignore = true)
     Product toProduct(ProductRequest productRequest);
+
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "category.id", target = "categoryId")
     @Mapping(source = "mainImage.imageUrl", target = "mainImageUrl")
     @Mapping(source = "mainImage.publicId", target = "mainImagePublicId")
-    @Mapping(source = "slug", target = "slug")
+    @Mapping(target = "mainImageMetadata", source = "mainImage", qualifiedByName = "mapMainImageMetadata")
     @Mapping(source = "secondaryImages", target = "secondaryImageUrls", qualifiedByName = "mapSecondaryImageUrls")
     @Mapping(source = "secondaryImages", target = "secondaryImagePublicIds", qualifiedByName = "mapSecondaryImagePublicIds")
-    @Mapping(source = "descriptionImages", target = "descriptionImageUrls", qualifiedByName = "mapDescriptionImageUrls")
-    @Mapping(source = "descriptionImages", target = "descriptionImagePublicIds", qualifiedByName = "mapDescriptionImagePublicIds")
-    @Mapping(source = "tags", target = "tags", qualifiedByName = "mapTagsToTagNames") // ✨ Convert Set<Tag> → Set<String>
+    @Mapping(target = "secondaryImages", source = "secondaryImages", qualifiedByName = "mapSecondaryImageMetadata")
+    @Mapping(source = "tags", target = "tags", qualifiedByName = "mapTagsToTagNames")
     @Mapping(target = "reviewCount", expression = "java(product.getReviews() != null ? product.getReviews().size() : 0)")
     ProductResponse toProductResponse(Product product);
+
+    @Named("mapMainImageMetadata")
+    default ImageMetadataResponse mapMainImageMetadata(ProductMainImage img) {
+        if (img == null || img.getImageUrl() == null) return null;
+        return new ImageMetadataResponse(img.getImageUrl(), img.getPublicId());
+    }
+
+    @Named("mapSecondaryImageMetadata")
+    default List<ImageMetadataResponse> mapSecondaryImageMetadata(List<ProductSecondaryImage> images) {
+        return images == null ? null : images.stream()
+                .map(img -> new ImageMetadataResponse(img.getImageUrl(), img.getPublicId()))
+                .collect(Collectors.toList());
+    }
+
+    @Named("mapDescriptionImageMetadata")
+    default List<ImageMetadataResponse> mapDescriptionImageMetadata(List<ProductDescriptionImage> images) {
+        return images == null ? null : images.stream()
+                .map(img -> new ImageMetadataResponse(img.getImageUrl(), img.getPublicId()))
+                .collect(Collectors.toList());
+    }
+
     @Named("mapSecondaryImageUrls")
     default List<String> mapSecondaryImageUrls(List<ProductSecondaryImage> images) {
         return mapImageUrls(images);
@@ -57,12 +80,6 @@ public interface ProductMapper {
         return images == null ? null : images.stream()
                 .map(ProductImage::getPublicId)
                 .collect(Collectors.toList());
-    }
-    @Named("mapTagNamesToTags")
-    default Set<Tag> mapTagNamesToTags(Set<String> tagNames) {
-        return tagNames == null ? null : tagNames.stream()
-                .map(Tag::new) // Tạo mới `Tag` với constructor mặc định
-                .collect(Collectors.toSet());
     }
     @Named("mapTagsToTagNames")
     default Set<String> mapTagsToTagNames(Set<Tag> tags) {

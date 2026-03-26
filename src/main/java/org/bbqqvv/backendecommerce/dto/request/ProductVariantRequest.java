@@ -17,6 +17,7 @@ public class ProductVariantRequest {
     private ImageMetadata imageMetadata;
     private List<SizeProductRequest> sizes;
     private String color;
+    private String hexCode;
     private java.math.BigDecimal price;
     private Integer stock;
 

@@ -27,3 +27,9 @@ databaseChangeLog:
       file: db/changelog/v1.1/07-user-enabled.xml
   - include:
       file: db/changelog/v1.1/08-refresh-token.xml
+  - include:
+      file: db/changelog/v1.1/09-support-items-data.xml
+  - include:
+      file: db/changelog/v1.1/11-variant-hex-code.xml
+  - include:
+      file: db/changelog/v1.1/12-user-permissions.xml

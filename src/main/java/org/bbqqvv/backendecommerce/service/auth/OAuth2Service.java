@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class OAuth2Service implements UserDetailsService {
+public class OAuth2Service {
 
     private final UserRepository userRepository;
     private final JwtTokenUtil jwtTokenUtil;
@@ -157,7 +157,7 @@ public class OAuth2Service implements UserDetailsService {
             }
         }
 
-        UserDetails userDetails = this.loadUserByUsername(email);
+        UserDetails userDetails = this.loadUserByEmail(email);
         String token = jwtTokenUtil.generateToken(userDetails);
         
         // Luôn xoay vòng Token (Xóa cũ tạo mới)
@@ -170,13 +170,12 @@ public class OAuth2Service implements UserDetailsService {
                 .build();
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
+                user.getUsername(),
                 "", // Không sử dụng password với OAuth2
                 getAuthorities(user)
         );

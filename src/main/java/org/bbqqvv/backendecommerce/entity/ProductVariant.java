@@ -34,5 +34,8 @@ public class ProductVariant extends BaseEntity {
 
     @Column(nullable = false)
     private String color;
+
+    @Column(name = "hex_code")
+    private String hexCode;
 }
 

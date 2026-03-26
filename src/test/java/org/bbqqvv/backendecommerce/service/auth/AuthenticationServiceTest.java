@@ -116,7 +116,7 @@ class AuthenticationServiceTest {
         // Act & Assert
         assertThatThrownBy(() -> authenticationService.register(registerRequest))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Email này đã được đăng ký");
+                .hasMessageContaining("Email đã tồn tại");
 
         verify(userRepository, never()).save(any(User.class));
     }

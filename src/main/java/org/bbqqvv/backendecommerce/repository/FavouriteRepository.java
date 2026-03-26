@@ -18,4 +18,5 @@ public interface FavouriteRepository extends JpaRepository<Favourite, Long> {
 
     boolean existsByProductIdAndUserId(Long productId, Long id);
     boolean existsByUserIdAndProductIdAndSizeProductVariantId(Long userId, Long productId, Long spvId);
+    Optional<Favourite> findByUserIdAndProductId(Long userId, Long productId);
 }
