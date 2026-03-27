@@ -17,6 +17,10 @@ public interface VariantMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "product", ignore = true)
+    @Mapping(target = "productVariantSizes", ignore = true)
     ProductVariant toProductVariant(ProductVariantRequest request);
 
     @Mapping(target = "sizes", source = "productVariantSizes")

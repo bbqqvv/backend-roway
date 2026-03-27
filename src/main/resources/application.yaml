@@ -90,8 +90,8 @@ application:
   security:
     jwt:
       secret-key: ${JWT_SECRET_KEY:dGhpcy1pcy1hLTMyLWJ5dGUtc2VjcmV0LWtleS0xMjM=}
-      expiration: 900000 # 15 minutes in milliseconds
-      refresh-expiration: 604800000 # 7 days in milliseconds
+      expiration: 604800000 # 7 days in milliseconds
+      refresh-expiration: 2592000000 # 30 days in milliseconds
   cloudinary:
     cloud-name: ${CLOUDINARY_CLOUD_NAME:do7dou7cw}
     api-key: ${CLOUDINARY_API_KEY:key}

@@ -63,7 +63,14 @@ public class ProductController {
         return ApiResponse.success(product);
     }
 
-
+    // Lấy sản phẩm liên quan
+    @GetMapping("/{id}/related")
+    public ApiResponse<PageResponse<ProductResponse>> getRelatedProducts(
+            @PathVariable Long id,
+            @PageableDefault(size = 4) Pageable pageable) {
+        PageResponse<ProductResponse> relatedProducts = productService.getRelatedProducts(id, pageable);
+        return ApiResponse.success(relatedProducts);
+    }
 
     // Lấy sản phẩm theo danh mục với phân trang
     @GetMapping("/find-by-category-slug/{slug}")
@@ -75,7 +82,7 @@ public class ProductController {
     }
 
     // Cập nhật thông tin sản phẩm
-    @PatchMapping("/{id}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> updateProduct(@PathVariable Long id, @ModelAttribute @Valid ProductRequest productRequest) {
         ProductResponse updatedProduct = productService.updateProduct(id, productRequest);
@@ -121,5 +128,23 @@ public class ProductController {
     public ApiResponse<String> syncViewedProducts(@RequestBody List<Long> productIds) {
         recentlyViewedProductService.syncViewedProducts(productIds);
         return ApiResponse.success("Synced successfully");
+    }
+
+    /**
+     * Xóa toàn bộ lịch sử xem sản phẩm của người dùng
+     */
+    @DeleteMapping("/recently-viewed/clear")
+    public ApiResponse<String> clearRecentlyViewedProducts() {
+        recentlyViewedProductService.clearRecentlyViewedProducts();
+        return ApiResponse.success("Cleared viewing history");
+    }
+
+    /**
+     * Import dữ liệu ảo để test
+     */
+    @PostMapping("/seed")
+    public ApiResponse<String> seedDummyProducts(@RequestParam(defaultValue = "100") int count) {
+        productService.seedDummyProducts(count);
+        return ApiResponse.success("Seeded " + count + " dummy products successfully.");
     }
 }

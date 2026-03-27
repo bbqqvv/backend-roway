@@ -13,4 +13,5 @@ public interface RecentlyViewedProductService {
     PageResponse<ProductResponse> getRecentlyViewedProducts(Pageable pageable);
 
     void syncViewedProducts(List<Long> productIds);
+    void clearRecentlyViewedProducts();
 }

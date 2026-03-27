@@ -17,6 +17,7 @@ import org.bbqqvv.backendecommerce.service.OrderService;
 import org.bbqqvv.backendecommerce.service.DiscountService;
 import org.bbqqvv.backendecommerce.service.email.EmailService;
 import org.bbqqvv.backendecommerce.service.payment.PaymentService;
+import org.bbqqvv.backendecommerce.service.img.CloudinaryService;
 import org.bbqqvv.backendecommerce.util.PagingUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,8 @@ import org.bbqqvv.backendecommerce.service.ShippingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.bbqqvv.backendecommerce.dto.request.RefundRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -49,6 +52,7 @@ public class OrderServiceImpl implements OrderService {
     private final EmailService emailService;
     private final PaymentService paymentService;
     private final ShippingService shippingService;
+    private final CloudinaryService cloudinaryService;
 
     private static final int EXPECTED_DELIVERY_DAYS = 5;
 
@@ -56,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
                             UserRepository userRepository, ProductRepository productRepository, CartRepository cartRepository,
                             AddressRepository addressRepository, SizeProductVariantRepository sizeProductVariantRepository,
                             DiscountService discountService, DiscountRepository discountRepository, OrderMapper orderMapper, EmailService emailService, 
-                            PaymentService paymentService, ShippingService shippingService) {
+                            PaymentService paymentService, ShippingService shippingService, CloudinaryService cloudinaryService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
@@ -70,6 +74,7 @@ public class OrderServiceImpl implements OrderService {
         this.emailService = emailService;
         this.paymentService = paymentService;
         this.shippingService = shippingService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     private User getAuthenticatedUser() {
@@ -114,8 +119,10 @@ public class OrderServiceImpl implements OrderService {
                     if (sizeProductVariant == null) {
                         throw new AppException(ProductErrorCode.SIZE_NOT_FOUND);
                     }
-                    return sizeProductVariant.getSizeProduct().getPriceAfterDiscount()
-                            .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    BigDecimal price = sizeProductVariant.getPriceAfterDiscount() != null && sizeProductVariant.getPriceAfterDiscount().compareTo(BigDecimal.ZERO) > 0
+                            ? sizeProductVariant.getPriceAfterDiscount()
+                            : (sizeProductVariant.getPrice() != null ? sizeProductVariant.getPrice() : BigDecimal.ZERO);
+                    return price.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -243,7 +250,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private String generateOrderCode() {
-        return "ORD-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        // Timestamp in millis is 13 digits, "ORD-" is 4 chars, total 17 chars (fits in 20)
+        return "ORD-" + System.currentTimeMillis();
     }
 
     private OrderItem buildOrderItem(Order order, Product product, SizeProductVariant sizeProductVariant, OrderItemRequest itemRequest) {
@@ -251,14 +259,18 @@ public class OrderServiceImpl implements OrderService {
         validateStock(sizeProduct, itemRequest.getQuantity());
         updateStock(sizeProductVariant, itemRequest.getQuantity());
 
+        BigDecimal price = sizeProductVariant.getPriceAfterDiscount() != null && sizeProductVariant.getPriceAfterDiscount().compareTo(BigDecimal.ZERO) > 0
+                ? sizeProductVariant.getPriceAfterDiscount()
+                : (sizeProductVariant.getPrice() != null ? sizeProductVariant.getPrice() : BigDecimal.ZERO);
+
         return OrderItem.builder()
                 .order(order)
                 .product(product)
                 .productVariant(sizeProductVariant.getProductVariant())
                 .sizeName(sizeProduct.getSizeName())
                 .quantity(itemRequest.getQuantity())
-                .price(sizeProduct.getPriceAfterDiscount()) // Sử dụng giá sau giảm
-                .subtotal(sizeProduct.getPriceAfterDiscount().multiply(BigDecimal.valueOf(itemRequest.getQuantity())))
+                .price(price) // Sử dụng giá thực tế từ SizeProductVariant
+                .subtotal(price.multiply(BigDecimal.valueOf(itemRequest.getQuantity())))
                 .color(itemRequest.getColor())
                 .build();
     }
@@ -301,6 +313,13 @@ public class OrderServiceImpl implements OrderService {
             throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
 
+        return orderMapper.toOrderResponse(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderById(Long orderId) {
+        Order order = findOrderById(orderId);
         return orderMapper.toOrderResponse(order);
     }
 
@@ -362,6 +381,13 @@ public class OrderServiceImpl implements OrderService {
         try {
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
             order.setStatus(newStatus);
+
+            // Ghi nhận thời điểm giao hàng
+            if (newStatus == OrderStatus.SHIPPED && order.getShippedAt() == null) {
+                order.setShippedAt(LocalDateTime.now());
+                // Ước tính ngày thứ 3 sẽ giao hàng (sau 2 ngày)
+                order.setExpectedDeliveryDate(LocalDate.now().plusDays(2));
+            }
         } catch (IllegalArgumentException e) {
             throw new AppException(CartOrderErrorCode.INVALID_ORDER_STATUS);
         }
@@ -379,7 +405,7 @@ public class OrderServiceImpl implements OrderService {
         if (!user.getId().equals(order.getUser().getId()) && !user.isAdmin()) {
             throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
-        if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELED) {
+        if (order.getStatus() != OrderStatus.PENDING) {
             throw new AppException(CartOrderErrorCode.CANNOT_CANCEL_ORDER);
         }
 
@@ -413,6 +439,74 @@ public class OrderServiceImpl implements OrderService {
         }
         sizeProductVariant.setStock(sizeProductVariant.getStock() - quantity);
         sizeProductVariantRepository.save(sizeProductVariant);
+    }
+
+    @Override
+    @Transactional
+    public void requestRefund(Long orderId, RefundRequest request, List<MultipartFile> images) {
+        Order order = findOrderById(orderId);
+        User user = getAuthenticatedUser();
+        
+        if (!user.getId().equals(order.getUser().getId()) && !user.isAdmin()) {
+            throw new AppException(CommonErrorCode.ACCESS_DENIED);
+        }
+        
+        if (order.getStatus() != OrderStatus.DELIVERED) {
+            throw new AppException(CartOrderErrorCode.CANNOT_CANCEL_ORDER); // Reuse as cannot request refund
+        }
+        
+        order.setStatus(OrderStatus.REFUND_REQUESTED);
+        order.setCancelReason(request.getReason());
+        order.setRefundType(request.getType());
+        order.setBankName(request.getBankName());
+        order.setBankAccountName(request.getBankAccountName());
+        order.setBankAccountNumber(request.getBankAccountNumber());
+
+        if (images != null && !images.isEmpty()) {
+            List<String> imageUrls = cloudinaryService.uploadImages(images).stream()
+                    .map(org.bbqqvv.backendecommerce.dto.request.ImageMetadata::getUrl)
+                    .toList();
+            order.setRefundImages(String.join(",", imageUrls));
+        }
+
+        orderRepository.save(order);
+    }
+
+    @Override
+    @Transactional
+    public void confirmDelivery(Long orderId) {
+        Order order = findOrderById(orderId);
+        User user = getAuthenticatedUser();
+
+        if (!user.getId().equals(order.getUser().getId()) && !user.isAdmin()) {
+            throw new AppException(CommonErrorCode.ACCESS_DENIED);
+        }
+
+        if (order.getStatus() != OrderStatus.SHIPPED) {
+            throw new AppException(CartOrderErrorCode.CANNOT_CANCEL_ORDER);
+        }
+
+        order.setStatus(OrderStatus.DELIVERED);
+        orderRepository.save(order);
+    }
+
+    // TEST ONLY
+    @Override
+    @Transactional
+    public void fastForwardShippedOrders() {
+        List<Order> shippedOrders = orderRepository.findAll().stream()
+                .filter(o -> o.getStatus() == OrderStatus.SHIPPED)
+                .collect(Collectors.toList());
+
+        for (Order order : shippedOrders) {
+            if (order.getShippedAt() != null) {
+                order.setShippedAt(order.getShippedAt().minusDays(6));
+            }
+            if (order.getExpectedDeliveryDate() != null) {
+                order.setExpectedDeliveryDate(order.getExpectedDeliveryDate().minusDays(6));
+            }
+        }
+        orderRepository.saveAll(shippedOrders);
     }
 
     @Override

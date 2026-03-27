@@ -100,9 +100,9 @@ public class OtpServiceImpl implements OtpService {
         context.setVariable("otp", otp);
         context.setVariable("expiration", OTP_EXPIRATION_MINUTES);
 
-        String content = templateEngine.process("email/otp-template.html", context);
+        String content = templateEngine.process("otp-template", context);
         helper.setText(content, true);
-        helper.addInline("logo", new ClassPathResource("images/roway.png"));
+        helper.addInline("logo", new ClassPathResource("static/images/roway.png"));
 
         mailSender.send(message);
     }

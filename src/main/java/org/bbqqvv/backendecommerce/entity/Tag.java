@@ -25,7 +25,7 @@ public class Tag extends BaseEntity {
 
     @ManyToMany(mappedBy = "tags")
     private Set<Product> products;
-    // ✅ Thêm constructor nhận name
+    // Thêm constructor nhận name
     public Tag(String name) {
         this.name = name;
     }

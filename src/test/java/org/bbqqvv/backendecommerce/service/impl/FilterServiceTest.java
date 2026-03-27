@@ -56,7 +56,7 @@ class FilterServiceTest {
         Map<String, Object> result = filterService.getFilterOptions();
 
         assertThat(result).containsKey("colors");
-        verify(productRepository, never()).findDistinctColors();
+        verify(productRepository, never()).findDistinctColorsWithHex();
     }
 
     @Test
@@ -64,7 +64,7 @@ class FilterServiceTest {
     void getFilterOptions_shouldReturnFromDB_whenNotCached() throws JsonProcessingException {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("catalog:filter:options")).thenReturn(null);
-        when(productRepository.findDistinctColors()).thenReturn(List.of("Red"));
+        when(productRepository.findDistinctColorsWithHex()).thenReturn(Collections.singletonList(new Object[]{"Red", "#FF0000"}));
         when(categoryRepository.findAll()).thenReturn(Collections.emptyList());
         when(productRepository.findMinPrice()).thenReturn(BigDecimal.ZERO);
         when(productRepository.findMaxPrice()).thenReturn(BigDecimal.TEN);

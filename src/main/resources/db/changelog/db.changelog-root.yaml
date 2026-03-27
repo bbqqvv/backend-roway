@@ -33,3 +33,13 @@ databaseChangeLog:
       file: db/changelog/v1.1/11-variant-hex-code.xml
   - include:
       file: db/changelog/v1.1/12-user-permissions.xml
+  - include:
+      file: db/changelog/db.changelog-review-anonymous.yaml
+  - include:
+      file: db/changelog/v1.1/13-order-delivery-columns.xml
+  - include:
+      file: db/changelog/v1.1/14-order-cancel-reason.xml
+  - include:
+      file: db/changelog/v1.1/15-advanced-refund-columns.xml
+  - include:
+      file: db/changelog/v1.1/16-review-enhancements.xml

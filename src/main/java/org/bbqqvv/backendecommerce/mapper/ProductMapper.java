@@ -33,6 +33,7 @@ public interface ProductMapper {
     @Mapping(target = "secondaryImages", source = "secondaryImages", qualifiedByName = "mapSecondaryImageMetadata")
     @Mapping(source = "tags", target = "tags", qualifiedByName = "mapTagsToTagNames")
     @Mapping(target = "reviewCount", expression = "java(product.getReviews() != null ? product.getReviews().size() : 0)")
+    @Mapping(target = "sale", expression = "java(product.getSalePercentage() > 0)")
     ProductResponse toProductResponse(Product product);
 
     @Named("mapMainImageMetadata")

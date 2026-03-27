@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-is-anonymous-to-product-reviews
+      author: roway
+      changes:
+        - addColumn:
+            tableName: product_reviews
+            columns:
+              - column:
+                  name: is_anonymous
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

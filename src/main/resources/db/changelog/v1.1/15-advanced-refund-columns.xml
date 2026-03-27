@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="15-advanced-refund-columns" author="antigravity">
+        <addColumn tableName="orders">
+            <column name="refund_type" type="VARCHAR(50)"/>
+            <column name="bank_name" type="VARCHAR(100)"/>
+            <column name="bank_account_number" type="VARCHAR(50)"/>
+            <column name="bank_account_name" type="VARCHAR(100)"/>
+            <column name="refund_images" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -75,5 +75,26 @@ public class Order extends BaseEntity {
 
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
+
+    @Column(name = "cancel_reason", columnDefinition = "TEXT")
+    private String cancelReason;
+
+    @Column(name = "refund_type", length = 50)
+    private String refundType;
+
+    @Column(name = "bank_name", length = 100)
+    private String bankName;
+
+    @Column(name = "bank_account_number", length = 50)
+    private String bankAccountNumber;
+
+    @Column(name = "bank_account_name", length = 100)
+    private String bankAccountName;
+
+    @Column(name = "refund_images", columnDefinition = "TEXT")
+    private String refundImages;
+
+    @Column(name = "shipped_at")
+    private LocalDateTime shippedAt;
 }
 

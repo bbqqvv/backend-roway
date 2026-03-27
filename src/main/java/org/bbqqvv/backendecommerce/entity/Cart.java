@@ -26,6 +26,7 @@ public class Cart extends BaseEntity {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
     private List<CartItem> cartItems;
 
+    @Builder.Default
     @Column(nullable = false)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 

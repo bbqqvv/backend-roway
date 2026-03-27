@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SizeProductResponse {
+    private Long id;
     private String sizeName;
     private int stock;
     private BigDecimal price;

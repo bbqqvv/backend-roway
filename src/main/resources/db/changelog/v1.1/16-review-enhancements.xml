@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="16-review-enhancements-1" author="antigravity">
+        <!-- Add table to track which users have liked a product review -->
+        <createTable tableName="product_review_likes">
+            <column name="review_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="product_review_likes" columnNames="review_id, user_id" constraintName="pk_product_review_likes"/>
+
+        <addForeignKeyConstraint baseColumnNames="review_id"
+                                 baseTableName="product_review_likes"
+                                 constraintName="fk_product_review_likes_review"
+                                 referencedColumnNames="id"
+                                 referencedTableName="product_reviews"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="product_review_likes"
+                                 constraintName="fk_product_review_likes_user"
+                                 referencedColumnNames="id"
+                                 referencedTableName="users"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>

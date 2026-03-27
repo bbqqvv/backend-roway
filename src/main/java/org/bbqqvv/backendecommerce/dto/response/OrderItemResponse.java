@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderItemResponse {
+    Long id;
     Long productId;
     String productName;
     String mainImageUrl;
@@ -18,4 +19,5 @@ public class OrderItemResponse {
     Integer quantity;
     BigDecimal price;
     BigDecimal subtotal;
+    Boolean isReviewed;
 }

@@ -192,7 +192,7 @@ public class DiscountServiceImpl implements DiscountService {
             throw new AppException(SocialMarketingErrorCode.CANNOT_DELETE_ACTIVE_DISCOUNT);
         }
 
-        // ✅ Xóa quan hệ trong bảng trung gian trước khi xóa discount
+        // Xóa quan hệ trong bảng trung gian trước khi xóa discount
         discountProductRepository.deleteByDiscountId(id);
         discountUserRepository.deleteByDiscountId(id);
 

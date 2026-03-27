@@ -6,5 +6,7 @@ public enum OrderStatus {
     SHIPPED,      // Đang giao hàng
     DELIVERED,    // Đã giao hàng thành công
     CANCELED,     // Đã hủy đơn hàng
-    REFUNDED      // Đã hoàn tiền
+    REFUND_REQUESTED, // Yêu cầu hoàn tiền/đổi trả
+    REFUNDED,     // Đã hoàn tiền
+    RETURNED      // Đã trả hàng
 }

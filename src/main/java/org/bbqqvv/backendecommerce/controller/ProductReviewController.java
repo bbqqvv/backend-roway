@@ -6,6 +6,7 @@ import org.bbqqvv.backendecommerce.dto.ApiResponse;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
 import org.bbqqvv.backendecommerce.dto.request.ProductReviewRequest;
 import org.bbqqvv.backendecommerce.dto.response.ProductReviewResponse;
+import org.bbqqvv.backendecommerce.dto.response.ReviewStatsResponse;
 import org.bbqqvv.backendecommerce.service.ProductReviewService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -24,12 +25,22 @@ public class ProductReviewController {
     public ApiResponse<ProductReviewResponse> addOrUpdateReview(@ModelAttribute @Valid ProductReviewRequest reviewRequest) {
         return ApiResponse.success(productReviewService.addOrUpdateReview(reviewRequest), "Review added/updated successfully");
     }
+
     @GetMapping("/product/{productId}")
     public ApiResponse<PageResponse<ProductReviewResponse>> getReviewsByProduct(
             @PathVariable Long productId,
+            @RequestParam(required = false) Integer rating,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
-        PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByProduct(productId, pageable);
+        PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByProduct(productId, rating, pageable);
         return ApiResponse.success(response, "Reviews retrieved successfully");
+    }
+
+    /**
+     * Thống kê đánh giá sản phẩm (trung bình, tổng, phân bố sao)
+     */
+    @GetMapping("/stats/{productId}")
+    public ApiResponse<ReviewStatsResponse> getReviewStats(@PathVariable Long productId) {
+        return ApiResponse.success(productReviewService.getReviewStats(productId), "Review stats retrieved successfully");
     }
 
     @GetMapping("/user")
@@ -37,6 +48,18 @@ public class ProductReviewController {
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByUser(pageable);
         return ApiResponse.success(response, "User reviews retrieved successfully");
+    }
+
+    @GetMapping
+    public ApiResponse<PageResponse<ProductReviewResponse>> getAllReviews(
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+        PageResponse<ProductReviewResponse> response = productReviewService.getAllReviews(pageable);
+        return ApiResponse.success(response, "All reviews retrieved successfully");
+    }
+
+    @PostMapping("/{reviewId}/like")
+    public ApiResponse<ProductReviewResponse> toggleLike(@PathVariable Long reviewId) {
+        return ApiResponse.success(productReviewService.toggleLike(reviewId), "Review like toggled successfully");
     }
 
     /**

@@ -196,8 +196,22 @@ public class RecentlyViewedProductServiceImpl implements RecentlyViewedProductSe
             repository.deleteOldestByUserId(currentUser.getId(), (int) (count - MAX_ITEMS));
         }
     }
-
-
+    
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void clearRecentlyViewedProducts() {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return;
+        
+        log.info("Clearing recently viewed products for user {}", currentUser.getId());
+        
+        // 1. Clear in DB
+        repository.deleteAllByUser(currentUser);
+        
+        // 2. Clear in Redis
+        String redisKey = REDIS_KEY_PREFIX + currentUser.getId();
+        redisTemplate.delete(redisKey);
+    }
 
 }
 

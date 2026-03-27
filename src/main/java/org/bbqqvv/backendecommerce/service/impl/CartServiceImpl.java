@@ -75,19 +75,47 @@ public class CartServiceImpl implements CartService {
                             product.getId(), itemRequest.getSizeName())
                     .orElseThrow(() -> new AppException(ProductErrorCode.INVALID_PRODUCT_OPTION));
 
-            ProductVariant productVariant = sizeProduct.getProductVariantSizes().stream()
-                    .map(SizeProductVariant::getProductVariant)
+            // ⚡ Tìm SizeProductVariant cụ thể khớp với PRODUCT + COLOR + SIZE để lấy giá và stock chính xác
+            // Vì SizeProduct (Vd: "S") có thể dùng chung cho nhiều sản phẩm, nên phải lọc thêm productId
+            SizeProductVariant matchedSPV = sizeProduct.getProductVariantSizes().stream()
+                    .filter(spv -> spv.getProductVariant().getProduct().getId().equals(product.getId()) &&
+                                   spv.getProductVariant().getColor().equalsIgnoreCase(itemRequest.getColor()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (matchedSPV == null) {
+                log.warn("⚠️ Không tìm thấy biến thể khớp chính xác. Đang thử map fallback...");
+                matchedSPV = sizeProduct.getProductVariantSizes().stream()
+                    .filter(spv -> spv.getProductVariant().getProduct().getId().equals(product.getId()))
                     .findFirst()
                     .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_VARIANT_NOT_FOUND));
+            }
+
+            ProductVariant productVariant = matchedSPV != null 
+                    ? matchedSPV.getProductVariant()
+                    : sizeProduct.getProductVariantSizes().stream()
+                        .map(SizeProductVariant::getProductVariant)
+                        .findFirst()
+                        .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
             String key = generateKey(itemRequest.getProductId(), itemRequest.getSizeName(), itemRequest.getColor());
             int newTotalQuantity = cartItemMap.getOrDefault(key, new CartItem()).getQuantity() + itemRequest.getQuantity();
 
-            if (newTotalQuantity > sizeProduct.getStockQuantity()) {
+            int stockAvailable = matchedSPV.getStock();
+            if (newTotalQuantity > stockAvailable) {
+                log.error("❌ Hết hàng cho biến thể này. Yêu cầu: {}, Có sẵn: {}", newTotalQuantity, stockAvailable);
                 throw new AppException(ProductErrorCode.OUT_OF_STOCK);
             }
 
-            BigDecimal price = sizeProduct.getPriceAfterDiscount() != null ? sizeProduct.getPriceAfterDiscount() : BigDecimal.ZERO;
+            // ⚡ Lấy giá từ SizeProductVariant (bảng chi tiết), không phải SizeProduct (bảng global)
+            final BigDecimal price;
+            if (matchedSPV != null) {
+                price = matchedSPV.getPriceAfterDiscount() != null && matchedSPV.getPriceAfterDiscount().compareTo(BigDecimal.ZERO) > 0
+                        ? matchedSPV.getPriceAfterDiscount()
+                        : (matchedSPV.getPrice() != null ? matchedSPV.getPrice() : BigDecimal.ZERO);
+            } else {
+                price = BigDecimal.ZERO;
+            }
             boolean isInStock = sizeProduct.getStockQuantity() >= itemRequest.getQuantity();
 
             cartItemMap.computeIfAbsent(key, k -> {
@@ -131,11 +159,15 @@ public class CartServiceImpl implements CartService {
         return cartMapper.toCartResponse(cart);
     }
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public CartResponse getCartByUserId() {
         User user = getAuthenticatedUser();
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(CartOrderErrorCode.CART_NOT_FOUND));
+                .orElseGet(() -> cartRepository.save(Cart.builder()
+                        .user(user)
+                        .totalPrice(BigDecimal.ZERO)
+                        .cartItems(new ArrayList<>())
+                        .build()));
 
         return cartMapper.toCartResponse(cart);
     }
@@ -238,16 +270,19 @@ public class CartServiceImpl implements CartService {
     }
 
     private void validateSizeOption(Product product, String sizeName) {
+        log.info("🔍 Validating size '{}' for product ID: {} (Category: {})", sizeName, product.getId(), product.getCategory().getName());
         List<String> validSizes = sizeCategoryRepository.findSizeNamesByCategoryId(product.getCategory().getId());
-        log.info("📌 Danh sách size hợp lệ: {}", validSizes);
-        log.info("📌 Kiểm tra size: {}", sizeName);
+        log.info("📌 Valid sizes for category: {}", validSizes);
 
-        if (!validSizes.contains(sizeName)) {
-            log.error("❌ Size không hợp lệ: {}", sizeName);
+        boolean isValid = validSizes.stream()
+                .anyMatch(s -> s.equalsIgnoreCase(sizeName));
+
+        if (!isValid) {
+            log.error("❌ Invalid size '{}' for product ID: {}. Expected one of: {}", sizeName, product.getId(), validSizes);
             throw new AppException(ProductErrorCode.INVALID_PRODUCT_OPTION);
         }
 
-        log.info("✅ Size hợp lệ: {}", sizeName);
+        log.info("✅ Size validated: {}", sizeName);
     }
     private String generateKey(Long productId, String sizeName, String color) {
         return productId + "-" + sizeName + "-" + color;

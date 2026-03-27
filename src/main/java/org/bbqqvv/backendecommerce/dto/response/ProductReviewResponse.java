@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Getter
@@ -20,6 +21,9 @@ public class ProductReviewResponse {
     private String userName;
     private int rating;
     private String reviewText;
-    private String imageUrl;
+    private List<String> imageUrls;
+    private boolean isAnonymous;
     private LocalDateTime createdAt;
+    private int helpfulCount;
+    private boolean isLikedByCurrentUser;
 }

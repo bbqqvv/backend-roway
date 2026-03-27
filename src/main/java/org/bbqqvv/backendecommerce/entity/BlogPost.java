@@ -43,16 +43,19 @@ public class BlogPost extends BaseEntity {
     @JoinColumn(name = "category_id", nullable = false)
     private BlogCategory category;
 
+    @Builder.Default
     @ElementCollection
     @CollectionTable(name = "blog_post_tags", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
 
+    @Builder.Default
     @ElementCollection
     @CollectionTable(name = "blog_post_gallery", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "image_url")
     private List<String> gallery = new ArrayList<>();
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
         name = "blog_post_related_products",

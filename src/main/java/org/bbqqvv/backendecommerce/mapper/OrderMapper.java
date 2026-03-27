@@ -13,5 +13,6 @@ public interface OrderMapper {
     @Mapping(target = "address", source = "fullAddress")
     @Mapping(target = "discountCode", source = "discount.code", defaultValue = "")
     @Mapping(target = "discountAmount", source = "discountAmount", defaultValue = "0")
+    @Mapping(target = "paymentUrl", ignore = true)
     OrderResponse toOrderResponse(Order order);
 }

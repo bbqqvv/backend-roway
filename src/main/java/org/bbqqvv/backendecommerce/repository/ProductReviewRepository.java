@@ -12,7 +12,16 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
 
     Page<ProductReview> findByProductId(Long productId, Pageable pageable);
 
+    Page<ProductReview> findByProductIdAndRating(Long productId, Integer rating, Pageable pageable);
+
     Page<ProductReview> findByUserId(Long userId, Pageable pageable);
 
     Optional<ProductReview> findByOrderItemId(Long orderItemId);
+
+    long countByProductId(Long productId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(AVG(r.rating), 0) FROM ProductReview r WHERE r.product.id = :productId")
+    double averageRatingByProductId(@org.springframework.data.repository.query.Param("productId") Long productId);
+
+    long countByProductIdAndRating(Long productId, Integer rating);
 }

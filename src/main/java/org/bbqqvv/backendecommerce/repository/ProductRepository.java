@@ -23,6 +23,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     boolean existsBySlug(String slug);
     @EntityGraph(attributePaths = {"category", "mainImage"})
     Optional<Product> findBySlug(String slug);
+
+    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.id != :productId AND p.active = true")
+    Page<Product> findRelatedProducts(@org.springframework.data.repository.query.Param("categoryId") Long categoryId, @org.springframework.data.repository.query.Param("productId") Long productId, Pageable pageable);
     @EntityGraph(attributePaths = {"category", "mainImage"})
     Page<Product> findAll(Pageable pageable);
 
@@ -38,8 +41,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Page<Product> searchByKeyword(@Param("query") String query, Pageable pageable);
     @Query("SELECT COUNT(r) FROM ProductReview r WHERE r.product.id = :productId")
     long countReviewsByProductId(@Param("productId") Long productId);
-    @Query("SELECT DISTINCT pv.color FROM ProductVariant pv")
-    List<String> findDistinctColors();
+    @Query("SELECT DISTINCT pv.color, pv.hexCode FROM ProductVariant pv")
+    List<Object[]> findDistinctColorsWithHex();
     @Query("SELECT DISTINCT sp.sizeName FROM SizeProduct sp")
     List<String> findDistinctSizes();
     @Query("SELECT DISTINCT t.name FROM Product p JOIN p.tags t")

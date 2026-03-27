@@ -12,6 +12,7 @@ public interface RecentlyViewedProductRepository extends JpaRepository<RecentlyV
     Page<RecentlyViewedProduct> findByUserOrderByUpdatedAtDesc(User currentUser, Pageable pageable);
     
     long countByUser(User user);
+    void deleteAllByUser(User user);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query(value = 

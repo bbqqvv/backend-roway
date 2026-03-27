@@ -31,6 +31,14 @@ public class OrderResponse {
     List<OrderItemResponse> orderItems;
     BigDecimal totalAmount;
     String paymentUrl;
+
+    String cancelReason;
+    String refundType;
+    String bankName;
+    String bankAccountName;
+    String bankAccountNumber;
+    String refundImages;
+
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

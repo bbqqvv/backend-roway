@@ -38,8 +38,21 @@ public class ProductReview extends BaseEntity {
     @Column(nullable = false, length = 1000)
     private String reviewText;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean isAnonymous = false;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "product_review_likes",
+            joinColumns = @JoinColumn(name = "review_id")
+    )
+    @Column(name = "user_id")
+    @Builder.Default
+    private java.util.Set<Long> likedUserIds = new java.util.HashSet<>();
 }
 

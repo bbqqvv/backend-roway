@@ -29,7 +29,7 @@ public class FilterServiceImpl implements FilterService {
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final ProductMapper productMapper;
 
-    private static final String FILTER_CACHE_KEY = "catalog:filter:options";
+    private static final String FILTER_CACHE_KEY = "catalog:filter:options:v2";
 
     public FilterServiceImpl(ProductRepository productRepository,
                              CategoryRepository categoryRepository,
@@ -53,7 +53,15 @@ public class FilterServiceImpl implements FilterService {
         }
 
         // 2. Nếu không có ở Redis, Query từ DB
-        List<String> colors = productRepository.findDistinctColors();
+        List<Map<String, String>> colors = productRepository.findDistinctColorsWithHex()
+                .stream()
+                .map(arr -> {
+                    Map<String, String> m = new java.util.HashMap<>();
+                    m.put("name", (String) arr[0]);
+                    m.put("hexCode", (String) arr[1]);
+                    return m;
+                })
+                .toList();
         List<String> sizes = productRepository.findDistinctSizes();
         List<String> tags = productRepository.findDistinctTags();
         BigDecimal minPrice = productRepository.findMinPrice();
@@ -67,14 +75,14 @@ public class FilterServiceImpl implements FilterService {
                         .build())
                 .toList();
 
-        Map<String, Object> filterOptions = Map.of(
-                "colors", colors,
-                "sizes", sizes,
-                "tags", tags,
-                "minPrice", minPrice,
-                "maxPrice", maxPrice,
-                "categories", categories
-        );
+        Map<String, Object> filterOptions = new java.util.HashMap<>();
+        filterOptions.put("colors", colors != null ? colors : List.of());
+        filterOptions.put("sizes", sizes != null ? sizes : List.of());
+        filterOptions.put("tags", tags != null ? tags : List.of());
+        filterOptions.put("minPrice", minPrice != null ? minPrice : BigDecimal.ZERO);
+        filterOptions.put("maxPrice", maxPrice != null ? maxPrice : BigDecimal.ZERO);
+        filterOptions.put("categories", categories != null ? categories : List.of());
+
 
         // 3. Lưu vào Redis với TTL 30 phút
         redisTemplate.opsForValue().set(FILTER_CACHE_KEY, 
@@ -101,34 +109,50 @@ public class FilterServiceImpl implements FilterService {
             });
         }
 
-        // Filter by category (slug)
-        if (allParams.containsKey("category")) {
-            String categorySlug = allParams.get("category");
+        // Filter by category (slug or id)
+        String categoriesParam = allParams.containsKey("categories") ? allParams.get("categories") : allParams.get("category");
+        if (categoriesParam != null && !categoriesParam.isBlank()) {
+            String[] categoryVals = categoriesParam.split(",");
             spec = spec.and((root, query, cb) -> {
+                query.distinct(true);
                 Join<Product, Category> categoryJoin = root.join("category");
-                return cb.equal(categoryJoin.get("slug"), categorySlug);
+                
+                try {
+                    // Try parsing as numeric IDs (from frontend Redux state)
+                    List<Long> ids = java.util.Arrays.stream(categoryVals)
+                                            .map(Long::valueOf)
+                                            .toList();
+                    return categoryJoin.get("id").in(ids);
+                } catch (NumberFormatException e) {
+                    // Fallback to Slug matching
+                    return categoryJoin.get("slug").in((Object[]) categoryVals);
+                }
             });
         }
 
         // Filter by tag
-        if (allParams.containsKey("tag")) {
-            String tagName = allParams.get("tag");
+        String tagsParam = allParams.containsKey("tags") ? allParams.get("tags") : allParams.get("tag");
+        if (tagsParam != null && !tagsParam.isBlank()) {
+            String[] tagNames = tagsParam.split(",");
             spec = spec.and((root, query, cb) -> {
-                Join<Product, Tag> tagJoin = root.join("tags");
-                return cb.equal(tagJoin.get("name"), tagName);
+                query.distinct(true);
+                Join<Product, Tag> tagJoin = root.join("tags", jakarta.persistence.criteria.JoinType.LEFT);
+                return tagJoin.get("name").in((Object[]) tagNames);
             });
         }
 
         // Filter by price range
         if (allParams.containsKey("minPrice") || allParams.containsKey("maxPrice")) {
-            BigDecimal minPrice = allParams.getOrDefault("minPrice", null) != null 
-                    ? new BigDecimal(allParams.get("minPrice")) 
-                    : BigDecimal.ZERO;
-            BigDecimal maxPrice = allParams.getOrDefault("maxPrice", null) != null 
-                    ? new BigDecimal(allParams.get("maxPrice")) 
-                    : new BigDecimal("9999999999");
+            String minStr = allParams.get("minPrice");
+            String maxStr = allParams.get("maxPrice");
+            
+            BigDecimal minPrice = (minStr != null && !minStr.isBlank()) 
+                    ? new BigDecimal(minStr) : BigDecimal.ZERO;
+            BigDecimal maxPrice = (maxStr != null && !maxStr.isBlank()) 
+                    ? new BigDecimal(maxStr) : new BigDecimal("9999999999");
 
             spec = spec.and((root, query, cb) -> {
+                query.distinct(true);
                 Join<Product, ProductVariant> variantJoin = root.join("variants");
                 Join<ProductVariant, SizeProductVariant> sizeVariantJoin = variantJoin.join("productVariantSizes");
                 Join<SizeProductVariant, SizeProduct> sizeJoin = sizeVariantJoin.join("sizeProduct");
@@ -137,22 +161,26 @@ public class FilterServiceImpl implements FilterService {
         }
 
         // Filter by color
-        if (allParams.containsKey("color")) {
-            String color = allParams.get("color");
+        String colorsParam = allParams.containsKey("colors") ? allParams.get("colors") : allParams.get("color");
+        if (colorsParam != null && !colorsParam.isBlank()) {
+            String[] colors = colorsParam.split(",");
             spec = spec.and((root, query, cb) -> {
+                query.distinct(true);
                 Join<Product, ProductVariant> variantJoin = root.join("variants");
-                return cb.equal(variantJoin.get("color"), color);
+                return variantJoin.get("color").in((Object[]) colors);
             });
         }
 
         // Filter by size
-        if (allParams.containsKey("size")) {
-            String sizeName = allParams.get("size");
+        String sizesParam = allParams.containsKey("sizes") ? allParams.get("sizes") : allParams.get("size");
+        if (sizesParam != null && !sizesParam.isBlank()) {
+            String[] sizeNames = sizesParam.split(",");
             spec = spec.and((root, query, cb) -> {
+                query.distinct(true);
                 Join<Product, ProductVariant> variantJoin = root.join("variants");
                 Join<ProductVariant, SizeProductVariant> sizeVariantJoin = variantJoin.join("productVariantSizes");
                 Join<SizeProductVariant, SizeProduct> sizeJoin = sizeVariantJoin.join("sizeProduct");
-                return cb.equal(sizeJoin.get("sizeName"), sizeName);
+                return sizeJoin.get("sizeName").in((Object[]) sizeNames);
             });
         }
 

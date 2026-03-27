@@ -13,7 +13,6 @@ import org.bbqqvv.backendecommerce.dto.request.ProductReviewRequest;
 import org.bbqqvv.backendecommerce.dto.response.ProductReviewResponse;
 import org.bbqqvv.backendecommerce.entity.*;
 import org.bbqqvv.backendecommerce.exception.AppException;
-import org.bbqqvv.backendecommerce.exception.ErrorCode;
 import org.bbqqvv.backendecommerce.mapper.ProductReviewMapper;
 import org.bbqqvv.backendecommerce.repository.OrderItemRepository;
 import org.bbqqvv.backendecommerce.repository.ProductRepository;
@@ -23,9 +22,8 @@ import org.bbqqvv.backendecommerce.service.ProductReviewService;
 import org.bbqqvv.backendecommerce.service.img.CloudinaryService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.bbqqvv.backendecommerce.dto.response.ReviewStatsResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -71,18 +69,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     public ProductReviewResponse addOrUpdateReview(ProductReviewRequest reviewRequest) {
         User user = getAuthenticatedUser();
 
-        List<OrderItem> deliveredOrderItems = orderItemRepository
-                .findByProductIdAndOrderUserIdAndOrderStatus(
-                        reviewRequest.getProductId(),
-                        user.getId(),
-                        OrderStatus.DELIVERED
-                );
+        OrderItem orderItem = orderItemRepository.findById(reviewRequest.getOrderItemId())
+                .orElseThrow(() -> new RuntimeException("OrderItem không tồn tại."));
 
-        if (deliveredOrderItems.isEmpty()) {
+        if (!orderItem.getOrder().getUser().getId().equals(user.getId()) || orderItem.getOrder().getStatus() != OrderStatus.DELIVERED) {
             throw new AppException(CartOrderErrorCode.ORDER_NOT_COMPLETED);
         }
 
-        OrderItem orderItem = deliveredOrderItems.get(0);
         Product product = orderItem.getProduct();
 
         ProductReview existingReview = productReviewRepository.findByOrderItemId(orderItem.getId()).orElse(null);
@@ -98,6 +91,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
             existingReview.setRating(reviewRequest.getRating());
             existingReview.setReviewText(reviewRequest.getReviewText());
+            existingReview.setAnonymous(reviewRequest.isAnonymous());
 
             if (reviewRequest.getImageFiles() != null && !reviewRequest.getImageFiles().isEmpty()) {
                 List<String> imageUrls = cloudinaryService.uploadImages(reviewRequest.getImageFiles())
@@ -114,7 +108,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 existingReview.getImages().addAll(reviewImages);
             }
 
-            return productReviewMapper.toResponse(productReviewRepository.save(existingReview));
+            return toResponseWithLikeStatus(productReviewRepository.save(existingReview));
         }
 
         // New review
@@ -124,6 +118,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         newReview.setOrderItem(orderItem);
         newReview.setRating(reviewRequest.getRating());
         newReview.setReviewText(reviewRequest.getReviewText());
+        newReview.setAnonymous(reviewRequest.isAnonymous());
 
         if (reviewRequest.getImageFiles() != null && !reviewRequest.getImageFiles().isEmpty()) {
             List<String> imageUrls = cloudinaryService.uploadImages(reviewRequest.getImageFiles())
@@ -139,22 +134,58 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             newReview.setImages(reviewImages);
         }
 
-        return productReviewMapper.toResponse(productReviewRepository.save(newReview));
+        return toResponseWithLikeStatus(productReviewRepository.save(newReview));
     }
 
     @Override
     public PageResponse<ProductReviewResponse> getReviewsByProduct(Long productId, Pageable pageable) {
+        return getReviewsByProduct(productId, null, pageable);
+    }
+
+    @Override
+    public PageResponse<ProductReviewResponse> getReviewsByProduct(Long productId, Integer rating, Pageable pageable) {
         productRepository.findById(productId)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
-        Page<ProductReview> reviewPage = productReviewRepository.findByProductId(productId, pageable);
-        return toPageResponse(reviewPage, productReviewMapper::toResponse);
+        Page<ProductReview> reviewPage;
+        if (rating != null && rating >= 1 && rating <= 5) {
+            reviewPage = productReviewRepository.findByProductIdAndRating(productId, rating, pageable);
+        } else {
+            reviewPage = productReviewRepository.findByProductId(productId, pageable);
+        }
+        return toPageResponse(reviewPage, this::toResponseWithLikeStatus);
+    }
+
+    @Override
+    public ReviewStatsResponse getReviewStats(Long productId) {
+        productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+        long total = productReviewRepository.countByProductId(productId);
+        double avg = total > 0 ? productReviewRepository.averageRatingByProductId(productId) : 0.0;
+
+        java.util.Map<Integer, Long> distribution = new java.util.LinkedHashMap<>();
+        for (int star = 5; star >= 1; star--) {
+            distribution.put(star, productReviewRepository.countByProductIdAndRating(productId, star));
+        }
+
+        return ReviewStatsResponse.builder()
+                .averageRating(Math.round(avg * 10.0) / 10.0)
+                .totalReviews(total)
+                .distribution(distribution)
+                .build();
     }
 
     @Override
     public PageResponse<ProductReviewResponse> getReviewsByUser(Pageable pageable) {
         User user = getAuthenticatedUser();
         Page<ProductReview> reviewPage = productReviewRepository.findByUserId(user.getId(), pageable);
-        return toPageResponse(reviewPage, productReviewMapper::toResponse);
+        return toPageResponse(reviewPage, this::toResponseWithLikeStatus);
+    }
+
+    @Override
+    public PageResponse<ProductReviewResponse> getAllReviews(Pageable pageable) {
+        Page<ProductReview> reviewPage = productReviewRepository.findAll(pageable);
+        return toPageResponse(reviewPage, this::toResponseWithLikeStatus);
     }
 
     @Override
@@ -171,6 +202,37 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         }
 
         productReviewRepository.delete(review);
+    }
+
+    @Override
+    @Transactional
+    public ProductReviewResponse toggleLike(Long reviewId) {
+        User user = getAuthenticatedUser();
+        ProductReview review = productReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(SocialMarketingErrorCode.REVIEW_NOT_FOUND));
+
+        if (review.getLikedUserIds().contains(user.getId())) {
+            review.getLikedUserIds().remove(user.getId());
+        } else {
+            review.getLikedUserIds().add(user.getId());
+        }
+
+        review = productReviewRepository.save(review);
+        return toResponseWithLikeStatus(review);
+    }
+
+    private ProductReviewResponse toResponseWithLikeStatus(ProductReview review) {
+        ProductReviewResponse response = productReviewMapper.toResponse(review);
+        Long currentUserId = SecurityUtils.getCurrentUserLogin()
+                .flatMap(userRepository::findByUsername)
+                .map(User::getId)
+                .orElse(null);
+        if (currentUserId != null && review.getLikedUserIds() != null) {
+            response.setLikedByCurrentUser(review.getLikedUserIds().contains(currentUserId));
+        } else {
+            response.setLikedByCurrentUser(false);
+        }
+        return response;
     }
 }
 

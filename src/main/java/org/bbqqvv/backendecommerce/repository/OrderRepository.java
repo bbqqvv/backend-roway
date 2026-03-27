@@ -27,4 +27,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             @Param("productId") Long productId);
 
     Optional<Order> findByOrderCode(String orderCode);
+
+    @Query("SELECT o FROM Order o WHERE o.status = 'SHIPPED' AND o.shippedAt <= :cutoffTime")
+    java.util.List<Order> findShippedOrdersOlderThan(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
 }

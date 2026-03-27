@@ -10,6 +10,8 @@ public interface AddressMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "user", ignore = true)
     @Mapping(target = "defaultAddress", source = "defaultAddress") // ✅ Map từ defaultAddress -> isDefault
     Address toAddress(AddressRequest addressRequest);
     @Mapping(target = "userId", source = "user.id")
@@ -18,5 +20,8 @@ public interface AddressMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
     void updateEntityFromRequest(AddressRequest addressRequest, @MappingTarget Address existingAddress);
 }

@@ -36,7 +36,8 @@ public class Category extends BaseEntity {
     @Column(name = "public_id")
     private String publicId;
 
+    @Builder.Default
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SizeCategory> sizeCategories;
+    private List<SizeCategory> sizeCategories = new java.util.ArrayList<>();
 }
 
