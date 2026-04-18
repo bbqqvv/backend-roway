@@ -42,6 +42,9 @@ public class Product extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 100)
     private String productCode;
+    
+    @Column(name = "draft_id", unique = true, length = 100)
+    private String draftId;
 
     @Column(nullable = false)
     @Min(0)

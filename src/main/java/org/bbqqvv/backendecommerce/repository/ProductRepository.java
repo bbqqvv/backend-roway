@@ -18,6 +18,7 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     boolean existsByProductCode(String productCode);
+    boolean existsByDraftId(String draftId);
     @EntityGraph(attributePaths = {"category", "mainImage"})
     Page<Product> findProductByCategory(Category category, Pageable pageable);
     boolean existsBySlug(String slug);

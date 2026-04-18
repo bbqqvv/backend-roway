@@ -56,7 +56,8 @@ public class SecurityConfig {
 
     private static final String[] ADMIN_URL_PATTERNS = {
             "/admin/**",
-            "/api/v1/admin/**"
+            "/api/v1/admin/**",
+            "/api/v1/benchmarks/**"
     };
 
     private static final String[] USER_URL_PATTERNS = {

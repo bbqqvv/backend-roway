@@ -45,3 +45,7 @@ databaseChangeLog:
       file: db/changelog/v1.1/16-review-enhancements.xml
   - include:
       file: db/changelog/db.changelog-image-draft-id.yaml
+  - include:
+      file: db/changelog/db.changelog-image-unique.yaml
+  - include:
+      file: db/changelog/db.changelog-product-draft-id.yaml

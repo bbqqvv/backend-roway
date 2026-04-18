@@ -29,7 +29,12 @@ public class ImageStaleCleanupScheduler {
         log.info("Execution of ImageStaleCleanupScheduler triggered at {}", threshold);
         
         try {
+            // Case 1 & 3: Cleanup stale DB records (and their assets)
             productImageService.cleanupStaleImages(threshold, cloudinaryService);
+            
+            // Case 2 & 8: Cleanup "Ghost" assets (Cloudinary files with no DB record)
+            productImageService.syncCloudinaryOrphans(threshold);
+            
             long duration = System.currentTimeMillis() - startTime;
             log.info("Execution of ImageStaleCleanupScheduler completed successfully in {} ms", duration);
         } catch (Exception e) {

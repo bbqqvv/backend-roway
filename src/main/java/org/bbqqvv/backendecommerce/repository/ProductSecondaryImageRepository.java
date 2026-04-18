@@ -15,4 +15,5 @@ public interface ProductSecondaryImageRepository extends JpaRepository<ProductSe
     List<ProductSecondaryImage> findByStatusAndCreatedAtBefore(ImageStatus status, LocalDateTime dateTime);
     boolean existsByPublicId(String publicId);
     Optional<ProductSecondaryImage> findByPublicId(String publicId);
+    List<ProductSecondaryImage> findAllByPublicId(String publicId);
 }

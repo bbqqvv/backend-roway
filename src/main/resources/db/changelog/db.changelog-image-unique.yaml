@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: deduplicate-and-add-unique-to-images
+      author: antigravity
+      changes:
+        # 1. Cleanup duplicates for Main Images
+        - sql:
+            dbms: postgresql
+            sql: "DELETE FROM product_main_images WHERE id NOT IN (SELECT MAX(id) FROM product_main_images GROUP BY public_id) AND public_id IS NOT NULL"
+        # 2. Add Unique constraint for Main Images
+        - addUniqueConstraint:
+            columnNames: public_id
+            constraintName: ux_product_main_images_public_id
+            tableName: product_main_images
+
+        # 3. Cleanup duplicates for Secondary Images
+        - sql:
+            dbms: postgresql
+            sql: "DELETE FROM product_secondary_images WHERE id NOT IN (SELECT MAX(id) FROM product_secondary_images GROUP BY public_id) AND public_id IS NOT NULL"
+        # 4. Add Unique constraint for Secondary Images
+        - addUniqueConstraint:
+            columnNames: public_id
+            constraintName: ux_product_secondary_images_public_id
+            tableName: product_secondary_images
+
+        # 5. Cleanup duplicates for Variants
+        - sql:
+            dbms: postgresql
+            sql: "DELETE FROM product_variants WHERE id NOT IN (SELECT MAX(id) FROM product_variants GROUP BY public_id) AND public_id IS NOT NULL"
+        # 6. Add Unique constraint for Variants
+        - addUniqueConstraint:
+            columnNames: public_id
+            constraintName: ux_product_variants_public_id
+            tableName: product_variants

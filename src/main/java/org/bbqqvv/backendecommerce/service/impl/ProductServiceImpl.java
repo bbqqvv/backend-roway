@@ -74,6 +74,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductResponse createProduct(ProductRequest productRequest) {
+        // Case 6: Idempotency check (Double Submit)
+        if (productRequest.getDraftId() != null && productRepository.existsByDraftId(productRequest.getDraftId())) {
+            log.warn("DraftId {} already used for a product, ignoring double submit.", productRequest.getDraftId());
+            throw new AppException(ProductErrorCode.DUPLICATE_PRODUCT_CODE); // Or a specific IDEMPOTENCY_ERROR
+        }
+
         if (productRepository.existsByProductCode(productRequest.getProductCode())) {
             throw new AppException(ProductErrorCode.DUPLICATE_PRODUCT_CODE);
         }
@@ -82,10 +88,12 @@ public class ProductServiceImpl implements ProductService {
         Product product = createOrUpdateProductEntity(productRequest, category, null);
 
         product.setSlug(productRequest.getSlug());
+        product.setDraftId(productRequest.getDraftId());
         Product savedProduct = productRepository.save(product);
         
-        // 5. CHUYỂN TRẠNG THÁI ẢNH TỪ DRAFT (Nếu có draftId)
+        // 5. CHUYỂN TRẠNG THÁI ẢNH TỪ DRAFT (Giai đoạn 2: Activate staged components)
         productImageService.activateImages(productRequest.getDraftId(), savedProduct);
+        activateStagedVariants(productRequest, savedProduct);
 
         return toFullProductResponse(savedProduct);
     }
@@ -205,8 +213,9 @@ public class ProductServiceImpl implements ProductService {
 
         Product savedProduct = productRepository.save(product);
 
-        // ⚡ Kích hoạt ảnh mới từ nháp (nếu có)
+        // ⚡ Giai đoạn 2: Kích hoạt ảnh và variant từ nháp
         productImageService.activateImages(productRequest.getDraftId(), savedProduct);
+        activateStagedVariants(productRequest, savedProduct);
 
         // ⚡ Xóa các ảnh cũ không còn tồn tại trong sản phẩm mới khỏi Cloudinary
         List<String> newPublicIds = collectPublicIds(savedProduct);
@@ -273,141 +282,113 @@ public class ProductServiceImpl implements ProductService {
         Product product = productMapper.toProduct(req);
         product.setCategory(category);
 
-        // 1. PRE-UPLOAD ALL IMAGES IN PARALLEL
-        log.info("Starting parallel pre-upload for all product images");
-        long startTime = System.currentTimeMillis();
-        
-        // Harvest all images
-        java.util.List<MultipartFile> allFiles = new ArrayList<>();
-        if (req.getMainImage() != null && !req.getMainImage().isEmpty()) allFiles.add(req.getMainImage());
-        
-        if (req.getSecondaryImages() != null) {
-            for (MultipartFile f : req.getSecondaryImages()) {
-                if (f != null && !f.isEmpty()) allFiles.add(f);
-            }
-        }
-        
-        if (req.getVariants() != null) {
-            req.getVariants().forEach(v -> {
-                if (v.getImage() != null && !v.getImage().isEmpty()) allFiles.add(v.getImage());
-            });
-        }
-
-        // Upload everything in one big parallel burst
-        List<ImageMetadata> allMetadata = cloudinaryService.uploadImages(allFiles);
-        
-        // Create an iterator to map them back in the same order they were added
-        java.util.Iterator<ImageMetadata> metaIterator = allMetadata.iterator();
-        log.info("Parallel upload of {} images completed in {} ms", allFiles.size(), (System.currentTimeMillis() - startTime));
-
-        // 2. Map Image results back to Product
-        // Main Image
-        ImageMetadata mainM = (req.getMainImageMetadata() != null) ? req.getMainImageMetadata() 
-                             : (req.getMainImage() != null && !req.getMainImage().isEmpty() && metaIterator.hasNext() ? metaIterator.next() : null);
-        if (mainM != null) {
-            ProductMainImage m = new ProductMainImage();
-            m.setImageUrl(mainM.getUrl());
-            m.setPublicId(mainM.getPublicId());
-            m.setProduct(product);
-            product.setMainImage(m);
-        }
-
-        // Secondary Images
-        List<ImageMetadata> secList = new ArrayList<>();
-        if (req.getSecondaryImageMetadata() != null) secList.addAll(req.getSecondaryImageMetadata());
-        if (req.getSecondaryImages() != null) {
-            for (MultipartFile f : req.getSecondaryImages()) {
-                if (!f.isEmpty() && metaIterator.hasNext()) secList.add(metaIterator.next());
-            }
-        }
-        product.setSecondaryImages(secList.stream().map(mM -> {
-            ProductSecondaryImage s = new ProductSecondaryImage();
-            s.setImageUrl(mM.getUrl());
-            s.setPublicId(mM.getPublicId());
-            s.setProduct(product);
-            return s;
-        }).collect(Collectors.toList()));
-
-        // 3. Map Tags
-        if (req.getTags() != null) {
-            Set<Tag> tags = req.getTags().stream()
-                    .map(name -> tagRepository.findByName(name)
-                            .orElseGet(() -> tagRepository.save(new Tag(name))))
-                    .collect(Collectors.toSet());
-            product.setTags(tags);
-        }
-
         // 4. Map Variants and Sizes
         if (req.getVariants() != null) {
             List<ProductVariant> variants = new ArrayList<>();
             java.util.Map<String, SizeProduct> localSizeCache = new java.util.HashMap<>();
             
             for (ProductVariantRequest vReq : req.getVariants()) {
+                // Giai đoạn 1: Chỉ tạo các variant KHÔNG được staged trước (không có metadata)
+                if (vReq.getImageMetadata() != null && vReq.getImageMetadata().getPublicId() != null) {
+                    continue; 
+                }
+
                 ProductVariant variant = new ProductVariant();
                 variant.setColor(vReq.getColor());
                 variant.setHexCode(vReq.getHexCode());
                 variant.setProduct(product);
+                variant.setStatus(org.bbqqvv.backendecommerce.entity.ImageStatus.ACTIVE);
 
-                // Variant Image
-                ImageMetadata vM = (vReq.getImageMetadata() != null) ? vReq.getImageMetadata()
-                                 : (vReq.getImage() != null && !vReq.getImage().isEmpty() && metaIterator.hasNext() ? metaIterator.next() : null);
-                if (vM != null) {
-                    variant.setImageUrl(vM.getUrl());
-                    variant.setPublicId(vM.getPublicId());
-                }
-
-                // SMART SIZE MAPPING
-                final List<SizeProductRequest> inputSizes = Optional.ofNullable(vReq.getSizes()).orElse(Collections.emptyList());
-                List<SizeCategory> categorySizes = Optional.ofNullable(category.getSizeCategories()).orElse(Collections.emptyList());
-                List<SizeProductVariant> sizeVariants = new ArrayList<>();
-
-                for (int i = 0; i < categorySizes.size(); i++) {
-                    SizeCategory sizeCategory = categorySizes.get(i);
-                    String sName = sizeCategory.getName();
-
-                    SizeProductRequest matchedInput = inputSizes.stream()
-                            .filter(is -> is.getSizeName() != null && is.getSizeName().equalsIgnoreCase(sName))
-                            .findFirst()
-                            .orElse(null);
-
-                    if (matchedInput == null && i < inputSizes.size()) {
-                        SizeProductRequest indexedInput = inputSizes.get(i);
-                        if (indexedInput.getSizeName() == null || indexedInput.getSizeName().isBlank()) matchedInput = indexedInput;
-                    }
-
-                    SizeProduct size = localSizeCache.get(sName);
-                    if (size == null) {
-                        size = sizeProductRepository.findBySizeName(sName)
-                                .orElseGet(() -> {
-                                    SizeProduct s = new SizeProduct();
-                                    s.setSizeName(sName);
-                                    return sizeProductRepository.saveAndFlush(s);
-                                });
-                        localSizeCache.put(sName, size);
-                    }
-
-                    // WATERFALL PRICING
-                    BigDecimal resolvedPrice = (matchedInput != null && matchedInput.getPrice() != null) 
-                            ? matchedInput.getPrice() 
-                            : (vReq.getPrice() != null ? vReq.getPrice() : req.getPrice());
-                    
-                    SizeProductVariant spv = new SizeProductVariant();
-                    spv.setProductVariant(variant);
-                    spv.setSizeProduct(size);
-                    spv.setPrice(resolvedPrice);
-                    spv.setPriceAfterDiscount(calculatePriceAfterDiscount(resolvedPrice, req.getSalePercentage()));
-                    spv.setStock(matchedInput != null ? matchedInput.getStock() : 0);
-                    sizeVariants.add(spv);
-                }
-                variant.setProductVariantSizes(sizeVariants);
+                mapSizesToVariant(vReq, variant, category, localSizeCache, req.getSalePercentage(), req.getPrice());
                 variants.add(variant);
             }
             product.setVariants(variants);
         }
 
-        // 5. CHUYỂN TRẠNG THÁI ẢNH TỪ DRAFT (Logic đã được dời ra ngoài hàm này để đảm bảo Product đã save)
-
         return product;
+    }
+
+    private void activateStagedVariants(ProductRequest req, Product savedProduct) {
+        if (req.getVariants() == null || req.getVariants().isEmpty()) return;
+
+        java.util.Map<String, SizeProduct> localSizeCache = new java.util.HashMap<>();
+        
+        for (ProductVariantRequest vReq : req.getVariants()) {
+            if (vReq.getImageMetadata() != null && vReq.getImageMetadata().getPublicId() != null) {
+                String pid = vReq.getImageMetadata().getPublicId();
+                
+                ProductVariant variant = productVariantRepository.findByPublicId(pid)
+                        .orElseGet(() -> {
+                            ProductVariant v = new ProductVariant();
+                            v.setPublicId(pid);
+                            return v;
+                        });
+
+                variant.setProduct(savedProduct);
+                variant.setStatus(org.bbqqvv.backendecommerce.entity.ImageStatus.ACTIVE);
+                variant.setColor(vReq.getColor());
+                variant.setHexCode(vReq.getHexCode());
+                variant.setImageUrl(vReq.getImageMetadata().getUrl());
+
+                // Map sizes and prices
+                mapSizesToVariant(vReq, variant, savedProduct.getCategory(), localSizeCache, 
+                                 req.getSalePercentage(), req.getPrice());
+                
+                productVariantRepository.save(variant);
+            }
+        }
+    }
+
+    private void mapSizesToVariant(ProductVariantRequest vReq, ProductVariant variant, Category category, 
+                                 Map<String, SizeProduct> localSizeCache, int salePercentage, BigDecimal productBasePrice) {
+        final List<SizeProductRequest> inputSizes = Optional.ofNullable(vReq.getSizes()).orElse(Collections.emptyList());
+        List<SizeCategory> categorySizes = Optional.ofNullable(category.getSizeCategories()).orElse(Collections.emptyList());
+        List<SizeProductVariant> sizeVariants = new ArrayList<>();
+
+        for (int i = 0; i < categorySizes.size(); i++) {
+            SizeCategory sizeCategory = categorySizes.get(i);
+            String sName = sizeCategory.getName();
+
+            SizeProductRequest matchedInput = inputSizes.stream()
+                    .filter(is -> is.getSizeName() != null && is.getSizeName().equalsIgnoreCase(sName))
+                    .findFirst()
+                    .orElse(null);
+
+            if (matchedInput == null && i < inputSizes.size()) {
+                SizeProductRequest indexedInput = inputSizes.get(i);
+                if (indexedInput.getSizeName() == null || indexedInput.getSizeName().isBlank()) matchedInput = indexedInput;
+            }
+
+            SizeProduct size = localSizeCache.get(sName);
+            if (size == null) {
+                size = sizeProductRepository.findBySizeName(sName)
+                        .orElseGet(() -> {
+                            SizeProduct s = new SizeProduct();
+                            s.setSizeName(sName);
+                            return sizeProductRepository.saveAndFlush(s);
+                        });
+                localSizeCache.put(sName, size);
+            }
+
+            // WATERFALL PRICING
+            BigDecimal resolvedPrice = (matchedInput != null && matchedInput.getPrice() != null) 
+                    ? matchedInput.getPrice() 
+                    : (vReq.getPrice() != null ? vReq.getPrice() : productBasePrice);
+            
+            SizeProductVariant spv = new SizeProductVariant();
+            spv.setProductVariant(variant);
+            spv.setSizeProduct(size);
+            spv.setPrice(resolvedPrice);
+            spv.setPriceAfterDiscount(calculatePriceAfterDiscount(resolvedPrice, salePercentage));
+            spv.setStock(matchedInput != null ? matchedInput.getStock() : 0);
+            sizeVariants.add(spv);
+        }
+        if (variant.getProductVariantSizes() == null) {
+            variant.setProductVariantSizes(new ArrayList<>(sizeVariants));
+        } else {
+            variant.getProductVariantSizes().clear();
+            variant.getProductVariantSizes().addAll(sizeVariants);
+        }
     }
 
     private List<String> collectPublicIds(Product product) {

@@ -15,4 +15,5 @@ public interface ProductMainImageRepository extends JpaRepository<ProductMainIma
     List<ProductMainImage> findByStatusAndCreatedAtBefore(ImageStatus status, LocalDateTime dateTime);
     boolean existsByPublicId(String publicId);
     Optional<ProductMainImage> findByPublicId(String publicId);
+    List<ProductMainImage> findAllByPublicId(String publicId);
 }

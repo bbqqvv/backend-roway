@@ -23,26 +23,37 @@ public class ProductImageService {
 
     @Transactional
     public void unregisterImage(String publicId) {
-        log.info("Unregistering image with publicId: {}", publicId);
+        log.info("Unregistering image (Deferred Deletion) with publicId: {}", publicId);
         
-        mainImageRepository.findByPublicId(publicId).ifPresent(img -> {
-            mainImageRepository.delete(img);
-            cloudinaryService.deleteImage(publicId);
-        });
-        
-        secondaryImageRepository.findByPublicId(publicId).ifPresent(img -> {
-            secondaryImageRepository.delete(img);
-            cloudinaryService.deleteImage(publicId);
-        });
-        
-        variantRepository.findByPublicId(publicId).ifPresent(img -> {
-            variantRepository.delete(img);
-            cloudinaryService.deleteImage(publicId);
-        });
+        List<ProductMainImage> mains = mainImageRepository.findAllByPublicId(publicId);
+        List<ProductSecondaryImage> secondaries = secondaryImageRepository.findAllByPublicId(publicId);
+        List<ProductVariant> variants = variantRepository.findAllByPublicId(publicId);
+
+        boolean found = !mains.isEmpty() || !secondaries.isEmpty() || !variants.isEmpty();
+
+        if (found) {
+            // Case 8: Only delete from DB. Let the scheduler handle Cloudinary later.
+            // This provides a "Grace Period" (Recycle Bin) for accidental deletions.
+            if (!mains.isEmpty()) mainImageRepository.deleteAll(mains);
+            if (!secondaries.isEmpty()) secondaryImageRepository.deleteAll(secondaries);
+            if (!variants.isEmpty()) variantRepository.deleteAll(variants);
+            
+            log.info("DB records removed for {}. Cloudinary file remains for grace period.", publicId);
+        }
     }
 
     @Transactional
     public void registerImage(ImageRegisterRequest request) {
+        if (request.getPublicId() == null || request.getPublicId().isBlank()) return;
+
+        // Prevent duplicate registration
+        if (mainImageRepository.existsByPublicId(request.getPublicId()) ||
+            secondaryImageRepository.existsByPublicId(request.getPublicId()) ||
+            variantRepository.existsByPublicId(request.getPublicId())) {
+            log.info("Image {} already registered, skipping.", request.getPublicId());
+            return;
+        }
+
         log.info("Registering {} image with draftId: {}", request.getType(), request.getDraftId());
 
         StageableImage image = createPlaceholder(request.getType());
@@ -85,7 +96,7 @@ public class ProductImageService {
         if (draftId == null || draftId.isBlank()) return;
         log.info("Activating images for draftId: {} and product: {}", draftId, product.getId());
 
-        // Activate Main Image
+        // 1. Activate Main Image
         mainImageRepository.findByDraftId(draftId).forEach(img -> {
             img.setStatus(ImageStatus.ACTIVE);
             img.setProduct(product);
@@ -93,7 +104,7 @@ public class ProductImageService {
             mainImageRepository.save(img);
         });
 
-        // Activate Secondary Images
+        // 2. Activate Secondary Images
         List<ProductSecondaryImage> secondaryImages = secondaryImageRepository.findByDraftId(draftId);
         secondaryImages.forEach(img -> {
             img.setStatus(ImageStatus.ACTIVE);
@@ -106,13 +117,6 @@ public class ProductImageService {
         } else {
             product.getSecondaryImages().addAll(secondaryImages);
         }
-
-        // Activate Variant Images (if any linked via draftId)
-        variantRepository.findByDraftId(draftId).forEach(img -> {
-            img.setStatus(ImageStatus.ACTIVE);
-            img.setProduct(product);
-            variantRepository.save(img);
-        });
     }
 
     @Transactional(readOnly = true)
@@ -163,6 +167,36 @@ public class ProductImageService {
                 repo.delete(img);
             } catch (Exception e) {
                 log.error("Failed to cleanup image {}: {}", img.getPublicId(), e.getMessage());
+            }
+        }
+    }
+
+    @Transactional
+    public void syncCloudinaryOrphans(java.time.LocalDateTime beforeTime) {
+        log.info("Case 2: Syncing Cloudinary ghost assets (orphans) in products/tmp/ folder...");
+        
+        // List all resources in the temporary folder
+        java.util.Map<String, java.time.LocalDateTime> cloudinaryResources = cloudinaryService.listResourcesWithMetadata("products/tmp/");
+        
+        for (java.util.Map.Entry<String, java.time.LocalDateTime> entry : cloudinaryResources.entrySet()) {
+            String publicId = entry.getKey();
+            java.time.LocalDateTime createdAt = entry.getValue();
+
+            // Only process if it's older than our grace period (e.g. 24h)
+            if (createdAt.isBefore(beforeTime)) {
+                // Check if it exists in our DB
+                boolean existsInDb = mainImageRepository.existsByPublicId(publicId) || 
+                                     secondaryImageRepository.existsByPublicId(publicId) || 
+                                     variantRepository.existsByPublicId(publicId);
+
+                if (!existsInDb) {
+                    log.info("Deleting orphan/ghost asset from Cloudinary: {} (Created at {})", publicId, createdAt);
+                    try {
+                        cloudinaryService.deleteImage(publicId);
+                    } catch (Exception e) {
+                        log.error("Failed to delete orphan asset {}: {}", publicId, e.getMessage());
+                    }
+                }
             }
         }
     }

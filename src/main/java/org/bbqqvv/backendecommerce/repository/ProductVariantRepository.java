@@ -15,4 +15,5 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     List<ProductVariant> findByStatusAndCreatedAtBefore(ImageStatus status, LocalDateTime dateTime);
     boolean existsByPublicId(String publicId);
     Optional<ProductVariant> findByPublicId(String publicId);
+    List<ProductVariant> findAllByPublicId(String publicId);
 }

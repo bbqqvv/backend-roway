@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-product-draft-id
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: products
+            columns:
+              - column:
+                  name: draft_id
+                  type: varchar(100)
+                  constraints:
+                    unique: true
