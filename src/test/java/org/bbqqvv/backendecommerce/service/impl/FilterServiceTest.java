@@ -48,13 +48,16 @@ class FilterServiceTest {
     @Test
     @DisplayName("Lấy Filter Options từ Redis (Cache Hit)")
     void getFilterOptions_shouldReturnFromRedis_whenCached() throws JsonProcessingException {
+        // Arrange
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("catalog:filter:options:v2")).thenReturn("{\"colors\":[\"Black\"]}");
         Map<String, Object> cachedOptions = Map.of("colors", List.of("Black"));
         when(objectMapper.readValue(anyString(), any(TypeReference.class))).thenReturn(cachedOptions);
 
+        // Act
         Map<String, Object> result = filterService.getFilterOptions();
 
+        // Assert
         assertThat(result).containsKey("colors");
         verify(productRepository, never()).findDistinctColorsWithHex();
     }
@@ -62,6 +65,7 @@ class FilterServiceTest {
     @Test
     @DisplayName("Lấy Filter Options từ DB (Cache Miss)")
     void getFilterOptions_shouldReturnFromDB_whenNotCached() throws JsonProcessingException {
+        // Arrange
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("catalog:filter:options:v2")).thenReturn(null);
         when(productRepository.findDistinctColorsWithHex()).thenReturn(Collections.singletonList(new Object[]{"Red", "#FF0000"}));
@@ -69,8 +73,10 @@ class FilterServiceTest {
         when(productRepository.findMinPrice()).thenReturn(BigDecimal.ZERO);
         when(productRepository.findMaxPrice()).thenReturn(BigDecimal.TEN);
 
+        // Act
         Map<String, Object> result = filterService.getFilterOptions();
 
+        // Assert
         assertThat(result).containsKey("colors");
         verify(valueOperations).set(eq("catalog:filter:options:v2"), any(), any());
     }

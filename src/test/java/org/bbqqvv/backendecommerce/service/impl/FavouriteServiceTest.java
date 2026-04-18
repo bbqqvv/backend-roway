@@ -106,12 +106,15 @@ class FavouriteServiceTest {
         product.setSlug("jeans");
 
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            // Arrange
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(favouriteRepository.findByUserIdAndProductId(1L, 101L)).thenReturn(Optional.of(favourite));
 
+            // Act
             FavouriteResponse response = favouriteService.removeFavourite(101L);
 
+            // Assert
             assertThat(response).isNotNull();
             verify(favouriteRepository).delete(favourite);
         }

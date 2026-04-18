@@ -90,6 +90,7 @@ class ProductReviewServiceTest {
     @DisplayName("Thêm đánh giá mới thành công")
     void addOrUpdateReview_shouldAddNew_whenNoExistingReview() {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            // Arrange
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(orderItemRepository.findById(50L)).thenReturn(Optional.of(orderItem));
@@ -97,8 +98,10 @@ class ProductReviewServiceTest {
             when(productReviewRepository.save(any())).thenReturn(review);
             when(productReviewMapper.toResponse(any())).thenReturn(new ProductReviewResponse());
 
+            // Act
             productReviewService.addOrUpdateReview(reviewRequest);
 
+            // Assert
             verify(productReviewRepository).save(any(ProductReview.class));
         }
     }
@@ -107,6 +110,7 @@ class ProductReviewServiceTest {
     @DisplayName("Cập nhật đánh giá thành công")
     void addOrUpdateReview_shouldUpdate_whenExistingReviewWithin30Days() {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            // Arrange
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(orderItemRepository.findById(50L)).thenReturn(Optional.of(orderItem));
@@ -114,8 +118,10 @@ class ProductReviewServiceTest {
             when(productReviewRepository.save(any())).thenReturn(review);
             when(productReviewMapper.toResponse(any())).thenReturn(new ProductReviewResponse());
 
+            // Act
             productReviewService.addOrUpdateReview(reviewRequest);
 
+            // Assert
             verify(productReviewRepository).save(review);
         }
     }
@@ -157,6 +163,7 @@ class ProductReviewServiceTest {
     @DisplayName("Lấy đánh giá theo sản phẩm")
     void getReviewsByProduct_shouldReturnPageResponse() {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            // Arrange
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.empty());
             Pageable pageable = PageRequest.of(0, 10);
             when(productRepository.findById(101L)).thenReturn(Optional.of(product));
@@ -164,8 +171,10 @@ class ProductReviewServiceTest {
                     .thenReturn(new PageImpl<>(List.of(review)));
             when(productReviewMapper.toResponse(any())).thenReturn(new ProductReviewResponse());
 
+            // Act
             PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByProduct(101L, pageable);
 
+            // Assert
             assertThat(response.items()).hasSize(1);
         }
     }
