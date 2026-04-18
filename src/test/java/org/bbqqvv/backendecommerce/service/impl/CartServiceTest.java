@@ -77,7 +77,11 @@ class CartServiceTest {
             // Custom handle for SizeProductVariant link
             SizeProductVariant spv = SizeProductVariant.builder()
                     .stock(10)
-                    .productVariant(ProductVariant.builder().color("Red").build())
+                    .price(BigDecimal.valueOf(100))
+                    .productVariant(ProductVariant.builder()
+                            .color("Red")
+                            .product(product)
+                            .build())
                     .build();
             sizeProduct.setProductVariantSizes(List.of(spv));
 
@@ -115,7 +119,11 @@ class CartServiceTest {
 
             SizeProductVariant spv = SizeProductVariant.builder()
                     .stock(1) // Only 1 in stock
-                    .productVariant(ProductVariant.builder().color("Red").build())
+                    .price(BigDecimal.valueOf(100))
+                    .productVariant(ProductVariant.builder()
+                            .color("Red")
+                            .product(product)
+                            .build())
                     .build();
             sizeProduct.setProductVariantSizes(List.of(spv));
 

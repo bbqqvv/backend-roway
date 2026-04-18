@@ -108,9 +108,9 @@ class FavouriteServiceTest {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            when(favouriteRepository.findById(1L)).thenReturn(Optional.of(favourite));
+            when(favouriteRepository.findByUserIdAndProductId(1L, 101L)).thenReturn(Optional.of(favourite));
 
-            FavouriteResponse response = favouriteService.removeFavourite(1L);
+            FavouriteResponse response = favouriteService.removeFavourite(101L);
 
             assertThat(response).isNotNull();
             verify(favouriteRepository).delete(favourite);
