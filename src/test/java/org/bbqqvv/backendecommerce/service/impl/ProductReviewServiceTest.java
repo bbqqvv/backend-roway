@@ -58,7 +58,16 @@ class ProductReviewServiceTest {
     void setUp() {
         user = User.builder().id(1L).username("testuser").build();
         product = Product.builder().id(101L).name("Roway T-Shirt").build();
-        orderItem = OrderItem.builder().id(50L).product(product).build();
+        Order order = Order.builder()
+                .id(10L)
+                .user(user)
+                .status(OrderStatus.DELIVERED)
+                .build();
+        orderItem = OrderItem.builder()
+                .id(50L)
+                .product(product)
+                .order(order)
+                .build();
         
         review = new ProductReview();
         review.setId(1L);
@@ -72,6 +81,7 @@ class ProductReviewServiceTest {
 
         reviewRequest = new ProductReviewRequest();
         reviewRequest.setProductId(101L);
+        reviewRequest.setOrderItemId(50L);
         reviewRequest.setRating(5);
         reviewRequest.setReviewText("Great product!");
     }
@@ -82,8 +92,7 @@ class ProductReviewServiceTest {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            when(orderItemRepository.findByProductIdAndOrderUserIdAndOrderStatus(101L, 1L, OrderStatus.DELIVERED))
-                    .thenReturn(List.of(orderItem));
+            when(orderItemRepository.findById(50L)).thenReturn(Optional.of(orderItem));
             when(productReviewRepository.findByOrderItemId(50L)).thenReturn(Optional.empty());
             when(productReviewRepository.save(any())).thenReturn(review);
             when(productReviewMapper.toResponse(any())).thenReturn(new ProductReviewResponse());
@@ -100,8 +109,7 @@ class ProductReviewServiceTest {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            when(orderItemRepository.findByProductIdAndOrderUserIdAndOrderStatus(101L, 1L, OrderStatus.DELIVERED))
-                    .thenReturn(List.of(orderItem));
+            when(orderItemRepository.findById(50L)).thenReturn(Optional.of(orderItem));
             when(productReviewRepository.findByOrderItemId(50L)).thenReturn(Optional.of(review));
             when(productReviewRepository.save(any())).thenReturn(review);
             when(productReviewMapper.toResponse(any())).thenReturn(new ProductReviewResponse());
@@ -119,8 +127,7 @@ class ProductReviewServiceTest {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            when(orderItemRepository.findByProductIdAndOrderUserIdAndOrderStatus(101L, 1L, OrderStatus.DELIVERED))
-                    .thenReturn(List.of(orderItem));
+            when(orderItemRepository.findById(50L)).thenReturn(Optional.of(orderItem));
             when(productReviewRepository.findByOrderItemId(50L)).thenReturn(Optional.of(review));
 
             assertThatThrownBy(() -> productReviewService.addOrUpdateReview(reviewRequest))
@@ -135,8 +142,10 @@ class ProductReviewServiceTest {
         try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
             mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.of("testuser"));
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            when(orderItemRepository.findByProductIdAndOrderUserIdAndOrderStatus(101L, 1L, OrderStatus.DELIVERED))
-                    .thenReturn(Collections.emptyList());
+            
+            // Set order status to PENDING instead of DELIVERED
+            orderItem.getOrder().setStatus(OrderStatus.PENDING);
+            when(orderItemRepository.findById(50L)).thenReturn(Optional.of(orderItem));
 
             assertThatThrownBy(() -> productReviewService.addOrUpdateReview(reviewRequest))
                     .isInstanceOf(AppException.class)
@@ -147,14 +156,18 @@ class ProductReviewServiceTest {
     @Test
     @DisplayName("Lấy đánh giá theo sản phẩm")
     void getReviewsByProduct_shouldReturnPageResponse() {
-        Pageable pageable = PageRequest.of(0, 10);
-        when(productRepository.findById(101L)).thenReturn(Optional.of(product));
-        when(productReviewRepository.findByProductId(eq(101L), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(review)));
+        try (var mockedSecurity = mockStatic(SecurityUtils.class)) {
+            mockedSecurity.when(SecurityUtils::getCurrentUserLogin).thenReturn(Optional.empty());
+            Pageable pageable = PageRequest.of(0, 10);
+            when(productRepository.findById(101L)).thenReturn(Optional.of(product));
+            when(productReviewRepository.findByProductId(eq(101L), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(review)));
+            when(productReviewMapper.toResponse(any())).thenReturn(new ProductReviewResponse());
 
-        PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByProduct(101L, pageable);
+            PageResponse<ProductReviewResponse> response = productReviewService.getReviewsByProduct(101L, pageable);
 
-        assertThat(response.items()).hasSize(1);
+            assertThat(response.items()).hasSize(1);
+        }
     }
 
     @Test

@@ -10,6 +10,7 @@ import org.bbqqvv.backendecommerce.exception.codes.ProductErrorCode;
 import org.bbqqvv.backendecommerce.mapper.ProductMapper;
 import org.bbqqvv.backendecommerce.repository.*;
 import org.bbqqvv.backendecommerce.service.img.CloudinaryService;
+import org.bbqqvv.backendecommerce.service.ProductImageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ class ProductServiceTest {
     @Mock private ProductMapper productMapper;
     @Mock private CloudinaryService cloudinaryService;
     @Mock private TagRepository tagRepository;
+    @Mock private ProductImageService productImageService;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -103,6 +105,7 @@ class ProductServiceTest {
         when(productMapper.toProduct(any(ProductRequest.class))).thenReturn(product);
         when(productRepository.save(any(Product.class))).thenReturn(product);
         when(productMapper.toProductResponse(any(Product.class))).thenReturn(new ProductResponse());
+        doNothing().when(productImageService).activateImages(any(), any(Product.class));
 
         // Act
         ProductResponse response = productService.createProduct(productRequest);
