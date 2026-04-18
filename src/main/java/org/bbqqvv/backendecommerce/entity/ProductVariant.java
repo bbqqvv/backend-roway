@@ -13,15 +13,23 @@ import java.util.List;
 @AllArgsConstructor
 @ToString(exclude = {"productVariantSizes"})
 @EqualsAndHashCode(callSuper = false, exclude = {"productVariantSizes"})
-public class ProductVariant extends BaseEntity {
+public class ProductVariant extends BaseEntity implements StageableImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = true)
     private Product product;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private ImageStatus status = ImageStatus.TEMP;
+
+    @Column(name = "draft_id")
+    private String draftId;
 
     @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SizeProductVariant> productVariantSizes;

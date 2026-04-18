@@ -22,4 +22,7 @@ public interface BlogService {
     BlogPostResponse createPost(BlogPostRequest request);
     BlogPostResponse updatePost(Long id, BlogPostRequest request);
     void deletePost(Long id);
+    
+    // Auto-generate mock data
+    void seedDummyBlogs(int count);
 }

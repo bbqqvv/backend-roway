@@ -104,4 +104,33 @@ public class CloudinaryService {
         if (publicIds == null || publicIds.isEmpty()) return;
         publicIds.forEach(this::deleteImage);
     }
+
+    /**
+     * Liệt kê các tài nguyên kèm ngày tạo theo prefix (dùng Admin API)
+     * Trả về Map với key là publicId và value là LocalDateTime (created_at)
+     */
+    public java.util.Map<String, java.time.LocalDateTime> listResourcesWithMetadata(String prefix) {
+        try {
+            Map result = cloudinary.api().resources(ObjectUtils.asMap(
+                    "type", "upload",
+                    "prefix", prefix,
+                    "max_results", 500
+            ));
+            
+            List<Map> resources = (List<Map>) result.get("resources");
+            java.util.Map<String, java.time.LocalDateTime> metaMap = new java.util.HashMap<>();
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+
+            for (Map res : resources) {
+                String publicId = res.get("public_id").toString();
+                String createdAtStr = res.get("created_at").toString();
+                java.time.LocalDateTime createdAt = java.time.ZonedDateTime.parse(createdAtStr, formatter).toLocalDateTime();
+                metaMap.put(publicId, createdAt);
+            }
+            return metaMap;
+        } catch (Exception e) {
+            log.error("Failed to list Cloudinary resources with prefix {}: {}", prefix, e.getMessage());
+            return new java.util.HashMap<>();
+        }
+    }
 }

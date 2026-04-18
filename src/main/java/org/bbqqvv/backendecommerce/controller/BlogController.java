@@ -95,4 +95,11 @@ public class BlogController {
         blogService.deletePost(id);
         return ApiResponse.success("Deleted");
     }
+
+    @PostMapping("/seed")
+    @Operation(summary = "Import dummy blog posts for testing")
+    public ApiResponse<String> seedDummyBlogs(@RequestParam(defaultValue = "20") int count) {
+        blogService.seedDummyBlogs(count);
+        return ApiResponse.success("Seeded " + count + " dummy blog posts successfully.");
+    }
 }

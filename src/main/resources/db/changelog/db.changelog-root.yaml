@@ -43,3 +43,5 @@ databaseChangeLog:
       file: db/changelog/v1.1/15-advanced-refund-columns.xml
   - include:
       file: db/changelog/v1.1/16-review-enhancements.xml
+  - include:
+      file: db/changelog/db.changelog-image-draft-id.yaml

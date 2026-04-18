@@ -69,4 +69,5 @@ public class ProductRequest {
     private List<ImageMetadata> secondaryImageMetadata;
 
     private List<ProductVariantRequest> variants;
+    private String draftId;
 }

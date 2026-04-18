@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import org.bbqqvv.backendecommerce.exception.codes.*;
 
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.bbqqvv.backendecommerce.dto.PageResponse;
@@ -29,6 +30,7 @@ import org.bbqqvv.backendecommerce.mapper.ProductMapper;
 import org.bbqqvv.backendecommerce.repository.*;
 import org.bbqqvv.backendecommerce.service.ProductService;
 import org.bbqqvv.backendecommerce.service.img.CloudinaryService;
+import org.bbqqvv.backendecommerce.service.ProductImageService;
 import org.bbqqvv.backendecommerce.util.SlugUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -51,36 +53,23 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class ProductServiceImpl implements ProductService {
 
-    ProductRepository productRepository;
-    CategoryRepository categoryRepository;
-    SizeProductRepository sizeProductRepository;
-    ProductMapper productMapper;
-    CloudinaryService cloudinaryService;
-    TagRepository tagRepository;
-    SizeCategoryRepository sizeCategoryRepository;
-    EntityManager entityManager;
-
-    public ProductServiceImpl(ProductRepository productRepository,
-                              CategoryRepository categoryRepository,
-                              ProductMapper productMapper,
-                              CloudinaryService cloudinaryService,
-                              SizeProductRepository sizeProductRepository,
-                              TagRepository tagRepository,
-                              SizeCategoryRepository sizeCategoryRepository,
-                              EntityManager entityManager) {
-        this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
-        this.productMapper = productMapper;
-        this.cloudinaryService = cloudinaryService;
-        this.sizeProductRepository = sizeProductRepository;
-        this.tagRepository = tagRepository;
-        this.sizeCategoryRepository = sizeCategoryRepository;
-        this.entityManager = entityManager;
-    }
+    final ProductRepository productRepository;
+    final CategoryRepository categoryRepository;
+    final SizeProductRepository sizeProductRepository;
+    final ProductMapper productMapper;
+    final CloudinaryService cloudinaryService;
+    final TagRepository tagRepository;
+    final SizeCategoryRepository sizeCategoryRepository;
+    final EntityManager entityManager;
+    final ProductMainImageRepository mainImageRepository;
+    final ProductSecondaryImageRepository secondaryImageRepository;
+    final ProductVariantRepository productVariantRepository;
+    final ProductImageService productImageService;
 
     @Override
     @Transactional
@@ -94,6 +83,10 @@ public class ProductServiceImpl implements ProductService {
 
         product.setSlug(productRequest.getSlug());
         Product savedProduct = productRepository.save(product);
+        
+        // 5. CHUYỂN TRẠNG THÁI ẢNH TỪ DRAFT (Nếu có draftId)
+        productImageService.activateImages(productRequest.getDraftId(), savedProduct);
+
         return toFullProductResponse(savedProduct);
     }
 
@@ -211,6 +204,9 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Product savedProduct = productRepository.save(product);
+
+        // ⚡ Kích hoạt ảnh mới từ nháp (nếu có)
+        productImageService.activateImages(productRequest.getDraftId(), savedProduct);
 
         // ⚡ Xóa các ảnh cũ không còn tồn tại trong sản phẩm mới khỏi Cloudinary
         List<String> newPublicIds = collectPublicIds(savedProduct);
@@ -408,6 +404,8 @@ public class ProductServiceImpl implements ProductService {
             }
             product.setVariants(variants);
         }
+
+        // 5. CHUYỂN TRẠNG THÁI ẢNH TỪ DRAFT (Logic đã được dời ra ngoài hàm này để đảm bảo Product đã save)
 
         return product;
     }

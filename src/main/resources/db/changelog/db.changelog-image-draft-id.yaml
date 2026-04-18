@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-draft-id-and-status-to-images
+      author: antigravity
+      changes:
+        - addColumn:
+            tableName: product_main_images
+            columns:
+              - column:
+                  name: draft_id
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: TEMP
+                  constraints:
+                    nullable: false
+        - dropNotNullConstraint:
+            tableName: product_main_images
+            columnName: product_id
+
+        - addColumn:
+            tableName: product_secondary_images
+            columns:
+              - column:
+                  name: draft_id
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: TEMP
+                  constraints:
+                    nullable: false
+        - dropNotNullConstraint:
+            tableName: product_secondary_images
+            columnName: product_id
+
+        - addColumn:
+            tableName: product_variants
+            columns:
+              - column:
+                  name: draft_id
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: TEMP
+                  constraints:
+                    nullable: false
+        - dropNotNullConstraint:
+            tableName: product_variants
+            columnName: product_id

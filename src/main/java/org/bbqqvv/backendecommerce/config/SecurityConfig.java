@@ -42,7 +42,6 @@ public class SecurityConfig {
             "/api/v1/products-review/**",
             "/api/v1/filter/**",
             "/api/v1/blogs/**",
-            "/api/v1/blogs/**",
 
             // Swagger URLs
             "/swagger-ui.html",

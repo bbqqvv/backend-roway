@@ -245,4 +245,58 @@ public class BlogServiceImpl implements BlogService {
                         : List.of())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public void seedDummyBlogs(int count) {
+        String[] catNames = {"Phong Cách", "Xu Hướng", "Phối Đồ", "Tin Tức"};
+        List<BlogCategory> categories = new java.util.ArrayList<>();
+        for (String cName : catNames) {
+            String cSlug = org.bbqqvv.backendecommerce.util.SlugUtils.toSlug(cName);
+            BlogCategory c = blogCategoryRepository.findBySlug(cSlug).orElse(null);
+            if (c == null) {
+                c = blogCategoryRepository.save(BlogCategory.builder().name(cName).slug(cSlug).build());
+            }
+            categories.add(c);
+        }
+
+        String[] titles = {
+            "Cách phối đồ chuẩn soái ca Hàn Quốc",
+            "Xu hướng thời trang Thu Đông 2024",
+            "Bí quyết chọn quần jean đúng form",
+            "5 đôi giày sneaker nam không bao giờ lỗi thời",
+            "Lựa chọn áo sơ mi đi làm lịch lãm",
+            "Mẹo giữ màu quần áo luôn như mới",
+            "Cách chọn cà vạt phù hợp với dáng người",
+            "Tủ đồ con nhộng (Capsule Wardrobe) cho nam giới"
+        };
+
+        String[] tags = {"Style", "Men", "Fashion", "News", "Trend", "Tips"};
+
+        java.util.Random random = new java.util.Random();
+        List<BlogPost> postsToSave = new java.util.ArrayList<>();
+
+        for (int i = 1; i <= count; i++) {
+            BlogCategory randomCat = categories.get(random.nextInt(categories.size()));
+            String title = titles[random.nextInt(titles.length)] + " - " + java.util.UUID.randomUUID().toString().substring(0, 4);
+            
+            BlogPost post = BlogPost.builder()
+                .title(title)
+                .slug(org.bbqqvv.backendecommerce.util.SlugUtils.toSlug(title))
+                .summary("Một bài viết tóm tắt về " + title + ". Giúp bạn cải thiện gu thời trang và nắm bắt xu hướng mới nhất.")
+                .content("<p>Đây là nội dung chi tiết của bài viết <strong>" + title + "</strong>.</p><p>Thời trang là một trong những yếu tố giúp nam giới tự tin hơn trong cuộc sống. Trong bài viết này, chúng ta sẽ cùng tìm hiểu cách làm sao để luôn xuất hiện với diện mạo hoàn hảo nhất.</p><img src=\"https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg\" alt=\"Sample Image\" />")
+                .author(random.nextBoolean() ? "Admin" : "Fashion Editor")
+                .date(java.time.LocalDate.now().minusDays(random.nextInt(30)).toString())
+                .readingTime(String.valueOf(2 + random.nextInt(8)))
+                .imageUrl("https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80")
+                .category(randomCat)
+                .tags(List.of(tags[random.nextInt(tags.length)], tags[random.nextInt(tags.length)]))
+                .build();
+            
+            postsToSave.add(post);
+        }
+
+        blogRepository.saveAll(postsToSave);
+        log.info("✅ Successfully seeded {} blog posts.", count);
+    }
 }
